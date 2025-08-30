@@ -61,7 +61,7 @@ export const signup = async (req, res) => {
 		res.status(201).json(newUser);
 	}
 	catch (error) {
-		console.log("Error while performing signup", error.message);
+		console.error("Error while performing signup", error.message);
 		res.status(500).json({ message: error.message });
 	}
 };
@@ -91,7 +91,7 @@ export const login = async (req, res) => {
 		}
 	}
 	catch (error) {
-		console.log("Error while performing login", error.message);
+		console.error("Error while performing login", error.message);
 		res.status(500).json({ message: error.message });
 	}
 };
@@ -110,7 +110,7 @@ export const logout = async (req, res) => {
 		res.status(204).end();
 	}
 	catch (error) {
-		console.log("Error while performing logout", error.message);
+		console.error("Error while performing logout", error.message);
 		res.status(500).json({ message: error.message });
 	}
 };
@@ -142,7 +142,7 @@ export const refreshAccessToken = async (req, res) => {
 		res.status(200).json({ message: "Token refreshed successfully" });
 	}
 	catch (error) {
-		console.log("Error while performing access token refreshing", error.message);
+		console.error("Error while performing access token refreshing", error.message);
 		res.status(500).json({ message: error.message });
 	}
 };
