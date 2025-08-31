@@ -58,11 +58,11 @@ export const signup = async (req, res) => {
 			role: user.role
 		};
 
-		res.status(201).json(newUser);
+		return res.status(201).json(newUser);
 	}
 	catch (error) {
 		console.error("Error while performing signup", error.message);
-		res.status(500).json({ message: error.message });
+		return res.status(500).json({ message: error.message });
 	}
 };
 
@@ -84,15 +84,15 @@ export const login = async (req, res) => {
 				role: user.role
 			};
 
-			res.status(200).json(confirmedUser);
+			return res.status(200).json(confirmedUser);
 		}
 		else {
-			res.status(401).json({ message: "Invalid credentials" });
+			return res.status(401).json({ message: "Invalid credentials" });
 		}
 	}
 	catch (error) {
 		console.error("Error while performing login", error.message);
-		res.status(500).json({ message: error.message });
+		return res.status(500).json({ message: error.message });
 	}
 };
 
@@ -107,11 +107,11 @@ export const logout = async (req, res) => {
 
 		res.clearCookie("accessToken");
 		res.clearCookie("refreshToken");
-		res.status(204).end();
+		return res.status(204).end();
 	}
 	catch (error) {
 		console.error("Error while performing logout", error.message);
-		res.status(500).json({ message: error.message });
+		return res.status(500).json({ message: error.message });
 	}
 };
 
@@ -139,10 +139,10 @@ export const refreshAccessToken = async (req, res) => {
 			maxAge: 15 * 60 * 1000
 		});
 
-		res.status(200).json({ message: "Token refreshed successfully" });
+		return res.status(200).json({ message: "Token refreshed successfully" });
 	}
 	catch (error) {
 		console.error("Error while performing access token refreshing", error.message);
-		res.status(500).json({ message: error.message });
+		return res.status(500).json({ message: error.message });
 	}
 };
