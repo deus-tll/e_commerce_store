@@ -3,6 +3,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 
 import authRouter from "./routers/auth.js"
+import productsRouter from "./routers/products.js"
 import connectDB from "./config/db.js";
 
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
+app.use("/api/products", productsRouter);
 
 connectDB().then(() => {
 	app.listen(PORT, () => {
