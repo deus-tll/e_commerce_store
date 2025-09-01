@@ -6,6 +6,7 @@ import authRouter from "./routers/auth.js"
 import productsRouter from "./routers/products.js"
 import cartRouter from "./routers/cart.js"
 import couponsRouter from "./routers/coupons.js"
+import paymentsRouter from "./routers/payments.js"
 import connectDB from "./config/db.js";
 
 const PORT = process.env.PORT || 3001;
@@ -20,6 +21,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponsRouter);
+app.use("/api/payments", paymentsRouter);
 
 connectDB().then(() => {
 	app.listen(PORT, () => {
