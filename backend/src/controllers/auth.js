@@ -146,3 +146,20 @@ export const refreshAccessToken = async (req, res) => {
 		return res.status(500).json({ message: error.message });
 	}
 };
+
+export const getProfile = async (req, res) => {
+	try {
+		const user = {
+			_id: req.user._id,
+			name: req.user.name,
+			email: req.user.email,
+			role: req.user.role
+		};
+
+		res.status(200).json(user)
+	}
+	catch (error) {
+		console.error("Error while getting profile", error.message);
+		return res.status(500).json({ message: error.message });
+	}
+}
