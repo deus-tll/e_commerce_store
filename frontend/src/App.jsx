@@ -1,3 +1,5 @@
+import {Toaster} from "react-hot-toast";
+
 import AppRouter from "./config/router.jsx";
 import Navbar from "./components/Navbar.jsx";
 import BackgroundGradient from "./components/BackgroundGradient.jsx";
@@ -10,6 +12,7 @@ function App() {
 		        <Navbar />
 		        <AppRouter />
 	        </div>
+	        <Toaster />
         </div>
     );
 }

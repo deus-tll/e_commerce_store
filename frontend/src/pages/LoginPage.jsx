@@ -2,6 +2,8 @@ import React, {useState} from 'react';
 import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight, LogIn } from "lucide-react";
 
+import {useUserStore} from "../stores/useUserStore.js";
+
 import AuthFormContainer from "../components/auth/AuthFormContainer.jsx";
 import FormInput from "../components/FormInput.jsx";
 import SubmitButton from "../components/SubmitButton.jsx";
@@ -12,12 +14,11 @@ const LoginPage = () => {
 		password: ""
 	});
 
-	// for now
-	const loading = false;
+	const { loading, login } = useUserStore();
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
-
+		await login(formData);
 	};
 
 	return (
