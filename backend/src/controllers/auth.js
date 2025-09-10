@@ -3,6 +3,17 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { redis } from "../config/redis.js";
 
+const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict" : "lax";
+
+const setCookieToken = (maxAge) => {
+	return {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: SAME_SITE_COOKIE_SETTER,
+		maxAge
+	}
+};
+
 const generateTokens = (userId) => {
 	const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
 		expiresIn: "15m"
@@ -20,19 +31,8 @@ const storeRefreshToken = async (userId, refreshToken) => {
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
-	res.cookie("accessToken", accessToken, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "strict",
-		maxAge: 15 * 60 * 1000
-	});
-
-	res.cookie("refreshToken", refreshToken, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "strict",
-		maxAge: 7 * 24 * 60 * 60 * 1000
-	});
+	res.cookie("accessToken", accessToken, setCookieToken(15 * 60 * 1000));
+	res.cookie("refreshToken", refreshToken, setCookieToken(7 * 24 * 60 * 60 * 1000));
 };
 
 export const signup = async (req, res) => {
@@ -132,12 +132,7 @@ export const refreshAccessToken = async (req, res) => {
 
 		const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
-		res.cookie("accessToken", accessToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-			maxAge: 15 * 60 * 1000
-		});
+		res.cookie("accessToken", accessToken, setCookieToken(15 * 60 * 1000));
 
 		return res.status(200).json({ message: "Token refreshed successfully" });
 	}
@@ -149,6 +144,7 @@ export const refreshAccessToken = async (req, res) => {
 
 export const getProfile = async (req, res) => {
 	try {
+
 		const user = {
 			_id: req.user._id,
 			name: req.user.name,
@@ -156,7 +152,7 @@ export const getProfile = async (req, res) => {
 			role: req.user.role
 		};
 
-		res.status(200).json(user)
+		return res.status(200).json(user)
 	}
 	catch (error) {
 		console.error("Error while getting profile", error.message);

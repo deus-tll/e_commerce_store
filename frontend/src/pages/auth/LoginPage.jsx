@@ -16,6 +16,11 @@ const LoginPage = () => {
 
 	const { loading, login } = useUserStore();
 
+	const handleInputChange = (e) => {
+		const { name, value } = e.target;
+		setFormData({ ...formData, [name]: value });
+	}
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		await login(formData);
@@ -27,21 +32,26 @@ const LoginPage = () => {
 				<FormInput
 					label="Email address"
 					icon={Mail}
+					inputElement="input"
 					id="email"
+					name="email"
 					type="email"
 					value={formData.email}
-					onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="you@example.com"
 				/>
 				<FormInput
 					label="Password"
 					icon={Lock}
+					inputElement="input"
 					id="password"
+					name="password"
 					type="password"
 					value={formData.password}
-					onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="••••••••"
 				/>
+
 				<SubmitButton loading={loading} text="Login" icon={LogIn} />
 			</form>
 			<p className="mt-8 text-center text-sm text-gray-400">

@@ -18,6 +18,11 @@ const SignupPage = () => {
 
 	const { loading, signup } = useUserStore();
 
+	const handleInputChange = (e) => {
+		const { name, value } = e.target;
+		setFormData({ ...formData, [name]: value });
+	}
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		await signup(formData);
@@ -29,37 +34,45 @@ const SignupPage = () => {
 				<FormInput
 					label="Full name"
 					icon={User}
+					inputElement="input"
 					id="name"
+					name="name"
 					type="text"
 					value={formData.name}
-					onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="John Doe"
 				/>
 				<FormInput
 					label="Email address"
 					icon={Mail}
+					inputElement="input"
 					id="email"
+					name="email"
 					type="email"
 					value={formData.email}
-					onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="you@example.com"
 				/>
 				<FormInput
 					label="Password"
 					icon={Lock}
+					inputElement="input"
 					id="password"
+					name="password"
 					type="password"
 					value={formData.password}
-					onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="••••••••"
 				/>
 				<FormInput
 					label="Confirm Password"
 					icon={Lock}
+					inputElement="input"
 					id="confirmPassword"
+					name="confirmPassword"
 					type="password"
 					value={formData.confirmPassword}
-					onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+					onChange={handleInputChange}
 					placeholder="••••••••"
 				/>
 				<SubmitButton loading={loading} text="Sign up" icon={UserPlus} />
