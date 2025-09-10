@@ -10,6 +10,7 @@ import couponsRouter from "./routers/coupons.js";
 import paymentsRouter from "./routers/payments.js";
 import analyticsRouter from "./routers/analytics.js";
 import connectDB from "./config/db.js";
+import errorHandler from "./middleware/errorHandlerMiddleware.js";
 
 const PORT = process.env.PORT || 3001;
 
@@ -33,6 +34,8 @@ app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponsRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/analytics", analyticsRouter);
+
+app.use(errorHandler);
 
 connectDB().then(() => {
 	app.listen(PORT, () => {
