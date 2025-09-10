@@ -1,13 +1,14 @@
 import express from "express";
-import {signup, login, logout, refreshAccessToken, getProfile} from "../controllers/auth.js";
+import {AuthController} from "../controllers/auth.js";
 import {protectRoute} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+const authController = new AuthController();
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.post("/logout", logout);
-router.post("/refresh-token", refreshAccessToken);
-router.get("/profile", protectRoute, getProfile);
+router.post("/signup", authController.signup);
+router.post("/login", authController.login);
+router.post("/logout", authController.logout);
+router.get("/profile", protectRoute, authController.getProfile);
+router.post("/refresh-token", authController.refreshAccessToken);
 
 export default router;
