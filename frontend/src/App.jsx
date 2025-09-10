@@ -8,7 +8,7 @@ function App() {
 	return (
         <div className="min-h-screen bg-gray-900 text-white relative, overflow-hidden">
 	        <BackgroundGradient />
-	        <div className="relative z-50 pt-20">
+	        <div className="relative z-50">
 		        <Navbar />
 		        <AppRouter />
 	        </div>

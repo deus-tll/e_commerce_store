@@ -1,12 +1,12 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight, LogIn } from "lucide-react";
 
-import {useUserStore} from "../stores/useUserStore.js";
+import {useUserStore} from "../../stores/useUserStore.js";
 
-import AuthFormContainer from "../components/auth/AuthFormContainer.jsx";
-import FormInput from "../components/FormInput.jsx";
-import SubmitButton from "../components/SubmitButton.jsx";
+import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
+import FormInput from "../../components/FormInput.jsx";
+import SubmitButton from "../../components/SubmitButton.jsx";
 
 const LoginPage = () => {
 	const [formData, setFormData] = useState({
