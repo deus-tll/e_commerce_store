@@ -2,24 +2,23 @@ import {AuthService} from "../services/auth.js";
 
 const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict" : "lax";
 
-const setCookieToken = (maxAge) => {
-	return {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: SAME_SITE_COOKIE_SETTER,
-		maxAge
-	}
-};
-
-const setCookies = (res, accessToken, refreshToken) => {
-	res.cookie("accessToken", accessToken, setCookieToken(15 * 60 * 1000));
-	res.cookie("refreshToken", refreshToken, setCookieToken(7 * 24 * 60 * 60 * 1000));
-};
-
-
 export class AuthController {
 	constructor() {
 		this.authService = new AuthService();
+	}
+
+	#setCookieToken(maxAge) {
+		return {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: SAME_SITE_COOKIE_SETTER,
+			maxAge
+		}
+	}
+
+	#setCookies(res, accessToken, refreshToken) {
+		res.cookie("accessToken", accessToken, this.#setCookieToken(15 * 60 * 1000));
+		res.cookie("refreshToken", refreshToken, this.#setCookieToken(7 * 24 * 60 * 60 * 1000));
 	}
 
 	signup = async (req, res, next) => {
@@ -27,7 +26,7 @@ export class AuthController {
 			const { name, email, password } = req.body;
 			const { user, tokens } = await this.authService.signup(name, email, password);
 
-			setCookies(res, tokens.accessToken, tokens.refreshToken);
+			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
 
 			return res.status(201).json(user);
 		}
@@ -41,7 +40,7 @@ export class AuthController {
 			const { email, password } = req.body;
 			const { user, tokens } = await this.authService.login(email, password);
 
-			setCookies(res, tokens.accessToken, tokens.refreshToken);
+			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
 			return res.status(200).json(user);
 		}
 		catch (error) {
@@ -78,7 +77,7 @@ export class AuthController {
 			const { refreshToken } = req.cookies;
 			const { accessToken } = await this.authService.refreshAccessToken(refreshToken);
 
-			res.cookie("accessToken", accessToken, setCookieToken(15 * 60 * 1000));
+			res.cookie("accessToken", accessToken, this.#setCookieToken(15 * 60 * 1000));
 			return res.status(200).json({ message: "Token refreshed successfully" });
 		}
 		catch (error) {
