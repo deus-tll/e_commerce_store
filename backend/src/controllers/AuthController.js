@@ -1,4 +1,4 @@
-import {AuthService} from "../services/auth.js";
+import {AuthService} from "../services/AuthService.js";
 
 const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict" : "lax";
 
