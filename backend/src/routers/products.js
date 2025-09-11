@@ -1,24 +1,17 @@
 import express from "express";
 
-import {
-	getProducts,
-	getFeaturedProducts,
-	getProductsByCategory,
-	getRecommendedProducts,
-	createProduct,
-	toggleFeaturedProduct,
-	deleteProduct,
-} from "../controllers/products.js";
 import {adminRoute, protectRoute} from "../middleware/authMiddleware.js";
+import {ProductController} from "../controllers/ProductController.js";
 
 const router = express.Router();
+const productController = new ProductController();
 
-router.get("/", protectRoute, adminRoute, getProducts);
-router.get("/featured", getFeaturedProducts);
-router.get("/category/:category", getProductsByCategory);
-router.get("/recommended", getRecommendedProducts);
-router.post("/", protectRoute, adminRoute, createProduct);
-router.patch("/:id", protectRoute, adminRoute, toggleFeaturedProduct);
-router.delete("/:id", protectRoute, adminRoute, deleteProduct);
+router.get("/", protectRoute, adminRoute, productController.getProducts);
+router.get("/featured", productController.getFeaturedProducts);
+router.get("/category/:category", productController.getProductsByCategory);
+router.get("/recommended", productController.getRecommendedProducts);
+router.post("/", protectRoute, adminRoute, productController.createProduct);
+router.patch("/:id", protectRoute, adminRoute, productController.toggleFeaturedProduct);
+router.delete("/:id", protectRoute, adminRoute, productController.deleteProduct);
 
 export default router;
