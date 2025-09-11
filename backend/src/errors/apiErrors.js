@@ -48,3 +48,9 @@ export class GoneError extends ApiError {
 		super(message, 410);
 	}
 }
+
+export class InternalServerError extends ApiError {
+	constructor(message = "Internal Server Error") {
+		super(message, 500);
+	}
+}
