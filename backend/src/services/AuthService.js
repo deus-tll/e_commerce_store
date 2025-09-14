@@ -2,9 +2,14 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/User.js";
 import { redis } from "../config/redis.js";
+import {EmailService} from "./EmailService.js";
 import {BadRequestError, NotFoundError, UnauthorizedError} from "../errors/apiErrors.js";
 
 export class AuthService {
+	constructor() {
+		this.emailService = new EmailService();
+	}
+
 	#generateTokens(userId) {
 		const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
 			expiresIn: "15m"
@@ -27,9 +32,18 @@ export class AuthService {
 			throw new BadRequestError("User already exists");
 		}
 
-		const user = await User.create({ name, email, password });
+		const verificationToken = this.emailService.generateVerificationToken();
+
+		const user = await User.create({
+			name, email, password,
+			verificationToken,
+			verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000
+		});
+
 		const { accessToken, refreshToken } = this.#generateTokens(user._id);
 		await this.#storeRefreshToken(user._id, refreshToken);
+
+		await this.emailService.sendVerificationEmail(user.email, verificationToken);
 
 		return {
 			user: {
@@ -50,6 +64,10 @@ export class AuthService {
 
 		const { accessToken, refreshToken } = this.#generateTokens(user._id);
 		await this.#storeRefreshToken(user._id, refreshToken);
+
+		user.lastLogin = new Date();
+
+		await user.save();
 
 		return {
 			user: {
@@ -99,5 +117,35 @@ export class AuthService {
 		const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
 		return { accessToken };
+	}
+
+	async verifyEmail(code) {
+		const user = await User.findOne({
+			verificationToken: code,
+			verificationTokenExpiresAt: { $gt: Date.now() }
+		});
+
+		if (!user) {
+			throw new BadRequestError("Invalid or expired verification code");
+		}
+
+		user.isVerified = true;
+		user.verificationToken = undefined;
+		user.verificationTokenExpiresAt = undefined;
+
+		await user.save();
+
+		const { accessToken, refreshToken } = this.#generateTokens(user._id);
+		await this.#storeRefreshToken(user._id, refreshToken);
+
+		return {
+			user: {
+				_id: user._id,
+				name: user.name,
+				email: user.email,
+				role: user.role
+			},
+			tokens: { accessToken, refreshToken }
+		};
 	}
 }

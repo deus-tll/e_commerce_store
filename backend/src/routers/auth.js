@@ -10,5 +10,6 @@ router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.get("/profile", protectRoute, authController.getProfile);
 router.post("/refresh-token", authController.refreshAccessToken);
+router.post("/verify-email", authController.verifyEmail);
 
 export default router;

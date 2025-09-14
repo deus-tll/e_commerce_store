@@ -84,4 +84,18 @@ export class AuthController {
 			next(error);
 		}
 	}
+
+	verifyEmail = async (req, res, next) => {
+		try {
+			const { code } = req.body;
+			const { user, tokens } = await this.authService.verifyEmail(code);
+
+			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
+
+			return res.status(200).json(user);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
 }
