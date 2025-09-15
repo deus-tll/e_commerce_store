@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 import {mailtrapClient, sender} from "../config/mailtrap.js";
 
@@ -41,6 +42,10 @@ export class EmailService {
 		return Math.floor(100000 + Math.random() * 900000).toString();
 	}
 
+	generateResetToken() {
+		return crypto.randomBytes(20).toString("hex");
+	}
+
 	async sendVerificationEmail(email, verificationToken) {
 		const subject = "Verify Your Email";
 		const htmlContent = await this.#readTemplate("emailVerification.html");
@@ -48,5 +53,22 @@ export class EmailService {
 		const category = "Email Verification";
 
 		await this.#sendEmail(email, subject, finalHtml, category);
+	}
+
+	async sendPasswordResetEmail(email, resetPasswordUrl) {
+		const subject = "Reset Your Password";
+		const htmlContent = await this.#readTemplate("passwordResetRequest.html");
+		const finalHtml = htmlContent.replace("{resetPasswordUrl}", resetPasswordUrl);
+		const category = "Password Reset";
+
+		await this.#sendEmail(email, subject, finalHtml, category);
+	}
+
+	async sendPasswordResetSuccessEmail(email) {
+		const subject = "Password Reset Successful";
+		const htmlContent = await this.#readTemplate("passwordResetSuccess.html");
+		const category = "Password Reset";
+
+		await this.#sendEmail(email, subject, htmlContent, category);
 	}
 }

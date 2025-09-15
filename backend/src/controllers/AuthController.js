@@ -98,4 +98,31 @@ export class AuthController {
 			next(error);
 		}
 	}
+
+	forgotPassword = async (req, res, next) => {
+		try {
+			const { email } = req.body;
+			const result = await this.authService.forgotPassword(email);
+
+			return res.status(200).json(result);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
+	resetPassword = async (req, res, next) => {
+		try {
+			const { token } = req.params;
+			const { password } = req.body;
+			const { user, tokens } = await this.authService.resetPassword(token, password);
+
+			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
+
+			return res.status(200).json(user);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
 }

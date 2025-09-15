@@ -148,4 +148,60 @@ export class AuthService {
 			tokens: { accessToken, refreshToken }
 		};
 	}
+
+	async forgotPassword(email) {
+		const user = await User.findOne({ email });
+
+		if (!user) {
+			throw new BadRequestError("User with this email does not exist");
+		}
+
+		const resetToken = this.emailService.generateResetToken();
+		const resetPasswordTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
+
+		user.resetPasswordToken = resetToken;
+		user.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;
+
+		await user.save();
+
+		const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+		await this.emailService.sendPasswordResetEmail(email, resetPasswordUrl);
+
+		return {
+			message: "Password reset link sent to your email"
+		};
+	}
+
+	async resetPassword(token, password) {
+		const user = await User.findOne({
+			resetPasswordToken: token,
+			resetPasswordTokenExpiresAt: { $gt: Date.now() }
+		});
+
+		if (!user) {
+			throw new BadRequestError("Invalid or expired reset token");
+		}
+
+		user.password = password;
+		user.resetPasswordToken = undefined;
+		user.resetPasswordTokenExpiresAt = undefined;
+
+		await user.save();
+
+		await this.emailService.sendPasswordResetSuccessEmail(user.email);
+
+		const { accessToken, refreshToken } = this.#generateTokens(user._id);
+		await this.#storeRefreshToken(user._id, refreshToken);
+
+		return {
+			user: {
+				_id: user._id,
+				name: user.name,
+				email: user.email,
+				role: user.role
+			},
+			tokens: { accessToken, refreshToken }
+		};
+	}
 }
