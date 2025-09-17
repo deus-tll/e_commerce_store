@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import { Link } from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import { UserPlus, Mail, Lock, User, ArrowRight } from "lucide-react";
 
 import {useUserStore} from "../../stores/useUserStore.js";
@@ -16,6 +16,8 @@ const SignupPage = () => {
 		confirmPassword: ""
 	});
 
+	const navigate = useNavigate();
+
 	const { loading, signup } = useUserStore();
 
 	const handleInputChange = (e) => {
@@ -26,6 +28,7 @@ const SignupPage = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		await signup(formData);
+		navigate("/verify-email");
 	};
 
 	return (
