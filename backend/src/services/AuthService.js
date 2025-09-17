@@ -52,7 +52,8 @@ export class AuthService {
 				email: user.email,
 				role: user.role,
 				isVerified: user.isVerified,
-				lastLogin: user.lastLogin
+				lastLogin: user.lastLogin,
+				createdAt: user.createdAt
 			},
 			tokens: { accessToken, refreshToken }
 		};
@@ -78,7 +79,8 @@ export class AuthService {
 				email: user.email,
 				role: user.role,
 				isVerified: user.isVerified,
-				lastLogin: user.lastLogin
+				lastLogin: user.lastLogin,
+				createdAt: user.createdAt
 			},
 			tokens: { accessToken, refreshToken }
 		};
@@ -104,7 +106,8 @@ export class AuthService {
 			email: user.email,
 			role: user.role,
 			isVerified: user.isVerified,
-			lastLogin: user.lastLogin
+			lastLogin: user.lastLogin,
+			createdAt: user.createdAt
 		};
 	}
 
@@ -151,7 +154,8 @@ export class AuthService {
 				email: user.email,
 				role: user.role,
 				isVerified: user.isVerified,
-				lastLogin: user.lastLogin
+				lastLogin: user.lastLogin,
+				createdAt: user.createdAt
 			},
 			tokens: { accessToken, refreshToken }
 		};
@@ -231,7 +235,8 @@ export class AuthService {
 				email: user.email,
 				role: user.role,
 				isVerified: user.isVerified,
-				lastLogin: user.lastLogin
+				lastLogin: user.lastLogin,
+				createdAt: user.createdAt
 			},
 			tokens: { accessToken, refreshToken }
 		};

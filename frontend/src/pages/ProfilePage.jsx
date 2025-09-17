@@ -1,9 +1,9 @@
-import React from 'react';
-import { CheckCircle2, XCircle, MailCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { CheckCircle2, XCircle, MailCheck } from 'lucide-react';
 
 import { useUserStore } from '../stores/useUserStore.js';
+
 import SubmitButton from '../components/SubmitButton.jsx';
 
 const formatDate = (dateString) => {
@@ -42,6 +42,17 @@ const ProfilePage = () => {
 					<div className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between">
 						<p className="text-gray-400 text-sm">Email</p>
 						<p className="text-white text-lg font-medium break-all">{user.email}</p>
+					</div>
+
+					<div className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between">
+						<p className="text-gray-400 text-sm">Joined</p>
+						<p className="text-white text-lg font-medium">
+							{new Date(user.createdAt).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "long",
+								day: "numeric",
+							})}
+						</p>
 					</div>
 
 					<div className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between">
