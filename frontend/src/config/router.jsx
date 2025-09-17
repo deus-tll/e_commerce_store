@@ -17,6 +17,7 @@ import CartPage from "../pages/cart/CartPage.jsx";
 import PurchaseSuccessPage from "../pages/cart/PurchaseSuccessPage.jsx";
 import PurchaseCancelPage from "../pages/cart/PurchaseCancelPage.jsx";
 import EmailVerificationPage from "../pages/auth/EmailVerificationPage.jsx";
+import ProfilePage from "../pages/ProfilePage.jsx";
 
 const AppRouter = () => {
 	const { user, checkAuth, checkingAuth } = useUserStore();
@@ -65,6 +66,11 @@ const AppRouter = () => {
 				} />
 
 				{/* Protected Routes */}
+				<Route path="/profile" element={
+					<ProtectedRoute>
+						<ProfilePage />
+					</ProtectedRoute>
+				} />
 				<Route path="/cart" element={
 					<ProtectedRoute>
 						<CartPage />

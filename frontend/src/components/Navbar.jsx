@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, UserPlus, LogIn, LogOut, Lock } from "lucide-react";
+import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, User } from "lucide-react";
 
 import {useUserStore} from "../stores/useUserStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
@@ -19,7 +19,7 @@ const Navbar = () => {
 
 					<nav className="flex flex-wrap items-center gap-4">
 						{user && (
-							<Link to="/cart" className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
+						<Link to="/cart" className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
 								<ShoppingCart className="inline-block mr-1 group-hover:text-emerald-400" size={20} />
 
 								{cart.length > 0 &&
@@ -30,23 +30,30 @@ const Navbar = () => {
 									</span>
 								}
 
-							</Link>
+						</Link>
 						)}
 
-						{isAdmin && (
-							<Link to="admin-dashboard" className="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1 rounded-md font-medium
-								 transition duration-300 ease-in-out flex items-center"
-							>
-								<Lock className="inline-block mr-1" size={18} />
-								<span className="hidden sm:inline">Dashboard</span>
-							</Link>
-						)}
+					{/* Profile first, then Dashboard if admin */}
 
-						{ user ? (
+					{ user ? (
+						<>
+							<Link to="/profile" className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
+								<User className="inline-block mr-1 group-hover:text-emerald-400" size={20} />
+							</Link>
+							{isAdmin && (
+								<Link
+									to="admin-dashboard"
+									className="border border-emerald-600 text-emerald-400 px-3 py-1.5 rounded-full font-medium transition duration-300 ease-in-out flex items-center hover:bg-emerald-700/40"
+								>
+									<Lock className="inline-block mr-1" size={18} />
+									<span className="hidden sm:inline">Dashboard</span>
+								</Link>
+							)}
 							<button onClick={logout} className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md flex items-center transition duration-300 ease-in-out">
 								<LogOut size={18} />
 								<span className="hidden sm:inline ml-2">Logout</span>
 							</button>
+						</>
 						) : (
 							<>
 								<Link to="/signup" className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4
