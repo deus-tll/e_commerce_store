@@ -103,7 +103,21 @@ export const useUserStore = create((set, get) => ({
 		finally {
 			set({ loading: false });
 		}
-	}
+	},
+
+	resendVerification: async () => {
+		set({ loading: true });
+
+		try {
+			await axios.post(`${AUTH_API_PATH}/resend-verification`);
+		}
+		catch (error) {
+			handleRequestError(error);
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
 }));
 
 let refreshPromise = null;
