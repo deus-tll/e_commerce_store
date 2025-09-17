@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {useNavigate} from "react-router-dom";
-import {Verified} from "lucide-react";
+import {Link, useNavigate} from "react-router-dom";
+import {ArrowRight, Verified} from "lucide-react";
 import {toast} from "react-hot-toast";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
@@ -86,6 +86,12 @@ const EmailVerificationPage = () => {
 
 				<SubmitButton loading={loading} text="Verify" icon={Verified} />
 			</form>
+
+			<p className="mt-8 text-center text-sm text-gray-400">
+				<Link to="/" className="font-medium text-emerald-400 hover:text-emerald-300">
+					Verify later <ArrowRight className="inline h-4 w-4" />
+				</Link>
+			</p>
 		</AuthFormContainer>
 	);
 };
