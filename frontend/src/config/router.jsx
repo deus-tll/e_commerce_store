@@ -4,10 +4,13 @@ import {Routes, Route, Navigate} from "react-router-dom";
 import {useUserStore} from "../stores/useUserStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
 
+import {ProtectedAdminRoute, ProtectedRoute, RedirectAuthenticatedUser} from "../components/RouteWrappers.jsx";
+
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
+
 import HomePage from "../pages/HomePage.jsx";
 import SignupPage from "../pages/auth/SignupPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";
-import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import AdminPage from "../pages/AdminPage.jsx";
 import CategoryPage from "../pages/CategoryPage.jsx";
 import CartPage from "../pages/cart/CartPage.jsx";
@@ -33,19 +36,50 @@ const AppRouter = () => {
 	return (
 		<div className="pt-10">
 			<Routes>
+				{/* Public Routes */}
 				<Route path="/" element={ <HomePage /> } />
-
-				<Route path="/signup" element={ !user ? <SignupPage /> : <Navigate to='/' /> } />
-				<Route path="/login" element={ !user ? <LoginPage /> : <Navigate to='/' /> } />
-				<Route path="/verify-email" element={ <EmailVerificationPage /> } />
-
-
-				<Route path="/admin-dashboard" element={ user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' /> } />
-
 				<Route path="/category/:category" element={ <CategoryPage /> } />
-				<Route path="/cart" element={ user ? <CartPage /> : <Navigate to='/' /> } />
-				<Route path="/purchase-success" element={ user ? <PurchaseSuccessPage /> : <Navigate to='/' /> } />
-				<Route path="/purchase-cancel" element={ user ? <PurchaseCancelPage /> : <Navigate to='/' /> } />
+
+				{/* Auth Routes */}
+				<Route path="/signup" element={
+					<RedirectAuthenticatedUser>
+						<SignupPage />
+					</RedirectAuthenticatedUser>
+				} />
+				<Route path="/login" element={
+					<RedirectAuthenticatedUser>
+						<LoginPage />
+					</RedirectAuthenticatedUser>
+				} />
+				<Route path="/verify-email" element={
+					user && !user.isVerified
+						? <EmailVerificationPage />
+						: <Navigate to='/' />
+				} />
+
+				{/* Admin Routes */}
+				<Route path="/admin-dashboard" element={
+					<ProtectedAdminRoute>
+						<AdminPage />
+					</ProtectedAdminRoute>
+				} />
+
+				{/* Protected Routes */}
+				<Route path="/cart" element={
+					<ProtectedRoute>
+						<CartPage />
+					</ProtectedRoute>
+				} />
+				<Route path="/purchase-success" element={
+					<ProtectedRoute>
+						<PurchaseSuccessPage />
+					</ProtectedRoute>
+				} />
+				<Route path="/purchase-cancel" element={
+					<ProtectedRoute>
+						<PurchaseCancelPage />
+					</ProtectedRoute>
+				} />
 			</Routes>
 		</div>
 	);
