@@ -50,7 +50,9 @@ export class AuthService {
 				_id: user._id,
 				name: user.name,
 				email: user.email,
-				role: user.role
+				role: user.role,
+				isVerified: user.isVerified,
+				lastLogin: user.lastLogin
 			},
 			tokens: { accessToken, refreshToken }
 		};
@@ -74,7 +76,9 @@ export class AuthService {
 				_id: user._id,
 				name: user.name,
 				email: user.email,
-				role: user.role
+				role: user.role,
+				isVerified: user.isVerified,
+				lastLogin: user.lastLogin
 			},
 			tokens: { accessToken, refreshToken }
 		};
@@ -98,7 +102,9 @@ export class AuthService {
 			_id: user._id,
 			name: user.name,
 			email: user.email,
-			role: user.role
+			role: user.role,
+			isVerified: user.isVerified,
+			lastLogin: user.lastLogin
 		};
 	}
 
@@ -143,10 +149,34 @@ export class AuthService {
 				_id: user._id,
 				name: user.name,
 				email: user.email,
-				role: user.role
+				role: user.role,
+				isVerified: user.isVerified,
+				lastLogin: user.lastLogin
 			},
 			tokens: { accessToken, refreshToken }
 		};
+	}
+
+	async resendVerificationEmail(userId) {
+		const user = await User.findById(userId);
+
+		if (!user) {
+			throw new NotFoundError("User not found");
+		}
+
+		if (user.isVerified) {
+			throw new BadRequestError("Email is already verified");
+		}
+
+		const verificationToken = this.emailService.generateVerificationToken();
+		user.verificationToken = verificationToken;
+		user.verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+
+		await user.save();
+
+		await this.emailService.sendVerificationEmail(user.email, verificationToken);
+
+		return { message: "Verification code sent to your email" };
 	}
 
 	async forgotPassword(email) {
@@ -199,7 +229,9 @@ export class AuthService {
 				_id: user._id,
 				name: user.name,
 				email: user.email,
-				role: user.role
+				role: user.role,
+				isVerified: user.isVerified,
+				lastLogin: user.lastLogin
 			},
 			tokens: { accessToken, refreshToken }
 		};
