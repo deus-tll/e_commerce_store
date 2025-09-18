@@ -7,8 +7,17 @@ import { toast } from "react-hot-toast";
  * @param {boolean} [showToast=true] A flag to determine whether to display a toast notification to the user.
  */
 export const handleRequestError = (error, defaultMessage = "An error occurred", showToast = true) => {
-	console.error(error);
+	console.error("Handling error:", error);
+	let errorMessage = defaultMessage;
+
+	if (error.response?.data?.message) {
+		errorMessage = error.response.data.message;
+	}
+	else if (error.message) {
+		errorMessage = error.message;
+	}
+
 	if (showToast) {
-		toast.error(error.response?.data?.message || defaultMessage);
+		toast.error(errorMessage);
 	}
 };
