@@ -5,6 +5,7 @@ import cors from "cors";
 
 import authRouter from "./routers/auth.js";
 import productsRouter from "./routers/products.js";
+import categoriesRouter from "./routers/categories.js";
 import cartRouter from "./routers/cart.js";
 import couponsRouter from "./routers/coupons.js";
 import paymentsRouter from "./routers/payments.js";
@@ -30,6 +31,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/products", productsRouter);
+app.use("/api/categories", categoriesRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponsRouter);
 app.use("/api/payments", paymentsRouter);

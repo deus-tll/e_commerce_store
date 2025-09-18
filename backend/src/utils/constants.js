@@ -1,3 +1,4 @@
 export const FileFolders = Object.freeze({
-	PRODUCTS: "products"
+	PRODUCTS: "products",
+	CATEGORIES: "categories"
 });

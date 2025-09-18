@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import { CategoryService } from "./CategoryService.js";
 import {redis} from "../config/redis.js";
 import {StorageProductService} from "./storages/StorageProductService.js";
 import {NotFoundError} from "../errors/apiErrors.js";
@@ -7,6 +8,7 @@ import {NotFoundError} from "../errors/apiErrors.js";
 export class ProductService {
 	constructor() {
 		this.storageProductService = new StorageProductService();
+		this.categoryService = new CategoryService();
 	}
 
 	async #updateFeaturedProductsCache() {
@@ -20,7 +22,7 @@ export class ProductService {
 	}
 
 	async getProducts() {
-		return Product.find({});
+		return Product.find({}).populate({ path: "category", select: "name slug" });
 	}
 
 	async getFeaturedProducts() {
@@ -29,7 +31,7 @@ export class ProductService {
 			return JSON.parse(featuredProducts);
 		}
 
-		featuredProducts = await Product.find({ isFeatured: true }).lean();
+		featuredProducts = await Product.find({ isFeatured: true }).populate({ path: "category", select: "name slug" }).lean();
 		if (!featuredProducts || featuredProducts.length === 0) {
 			throw new NotFoundError("No featured products found");
 		}
@@ -39,8 +41,9 @@ export class ProductService {
 		return featuredProducts;
 	}
 
-	async getProductsByCategory(category) {
-		return Product.find({category});
+	async getProductsByCategory(categorySlug) {
+		const category = await this.categoryService.getBySlug(categorySlug);
+		return Product.find({ category: category._id }).populate({ path: "category", select: "name slug" });
 	}
 
 	async getRecommendedProducts() {
@@ -58,7 +61,15 @@ export class ProductService {
 			imageUrl = await this.storageProductService.upload(image);
 		}
 
-		return await Product.create({...rest, image: imageUrl});
+		// Resolve category if provided as slug or name
+		if (rest.category && typeof rest.category === "string") {
+			const categoryDoc = await this.categoryService.getBySlug(rest.category).catch(async () => {
+				return await this.categoryService.createCategory({ name: rest.category });
+			});
+			rest.category = categoryDoc._id;
+		}
+
+		return await Product.create({ ...rest, image: imageUrl });
 	}
 
 	async toggleFeaturedProduct(productId) {
