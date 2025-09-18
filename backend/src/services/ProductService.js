@@ -77,8 +77,13 @@ export class ProductService {
 
 	async deleteProduct(productId) {
 		const product = await Product.findByIdAndDelete(productId);
+
 		if (!product) {
 			throw new NotFoundError("Product not found");
+		}
+
+		if (product.isFeatured) {
+			await this.#updateFeaturedProductsCache();
 		}
 
 		await this.storageProductService.delete(product.image);
