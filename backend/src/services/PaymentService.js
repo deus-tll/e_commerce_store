@@ -114,6 +114,16 @@ export class PaymentService {
 		const session = await stripe.checkout.sessions.retrieve(sessionId);
 
 		if (session.payment_status === "paid") {
+			// Idempotency: if an order was already created for this session, return it
+			const existingOrder = await Order.findOne({ stripeSessionId: sessionId });
+			if (existingOrder) {
+				return {
+					success: true,
+					message: "Payment already processed, returning existing order",
+					orderId: existingOrder._id
+				};
+			}
+
 			if (session.metadata.couponCode) {
 				await Coupon.findOneAndUpdate(
 					{
@@ -138,7 +148,22 @@ export class PaymentService {
 				stripeSessionId: sessionId
 			});
 
-			await newOrder.save();
+			try {
+				await newOrder.save();
+			} catch (error) {
+				// Handle potential race condition where another request created the order
+				if (error && error.code === 11000) {
+					const order = await Order.findOne({ stripeSessionId: sessionId });
+					if (order) {
+						return {
+							success: true,
+							message: "Payment already processed concurrently, returning existing order",
+							orderId: order._id
+						};
+					}
+				}
+				throw error;
+			}
 
 			return {
 				success: true,
