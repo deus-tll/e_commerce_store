@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { toast } from "react-hot-toast";
 
 import axios from "../config/axios.js";
 import {handleRequestError} from "../utils/errorHandler.js";
@@ -14,17 +13,18 @@ export const useUserStore = create((set, get) => ({
 	signup: async ({ name, email, password, confirmPassword }) => {
 		set({ loading: true });
 
-		if (password !== confirmPassword) {
-			set({ loading: false });
-			return toast.error("Passwords don't match");
-		}
-
 		try {
+			if (password !== confirmPassword) {
+				set({ loading: false });
+				throw new Error("Passwords don't match");
+			}
+
 			const res = await axios.post(`${AUTH_API_PATH}/signup`, { name, email, password });
 			set({ user: res.data });
 		}
 		catch (error) {
 			handleRequestError(error);
+			throw error;
 		}
 		finally {
 			set({ loading: false });
@@ -118,6 +118,42 @@ export const useUserStore = create((set, get) => ({
 			set({ loading: false });
 		}
 	},
+
+	forgotPassword: async (email) => {
+		set({ loading: true });
+
+		try {
+			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
+		}
+		catch (error) {
+			handleRequestError(error);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	resetPassword: async ({token, password, confirmPassword}) => {
+		set({ loading: true });
+
+		try {
+			if (password !== confirmPassword) {
+				set({ loading: false });
+				throw new Error("Passwords don't match");
+			}
+
+			const res = await axios.post(`${AUTH_API_PATH}/reset-password/${token}`, { password });
+			set({ user: res.data });
+		}
+		catch (error) {
+			handleRequestError(error);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
+	}
 }));
 
 let refreshPromise = null;

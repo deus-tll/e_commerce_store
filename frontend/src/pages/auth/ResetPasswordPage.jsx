@@ -1,6 +1,7 @@
-import {useState} from 'react';
-import {Link, useNavigate} from "react-router-dom";
-import { UserPlus, Mail, Lock, User, ArrowRight } from "lucide-react";
+import {useState} from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {Lock} from "lucide-react";
+import {toast} from "react-hot-toast";
 
 import {useUserStore} from "../../stores/useUserStore.js";
 
@@ -8,17 +9,16 @@ import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import FormInput from "../../components/FormInput.jsx";
 import SubmitButton from "../../components/SubmitButton.jsx";
 
-const SignupPage = () => {
+const ResetPasswordPage = () => {
 	const [formData, setFormData] = useState({
-		name: "",
-		email: "",
 		password: "",
 		confirmPassword: ""
 	});
 
+	const { token } = useParams();
 	const navigate = useNavigate();
 
-	const { loading, signup } = useUserStore();
+	const { loading, resetPassword } = useUserStore();
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -29,39 +29,18 @@ const SignupPage = () => {
 		e.preventDefault();
 
 		try {
-			await signup(formData);
-			navigate("/verify-email");
+			await resetPassword({ token, ...formData });
+
+			toast.success("Password reset successfully, redirecting...");
 		}
 		catch (error) {
 
 		}
-	};
+	}
 
 	return (
-		<AuthFormContainer title="Create your account">
+		<AuthFormContainer title="Reset Password">
 			<form onSubmit={handleSubmit} className="space-y-6">
-				<FormInput
-					label="Full name"
-					icon={User}
-					inputElement="input"
-					id="name"
-					name="name"
-					type="text"
-					value={formData.name}
-					onChange={handleInputChange}
-					placeholder="John Doe"
-				/>
-				<FormInput
-					label="Email address"
-					icon={Mail}
-					inputElement="input"
-					id="email"
-					name="email"
-					type="email"
-					value={formData.email}
-					onChange={handleInputChange}
-					placeholder="you@example.com"
-				/>
 				<FormInput
 					label="Password"
 					icon={Lock}
@@ -84,16 +63,11 @@ const SignupPage = () => {
 					onChange={handleInputChange}
 					placeholder="••••••••"
 				/>
-				<SubmitButton loading={loading} text="Sign up" icon={UserPlus} />
+
+				<SubmitButton loading={loading} text="Set New Password" />
 			</form>
-			<p className="mt-8 text-center text-sm text-gray-400">
-				Already have an account?{" "}
-				<Link to="/login" className="font-medium text-emerald-400 hover:text-emerald-300">
-					Login here <ArrowRight className="inline h-4 w-4" />
-				</Link>
-			</p>
 		</AuthFormContainer>
 	);
 };
 
-export default SignupPage;
+export default ResetPasswordPage;

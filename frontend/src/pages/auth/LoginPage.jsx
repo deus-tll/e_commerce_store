@@ -52,8 +52,15 @@ const LoginPage = () => {
 					placeholder="••••••••"
 				/>
 
+				<div className='flex items-center mb-6'>
+					<Link to='/forgot-password' className='text-sm text-emerald-400 hover:text-emerald-300 hover:underline'>
+						Forgot password?
+					</Link>
+				</div>
+
 				<SubmitButton loading={loading} text="Login" icon={LogIn} />
 			</form>
+
 			<p className="mt-8 text-center text-sm text-gray-400">
 				Don't have an account?{" "}
 				<Link to="/signup" className="font-medium text-emerald-400 hover:text-emerald-300">

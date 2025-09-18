@@ -19,7 +19,9 @@ const SubmitButton = ({ loading, text, icon: Icon, type = "submit", ...props }) 
 			) : (
 				<>
 					{Icon && <Icon className="mr-2 h-5 w-5" aria-hidden="true" />}
-					{text}
+					<span className="font-semibold">
+						{text}
+					</span>
 				</>
 			)}
 		</button>
