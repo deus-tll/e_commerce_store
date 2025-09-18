@@ -5,11 +5,14 @@ import { motion } from "framer-motion";
 import {useProductStore} from "../stores/useProductStore.js";
 
 import CreateProductForm from "../components/admin/CreateProductForm.jsx";
+import CreateCategoryForm from "../components/admin/CreateCategoryForm.jsx";
+import CategoriesList from "../components/admin/CategoriesList.jsx";
 import ProductsList from "../components/admin/ProductsList.jsx";
 import AnalyticsTab from "../components/admin/AnalyticsTab.jsx";
 
 const tabs = [
 	{ id: "create", label: "Create Product", icon: PlusCircle },
+	{ id: "categories", label: "Create Category", icon: PlusCircle },
 	{ id: "products", label: "Products", icon: ShoppingBasket },
 	{ id: "analytics", label: "Analytics", icon: BarChart },
 ];
@@ -54,6 +57,12 @@ const AdminPage = () => {
 				</div>
 
 				{activeTab === "create" && <CreateProductForm />}
+				{activeTab === "categories" && (
+					<div>
+						<CreateCategoryForm />
+						<CategoriesList />
+					</div>
+				)}
 				{activeTab === "products" && <ProductsList />}
 				{activeTab === "analytics" && <AnalyticsTab />}
 			</div>

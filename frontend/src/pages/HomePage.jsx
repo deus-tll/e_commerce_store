@@ -4,32 +4,18 @@ import {useProductStore} from "../stores/useProductStore.js";
 
 import CategoryItem from "../components/CategoryItem.jsx";
 import FeaturedProducts from "../components/FeaturedProducts.jsx";
+import { useCategoryStore } from "../stores/useCategoryStore.js";
 
 
-import jeansImage from '../assets/images/categories/jeans.jpg';
-import tshirtsImage from '../assets/images/categories/tshirts.jpg';
-import shoesImage from '../assets/images/categories/shoes.jpg';
-import glassesImage from '../assets/images/categories/glasses.png';
-import jacketsImage from '../assets/images/categories/jackets.jpg';
-import suitsImage from '../assets/images/categories/suits.jpg';
-import bagsImage from '../assets/images/categories/bags.jpg';
-
-const categories = [
-	{ href: "/jeans", name: "Jeans", imageUrl: jeansImage },
-	{ href: "/t-shirts", name: "T-shirts", imageUrl: tshirtsImage },
-	{ href: "/shoes", name: "Shoes", imageUrl: shoesImage },
-	{ href: "/glasses", name: "Glasses", imageUrl: glassesImage },
-	{ href: "/jackets", name: "Jackets", imageUrl: jacketsImage },
-	{ href: "/suits", name: "Suits", imageUrl: suitsImage },
-	{ href: "/bags", name: "Bags", imageUrl: bagsImage },
-];
 
 const HomePage = () => {
 	const { fetchFeaturedProducts, featuredProducts, isLoading } = useProductStore();
+	const { categories, fetchCategories } = useCategoryStore();
 
 	useEffect(() => {
 		fetchFeaturedProducts();
-	}, [fetchFeaturedProducts]);
+		fetchCategories();
+	}, [fetchFeaturedProducts, fetchCategories]);
 
 	return (
 		<div className="relative min-h-screen text-white overflow-hidden">
@@ -44,7 +30,11 @@ const HomePage = () => {
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 					{categories.map((category) => (
-						<CategoryItem category={category} key={category.name} />
+						<CategoryItem category={{
+							href: `/${category.slug}`,
+							name: category.name,
+							imageUrl: category.image
+						}} key={category._id} />
 					))}
 				</div>
 

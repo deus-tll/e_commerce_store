@@ -68,9 +68,9 @@ const ProductsList = () => {
 						</td>
 
 						<td className={tdClasses}>
-							<div className="text-sm text-gray-300">
-								${product.category}
-							</div>
+						<div className="text-sm text-gray-300">
+							{typeof product.category === "object" && product.category !== null ? product.category.name : product.category}
+						</div>
 						</td>
 
 						<td className={tdClasses}>

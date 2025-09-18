@@ -1,14 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle } from "lucide-react";
 
 import {useProductStore} from "../../stores/useProductStore.js";
+import {useCategoryStore} from "../../stores/useCategoryStore.js";
 
 import FormInput from "../FormInput.jsx";
 import SubmitButton from "../SubmitButton.jsx";
 import FormFileInput from "../FormFileInput.jsx";
-
-const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "suits", "bags"];
 
 let productTemplate = {
 	name: "",
@@ -22,6 +21,11 @@ const CreateProductForm = () => {
 	const [formData, setFormData] = useState({ ...productTemplate });
 
 	const { loading, createProduct } = useProductStore();
+	const { categories, fetchCategories } = useCategoryStore();
+
+	useEffect(() => {
+		fetchCategories();
+	}, [fetchCategories]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -107,8 +111,8 @@ const CreateProductForm = () => {
 				>
 					<option value="">Select a category</option>
 					{categories.map((category) => (
-						<option key={category} value={category}>
-							{category}
+						<option key={category._id} value={category.slug}>
+							{category.name}
 						</option>
 					))}
 				</FormInput>
