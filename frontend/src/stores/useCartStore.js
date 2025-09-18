@@ -73,7 +73,19 @@ export const useCartStore = create((set, get) => {
 			try {
 				const res = await axios.get(CART_API_PATH);
 
-				set({ cart: res.data });
+				// Normalize server response to a consistent cart item shape
+				// Expected shape by UI: { _id, name, description, image, price, quantity }
+				const normalized = Array.isArray(res.data)
+					? res.data.map((item) => {
+						// If server returns { product, quantity }, flatten it
+						if (item && item.product) {
+							return { ...item.product, quantity: item.quantity };
+						}
+						return item;
+					})
+					: [];
+
+				set({ cart: normalized });
 				get().calculateTotals();
 			}
 			catch (error) {
@@ -88,11 +100,12 @@ export const useCartStore = create((set, get) => {
 				toast.success("Product added to cart");
 
 				set((prevState) => {
+					// Ensure consistent shape in cart: flatten product fields
 					const existingItem = prevState.cart.find((item) => item._id === product._id);
 
 					const newCart = existingItem
-						? prevState.cart.map((item) => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item)
-						: [ ...prevState.cart, { product, quantity: 1 } ];
+						? prevState.cart.map((item) => (item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item))
+						: [ ...prevState.cart, { ...product, quantity: 1 } ];
 
 					return { cart: newCart };
 				});
