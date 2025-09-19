@@ -5,6 +5,11 @@ import { redis } from "../config/redis.js";
 import {EmailService} from "./EmailService.js";
 import {BadRequestError, NotFoundError, UnauthorizedError} from "../errors/apiErrors.js";
 
+const APP_URL =
+	process.env.NODE_ENV !== "production"
+		? process.env.DEVELOPMENT_CLIENT_URL
+		: process.env.APP_URL;
+
 export class AuthService {
 	constructor() {
 		this.emailService = new EmailService();
@@ -198,7 +203,7 @@ export class AuthService {
 
 		await user.save();
 
-		const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+		const resetPasswordUrl = `${APP_URL}/reset-password/${resetToken}`;
 
 		await this.emailService.sendPasswordResetEmail(email, resetPasswordUrl);
 
