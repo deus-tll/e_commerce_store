@@ -2,6 +2,8 @@ import express from "express";
 import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import authRouter from "./routers/auth.js";
 import productsRouter from "./routers/products.js";
@@ -12,8 +14,12 @@ import paymentsRouter from "./routers/payments.js";
 import analyticsRouter from "./routers/analytics.js";
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
+import {CategorySeeder} from "./seeders/CategorySeeder.js";
 
 const PORT = process.env.PORT || 3001;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -25,6 +31,7 @@ if (process.env.NODE_ENV !== "production") {
 		})
 	);
 }
+app.use("/public", express.static(path.join(__dirname, "../public")));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -39,7 +46,10 @@ app.use("/api/analytics", analyticsRouter);
 
 app.use(errorHandler);
 
-connectDB().then(() => {
+const categorySeeder = new CategorySeeder();
+
+connectDB().then(async () => {
+	await categorySeeder.seed();
 	app.listen(PORT, () => {
 		console.log(`Server is running on port ${PORT}`);
 	});

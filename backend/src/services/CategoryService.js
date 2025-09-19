@@ -27,7 +27,7 @@ export class CategoryService {
 		return slug;
 	}
 
-	async createCategory(name, image) {
+	async createCategory(name, image, options = { isPredefined: false }) {
 		if (!name || !name.trim()) {
 			throw new BadRequestError("Category name is required");
 		}
@@ -37,7 +37,12 @@ export class CategoryService {
 
 		let imageUrl = "";
 		if (image) {
-			imageUrl = await this.storageCategoryService.upload(image);
+			if (options.isPredefined) {
+				imageUrl = image;
+			}
+			else {
+				imageUrl = await this.storageCategoryService.upload(image);
+			}
 		}
 
 		return Category.create({ name: name.trim(), slug, image: imageUrl });
@@ -78,5 +83,9 @@ export class CategoryService {
 		await this.storageCategoryService.delete(category.image);
 
 		return category;
+	}
+
+	async countCategories() {
+		return await Category.countDocuments();
 	}
 }
