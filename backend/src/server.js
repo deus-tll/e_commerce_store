@@ -12,6 +12,7 @@ import cartRouter from "./routers/cart.js";
 import couponsRouter from "./routers/coupons.js";
 import paymentsRouter from "./routers/payments.js";
 import analyticsRouter from "./routers/analytics.js";
+import usersRouter from "./routers/users.js";
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
 import {CategorySeeder} from "./seeders/CategorySeeder.js";
@@ -44,6 +45,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponsRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/users", usersRouter);
 
 app.use(errorHandler);
 
