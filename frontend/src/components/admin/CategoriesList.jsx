@@ -44,9 +44,9 @@ const CategoriesList = () => {
 				</thead>
 				<tbody className="bg-gray-800 divide-y divide-gray-700">
 					{categories.map((cat) => (
-						<tr key={cat._id} className="hover:bg-gray-700">
+						<tr key={cat._id} className="hover:bg-gray-700 ">
 							<td className="px-6 py-4 whitespace-nowrap">
-								<img src={cat.image} alt={cat.name} className="h-10 w-10 object-cover rounded" />
+								<img src={cat.image} alt={cat.name} className="h-20 w-20 object-cover rounded" />
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								{editingId === cat._id ? (
