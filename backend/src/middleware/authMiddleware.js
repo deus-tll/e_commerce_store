@@ -1,5 +1,9 @@
 import jwt from "jsonwebtoken";
+
+import {UserService} from "../services/UserService.js";
 import {ForbiddenError, UnauthorizedError} from "../errors/apiErrors.js";
+
+const userService = new UserService();
 
 export const protectRoute = async (req, res, next) => {
 	try {
