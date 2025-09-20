@@ -1,4 +1,5 @@
 import {AuthService} from "../services/AuthService.js";
+import {BadRequestError} from "../errors/apiErrors.js";
 
 const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict" : "lax";
 
@@ -21,10 +22,28 @@ export class AuthController {
 		res.cookie("refreshToken", refreshToken, this.#setCookieToken(7 * 24 * 60 * 60 * 1000));
 	}
 
+	#clearCookies(res) {
+		res.clearCookie("accessToken", {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: SAME_SITE_COOKIE_SETTER
+		});
+		res.clearCookie("refreshToken", {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: SAME_SITE_COOKIE_SETTER
+		});
+	}
+
 	signup = async (req, res, next) => {
 		try {
 			const { name, email, password } = req.body;
-			const { user, tokens } = await this.authService.signup(name, email, password);
+
+			if (!name?.trim() || !email?.trim() || !password) {
+				throw new BadRequestError("Name, email and password are required");
+			}
+
+			const { user, tokens } = await this.authService.signup(name.trim(), email.trim(), password);
 
 			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
 
@@ -38,9 +57,15 @@ export class AuthController {
 	login = async (req, res, next) => {
 		try {
 			const { email, password } = req.body;
-			const { user, tokens } = await this.authService.login(email, password);
+
+			if (!email?.trim() || !password) {
+				throw new BadRequestError("Email and password are required");
+			}
+
+			const { user, tokens } = await this.authService.login(email.trim(), password);
 
 			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
+
 			return res.status(200).json(user);
 		}
 		catch (error) {
@@ -53,8 +78,8 @@ export class AuthController {
 			const { refreshToken } = req.cookies;
 			await this.authService.logout(refreshToken);
 
-			res.clearCookie("accessToken");
-			res.clearCookie("refreshToken");
+			this.#clearCookies(res);
+
 			return res.status(204).end();
 		}
 		catch (error) {
@@ -78,6 +103,7 @@ export class AuthController {
 			const { accessToken } = await this.authService.refreshAccessToken(refreshToken);
 
 			res.cookie("accessToken", accessToken, this.#setCookieToken(15 * 60 * 1000));
+
 			return res.status(200).json({ message: "Token refreshed successfully" });
 		}
 		catch (error) {
@@ -88,7 +114,12 @@ export class AuthController {
 	verifyEmail = async (req, res, next) => {
 		try {
 			const { code } = req.body;
-			const { user, tokens } = await this.authService.verifyEmail(code);
+
+			if (!code?.trim()) {
+				throw new BadRequestError("Verification code is required");
+			}
+
+			const { user, tokens } = await this.authService.verifyEmail(code.trim());
 
 			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
 
@@ -112,7 +143,12 @@ export class AuthController {
 	forgotPassword = async (req, res, next) => {
 		try {
 			const { email } = req.body;
-			const result = await this.authService.forgotPassword(email);
+
+			if (!email?.trim()) {
+				throw new BadRequestError("Email is required");
+			}
+
+			const result = await this.authService.forgotPassword(email.trim());
 
 			return res.status(200).json(result);
 		}
@@ -125,11 +161,43 @@ export class AuthController {
 		try {
 			const { token } = req.params;
 			const { password } = req.body;
-			const { user, tokens } = await this.authService.resetPassword(token, password);
+
+			if (!token?.trim()) {
+				throw new BadRequestError("Reset token is required");
+			}
+
+			if (!password) {
+				throw new BadRequestError("Password is required");
+			}
+
+			const { user, tokens } = await this.authService.resetPassword(token.trim(), password);
 
 			this.#setCookies(res, tokens.accessToken, tokens.refreshToken);
 
 			return res.status(200).json(user);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
+	changePassword = async (req, res, next) => {
+		try {
+			const { currentPassword, newPassword } = req.body;
+
+			if (!currentPassword || !newPassword) {
+				throw new BadRequestError("Current password and new password are required");
+			}
+
+			const result = await this.authService.changePassword(
+				req.user._id,
+				currentPassword,
+				newPassword
+			);
+
+			this.#clearCookies(res);
+
+			return res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);

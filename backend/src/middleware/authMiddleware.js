@@ -1,19 +1,33 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import {ForbiddenError, UnauthorizedError} from "../errors/apiErrors.js";
 
 export const protectRoute = async (req, res, next) => {
 	try {
 		const accessToken = req.cookies.accessToken;
 
 		if (!accessToken) {
-			return res.status(401).json({ message: "Unauthorized - No access token provided" });
+			throw new UnauthorizedError("No access token provided");
 		}
 
-		const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-		const user = await User.findById(decoded.userId);
+		let decoded;
+		try {
+			decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+		} catch (jwtError) {
+			if (jwtError.name === "JsonWebTokenError") {
+				throw new UnauthorizedError("Invalid token");
+			}
+			if (jwtError.name === "TokenExpiredError") {
+				throw new UnauthorizedError("Access token expired");
+			}
+			throw jwtError;
+		}
+
+		const user = await userService.getUserById(decoded.userId, {
+			throwIfNotFound: false
+		});
 
 		if (!user) {
-			return res.status(401).json({ message: "User not found" });
+			throw new UnauthorizedError("User not found");
 		}
 
 		req.user = user;
@@ -21,23 +35,31 @@ export const protectRoute = async (req, res, next) => {
 		next();
 	}
 	catch (error) {
-		if (error.name === "JsonWebTokenError") {
-			return res.status(401).json({ message: "Unauthorized - Invalid token" });
-		}
-		if (error.name === "TokenExpiredError") {
-			return res.status(401).json({ message: "Unauthorized - Access token expired" });
-		}
-
 		console.error("Error in protectRoute middleware", error.message);
-		res.status(500).json({ message: error.message });
+		next(error);
 	}
 };
 
 export const adminRoute = async (req, res, next) => {
-	if (req.user && req.user.role === "admin") {
-		next();
+	if (!req.user) {
+		throw new UnauthorizedError("User not authenticated");
 	}
-	else {
-		return res.status(403).json({ message: "Access denied - Admin only" });
+
+	if (req.user.role !== "admin") {
+		throw new ForbiddenError("Admin privileges required");
 	}
+
+	next();
+};
+
+export const requireVerified = (req, res, next) => {
+	if (!req.user) {
+		throw new UnauthorizedError("User not authenticated");
+	}
+
+	if (!req.user.isVerified) {
+		throw new ForbiddenError("Email verification required");
+	}
+
+	next();
 };
