@@ -25,6 +25,24 @@ export class ProductService {
 		return Product.find({}).populate({ path: "category", select: "name slug" });
 	}
 
+	async getProductById(productId, options = {}) {
+		const { populated = false, throwIfNotFound = true } = options;
+
+		let query = Product.findById(productId);
+
+		if (populated) {
+			query = query.populate({ path: "category", select: "name slug" });
+		}
+
+		const product = await query;
+
+		if (!product && throwIfNotFound) {
+			throw new NotFoundError("Product not found");
+		}
+
+		return product;
+	}
+
 	async getFeaturedProducts() {
 		let featuredProducts = await redis.get("featured_products");
 		if (featuredProducts) {
