@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, MailCheck } from 'lucide-react';
 
-import { useUserStore } from '../stores/useUserStore.js';
+import { useAuthStore } from '../stores/useAuthStore.js';
 
 import SubmitButton from '../components/SubmitButton.jsx';
 
@@ -14,7 +14,7 @@ const formatDate = (dateString) => {
 
 const ProfilePage = () => {
 	const navigate = useNavigate();
-	const { user, loading, resendVerification } = useUserStore();
+	const { user, loading, resendVerification } = useAuthStore();
 
 	if (!user) return null;
 

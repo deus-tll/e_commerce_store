@@ -5,14 +5,14 @@ import {toast} from "react-hot-toast";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import SubmitButton from "../../components/SubmitButton.jsx";
-import {useUserStore} from "../../stores/useUserStore.js";
+import {useAuthStore} from "../../stores/useAuthStore.js";
 
 const EmailVerificationPage = () => {
 	const [code, setCode] = useState(["", "", "", "", "", ""]);
 	const inputRefs = useRef([]);
 	const navigate = useNavigate();
 
-	const { loading, verifyEmail } = useUserStore();
+	const { loading, verifyEmail } = useAuthStore();
 
 	const handleChange = (index, value) => {
 		const newCode = [...code];

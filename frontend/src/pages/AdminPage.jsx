@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {PlusCircle, ShoppingBasket, BarChart} from "lucide-react";
+import {PlusCircle, ShoppingBasket, BarChart, Users, UserCog} from "lucide-react";
 import { motion } from "framer-motion";
 
 import {useProductStore} from "../stores/useProductStore.js";
@@ -9,11 +9,15 @@ import CreateCategoryForm from "../components/admin/CreateCategoryForm.jsx";
 import CategoriesList from "../components/admin/CategoriesList.jsx";
 import ProductsList from "../components/admin/ProductsList.jsx";
 import AnalyticsTab from "../components/admin/AnalyticsTab.jsx";
+import UsersList from "../components/admin/UsersList.jsx";
+import UserStats from "../components/admin/UserStats.jsx";
 
 const tabs = [
 	{ id: "create", label: "Create Product", icon: PlusCircle },
 	{ id: "categories", label: "Create Category", icon: PlusCircle },
 	{ id: "products", label: "Products", icon: ShoppingBasket },
+	{ id: "users", label: "Users", icon: Users },
+	{ id: "user-stats", label: "User Stats", icon: UserCog },
 	{ id: "analytics", label: "Analytics", icon: BarChart },
 ];
 
@@ -64,6 +68,8 @@ const AdminPage = () => {
 					</div>
 				)}
 				{activeTab === "products" && <ProductsList />}
+				{activeTab === "users" && <UsersList />}
+				{activeTab === "user-stats" && <UserStats />}
 				{activeTab === "analytics" && <AnalyticsTab />}
 			</div>
 		</div>

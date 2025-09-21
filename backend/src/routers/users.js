@@ -9,8 +9,8 @@ router.use(protectRoute);
 router.use(adminRoute);
 
 router.get("/", userController.getAllUsers);
-router.get("/:userId", userController.getUserById);
 router.get("/stats", userController.getUserStats);
+router.get("/:userId", userController.getUserById);
 router.post("/", userController.createUser);
 router.put("/:userId", userController.updateUser);
 router.delete("/:userId", userController.deleteUser);

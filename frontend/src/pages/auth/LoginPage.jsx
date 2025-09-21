@@ -2,7 +2,7 @@ import {useState} from 'react';
 import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight, LogIn } from "lucide-react";
 
-import {useUserStore} from "../../stores/useUserStore.js";
+import {useAuthStore} from "../../stores/useAuthStore.js";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import FormInput from "../../components/FormInput.jsx";
@@ -14,7 +14,7 @@ const LoginPage = () => {
 		password: ""
 	});
 
-	const { loading, login } = useUserStore();
+	const { loading, login } = useAuthStore();
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;

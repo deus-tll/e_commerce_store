@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, User } from "lucide-react";
 
-import {useUserStore} from "../stores/useUserStore.js";
+import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
 
 const Navbar = () => {
-	const { user, logout } = useUserStore();
+	const { user, logout } = useAuthStore();
 	const { cart } = useCartStore();
 	const isAdmin = user?.role === "admin";
 

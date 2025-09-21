@@ -1,7 +1,7 @@
 import {useEffect} from "react";
 import {Routes, Route, Navigate} from "react-router-dom";
 
-import {useUserStore} from "../stores/useUserStore.js";
+import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
 
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
@@ -14,7 +14,7 @@ import {AdminRoutes} from "../routes/AdminRoutes.jsx";
 import {ProtectedRoutes} from "../routes/ProtectedRoutes.jsx";
 
 const AppRouter = () => {
-	const { user, checkAuth, checkingAuth } = useUserStore();
+	const { user, checkAuth, checkingAuth } = useAuthStore();
 	const { getCartItems } = useCartStore();
 
 	useEffect(() => {
