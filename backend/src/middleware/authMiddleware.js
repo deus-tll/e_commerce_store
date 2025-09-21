@@ -1,39 +1,21 @@
-import jwt from "jsonwebtoken";
+import {AuthService} from "../services/AuthService.js";
 
-import {UserService} from "../services/UserService.js";
-import {ForbiddenError, UnauthorizedError} from "../errors/apiErrors.js";
+import {AccountNotVerifiedError, ForbiddenError, InvalidTokenError, UnauthorizedError} from "../errors/apiErrors.js";
 
-const userService = new UserService();
+const authService = new AuthService();
 
 export const protectRoute = async (req, res, next) => {
 	try {
-		const accessToken = req.cookies.accessToken;
+		const accessToken = req.cookies.accessToken ||
+			(req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
 		if (!accessToken) {
-			throw new UnauthorizedError("No access token provided");
+			throw new InvalidTokenError("No access token provided");
 		}
 
-		let decoded;
-		try {
-			decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-		} catch (jwtError) {
-			if (jwtError.name === "JsonWebTokenError") {
-				throw new UnauthorizedError("Invalid token");
-			}
-			if (jwtError.name === "TokenExpiredError") {
-				throw new UnauthorizedError("Access token expired");
-			}
-			throw jwtError;
-		}
+		const { userId, user } = await authService.validateAccessToken(accessToken);
 
-		const user = await userService.getUserById(decoded.userId, {
-			throwIfNotFound: false
-		});
-
-		if (!user) {
-			throw new UnauthorizedError("User not found");
-		}
-
+		req.userId = userId;
 		req.user = user;
 
 		next();
@@ -45,25 +27,35 @@ export const protectRoute = async (req, res, next) => {
 };
 
 export const adminRoute = async (req, res, next) => {
-	if (!req.user) {
-		throw new UnauthorizedError("User not authenticated");
-	}
+	try {
+		if (!req.user) {
+			throw new InvalidTokenError("Authentication required");
+		}
 
-	if (req.user.role !== "admin") {
-		throw new ForbiddenError("Admin privileges required");
-	}
+		if (req.user.role !== "admin") {
+			throw new ForbiddenError("Admin privileges required");
+		}
 
-	next();
+		next();
+	}
+	catch (error) {
+		next(error);
+	}
 };
 
 export const requireVerified = (req, res, next) => {
-	if (!req.user) {
-		throw new UnauthorizedError("User not authenticated");
-	}
+	try {
+		if (!req.user) {
+			throw new UnauthorizedError("Authentication required");
+		}
 
-	if (!req.user.isVerified) {
-		throw new ForbiddenError("Email verification required");
-	}
+		if (!req.user.isVerified) {
+			throw new AccountNotVerifiedError("Email verification required");
+		}
 
-	next();
+		next();
+	}
+	catch (error) {
+		next(error);
+	}
 };

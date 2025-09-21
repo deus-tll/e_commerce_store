@@ -5,6 +5,15 @@ import {handleRequestError} from "../utils/errorHandler.js";
 
 const AUTH_API_PATH = "/auth";
 
+const NO_RETRY_URLS = [
+	`${AUTH_API_PATH}/login`,
+	`${AUTH_API_PATH}/signup`,
+	`${AUTH_API_PATH}/forgot-password`,
+	`${AUTH_API_PATH}/refresh-token`,
+	`${AUTH_API_PATH}/verify-email`,
+	`${AUTH_API_PATH}/reset-password`
+];
+
 export const useAuthStore = create((set, get) => ({
 	user: null,
 	loading: false,
@@ -40,6 +49,7 @@ export const useAuthStore = create((set, get) => ({
 		}
 		catch (error) {
 			handleRequestError(error);
+			throw error;
 		}
 		finally {
 			set({ loading: false });
@@ -52,7 +62,10 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: null });
 		}
 		catch (error) {
-			handleRequestError(error);
+			handleRequestError(error, "", false);
+		}
+		finally {
+			set({ user: null });
 		}
 	},
 
@@ -65,7 +78,7 @@ export const useAuthStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ user: null });
-			handleRequestError(error, "", false);
+			console.debug("Auth check failed:", error.message);
 		}
 		finally {
 			set({ checkingAuth: false });
@@ -99,6 +112,7 @@ export const useAuthStore = create((set, get) => ({
 		}
 		catch (error) {
 			handleRequestError(error);
+			throw error;
 		}
 		finally {
 			set({ loading: false });
@@ -113,6 +127,7 @@ export const useAuthStore = create((set, get) => ({
 		}
 		catch (error) {
 			handleRequestError(error);
+			throw error;
 		}
 		finally {
 			set({ loading: false });
@@ -153,38 +168,88 @@ export const useAuthStore = create((set, get) => ({
 		finally {
 			set({ loading: false });
 		}
+	},
+
+	changePassword: async ({ currentPassword, newPassword, confirmPassword }) => {
+		set({ loading: true });
+
+		try {
+			if (newPassword !== confirmPassword) {
+				set({ loading: false });
+				throw new Error("New passwords don't match");
+			}
+
+			await axios.post(`${AUTH_API_PATH}/change-password`, {
+				currentPassword,
+				newPassword
+			});
+
+			set({ user: null });
+		}
+		catch (error) {
+			handleRequestError(error);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
 	}
 }));
 
 let refreshPromise = null;
+
+function canRetryRequest(error, originalRequest) {
+	if (error.response?.status !== 401) return false;
+
+	if (originalRequest._retry) return false;
+
+	const url = originalRequest.url || '';
+	if (NO_RETRY_URLS.some(noRetryUrl => url.includes(noRetryUrl))) return false;
+
+	const errorCode = error.response?.data?.code;
+
+	return errorCode === 'TOKEN_EXPIRED';
+}
 
 axios.interceptors.response.use(
 	(response) => response,
 	async (error) => {
 		const originalRequest = error.config;
 
-		if (error.response?.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
-
-			try {
-				if (refreshPromise) {
-					await refreshPromise;
-					return axios(originalRequest);
-				}
-
-				refreshPromise = useAuthStore.getState().refreshToken();
-				await refreshPromise;
-				refreshPromise = null;
-
-				return axios(originalRequest);
-			}
-			catch (refreshError) {
-				await useAuthStore.getState().logout();
-				return Promise.reject(refreshError);
-			}
+		if (!canRetryRequest(error, originalRequest)) {
+			return Promise.reject(error);
 		}
 
-		return Promise.reject(error);
+		originalRequest._retry = true;
+
+		try {
+			if (refreshPromise) {
+				await refreshPromise;
+				return axios(originalRequest);
+			}
+
+			refreshPromise = useAuthStore.getState().refreshToken();
+			await refreshPromise;
+			refreshPromise = null;
+
+			return axios(originalRequest);
+		}
+		catch (refreshError) {
+			refreshPromise = null;
+
+			await useAuthStore.getState().logout();
+
+			if (typeof window !== 'undefined') {
+				const currentPath = window.location.pathname;
+				const publicPaths = ["/login", "/signup", "verify-email", "/forgot-password", "/reset-password"];
+				const isHomePage = currentPath === '/';
+
+				if (!publicPaths.includes(currentPath) && !isHomePage) {
+					window.location.href = '/login';
+				}
+			}
+
+			return Promise.reject(refreshError);
+		}
 	}
 );
-

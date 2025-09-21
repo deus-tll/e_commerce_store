@@ -1,12 +1,16 @@
 import jwt from "jsonwebtoken";
-
-import User from "../models/User.js";
 import {redis} from "../config/redis.js";
 
 import {UserService} from "./UserService.js";
 import {EmailService} from "./EmailService.js";
 
-import {BadRequestError, NotFoundError, UnauthorizedError} from "../errors/apiErrors.js";
+import {
+	BadRequestError,
+	InvalidCredentialsError,
+	InvalidTokenError,
+	TokenExpiredError
+} from "../errors/apiErrors.js";
+import {TokenTypes} from "../utils/constants.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== "production"
@@ -53,6 +57,28 @@ export class AuthService {
 		await redis.del(`refresh_token:${userId}`);
 	}
 
+	async #verifyToken(token, secret, type) {
+		try {
+			return jwt.verify(token, secret)
+		}
+		catch (error) {
+			if (error.name === 'TokenExpiredError') {
+				switch (type) {
+					case TokenTypes.ACCESS_TOKEN:
+						throw new TokenExpiredError("Access token expired");
+					case TokenTypes.REFRESH_TOKEN:
+						throw new TokenExpiredError("Refresh token expired");
+				}
+			}
+			switch (type) {
+				case TokenTypes.ACCESS_TOKEN:
+					throw new InvalidTokenError("Invalid access token");
+				case TokenTypes.REFRESH_TOKEN:
+					throw new InvalidTokenError("Invalid refresh token");
+			}
+		}
+	}
+
 	async signup(name, email, password) {
 		const user = await this.userService.createUser({
 			name,
@@ -86,7 +112,7 @@ export class AuthService {
 		});
 
 		if (!(await user.comparePassword(password))) {
-			throw new UnauthorizedError("Invalid credentials");
+			throw new InvalidCredentialsError("Invalid credentials");
 		}
 
 		const { accessToken, refreshToken } = this.#generateTokens(user._id);
@@ -100,7 +126,7 @@ export class AuthService {
 	async logout(refreshToken) {
 		if (refreshToken) {
 			try {
-				const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+				const decoded = await this.#verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET, TokenTypes.REFRESH_TOKEN);
 				await this.#removeRefreshToken(decoded.userId);
 			}
 			catch (error) {
@@ -114,23 +140,31 @@ export class AuthService {
 		return this.userService.toDTO(user);
 	}
 
-	async refreshAccessToken(refreshToken) {
-		if (!refreshToken) {
-			throw new UnauthorizedError("No refresh token provided");
+	async validateAccessToken(token) {
+		const decoded = await this.#verifyToken(token, process.env.ACCESS_TOKEN_SECRET, TokenTypes.ACCESS_TOKEN);
+
+		const user = await this.userService.getUserById(decoded.userId, {
+			throwIfNotFound: false
+		});
+
+		if (!user) {
+			throw new InvalidTokenError("User not found");
 		}
 
-		let decoded;
-		try {
-			decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+		return { userId: decoded.userId, user };
+	}
+
+	async refreshAccessToken(refreshToken) {
+		if (!refreshToken) {
+			throw new InvalidTokenError("No refresh token provided");
 		}
-		catch (error) {
-			throw new UnauthorizedError("Invalid refresh token");
-		}
+
+		const decoded = await this.#verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET, TokenTypes.REFRESH_TOKEN);
 
 		const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
 
 		if (storedToken !== refreshToken) {
-			throw new UnauthorizedError("Invalid refresh token provided");
+			throw new InvalidTokenError("Refresh token not found or revoked");
 		}
 
 		await this.userService.getUserById(decoded.userId);
@@ -214,7 +248,7 @@ export class AuthService {
 		});
 
 		if (!(await user.comparePassword(currentPassword))) {
-			throw new UnauthorizedError("Current password is incorrect");
+			throw new InvalidCredentialsError("Current password is incorrect");
 		}
 
 		await this.userService.changePassword(user, newPassword);
