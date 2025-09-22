@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 import {ArrowLeft, Mail} from "lucide-react";
 import { motion } from 'framer-motion';
 
-import {useUserStore} from "../../stores/useUserStore.js";
+import {useAuthStore} from "../../stores/useAuthStore.js";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import FormInput from "../../components/FormInput.jsx";
@@ -13,7 +13,7 @@ const ForgotPasswordPage = () => {
 	const [email, setEmail] = useState("");
 	const [isSubmitted, setIsSubmitted] = useState(false);
 
-	const { loading, forgotPassword } = useUserStore();
+	const { loading, forgotPassword } = useAuthStore();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();

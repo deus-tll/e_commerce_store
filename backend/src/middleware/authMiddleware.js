@@ -1,43 +1,61 @@
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import {AuthService} from "../services/AuthService.js";
+
+import {AccountNotVerifiedError, ForbiddenError, InvalidTokenError, UnauthorizedError} from "../errors/apiErrors.js";
+
+const authService = new AuthService();
 
 export const protectRoute = async (req, res, next) => {
 	try {
-		const accessToken = req.cookies.accessToken;
+		const accessToken = req.cookies.accessToken ||
+			(req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
 		if (!accessToken) {
-			return res.status(401).json({ message: "Unauthorized - No access token provided" });
+			throw new InvalidTokenError("No access token provided");
 		}
 
-		const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-		const user = await User.findById(decoded.userId);
+		const { userId, user } = await authService.validateAccessToken(accessToken);
 
-		if (!user) {
-			return res.status(401).json({ message: "User not found" });
-		}
-
+		req.userId = userId;
 		req.user = user;
 
 		next();
 	}
 	catch (error) {
-		if (error.name === "JsonWebTokenError") {
-			return res.status(401).json({ message: "Unauthorized - Invalid token" });
-		}
-		if (error.name === "TokenExpiredError") {
-			return res.status(401).json({ message: "Unauthorized - Access token expired" });
-		}
-
 		console.error("Error in protectRoute middleware", error.message);
-		res.status(500).json({ message: error.message });
+		next(error);
 	}
 };
 
 export const adminRoute = async (req, res, next) => {
-	if (req.user && req.user.role === "admin") {
+	try {
+		if (!req.user) {
+			throw new InvalidTokenError("Authentication required");
+		}
+
+		if (req.user.role !== "admin") {
+			throw new ForbiddenError("Admin privileges required");
+		}
+
 		next();
 	}
-	else {
-		return res.status(403).json({ message: "Access denied - Admin only" });
+	catch (error) {
+		next(error);
+	}
+};
+
+export const requireVerified = (req, res, next) => {
+	try {
+		if (!req.user) {
+			throw new UnauthorizedError("Authentication required");
+		}
+
+		if (!req.user.isVerified) {
+			throw new AccountNotVerifiedError("Email verification required");
+		}
+
+		next();
+	}
+	catch (error) {
+		next(error);
 	}
 };

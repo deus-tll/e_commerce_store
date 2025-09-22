@@ -3,6 +3,11 @@ import Order from "../models/Order.js";
 import {stripe} from "../config/stripe.js";
 import {BadRequestError} from "../errors/apiErrors.js";
 
+const APP_URL =
+	process.env.NODE_ENV !== "production"
+		? process.env.DEVELOPMENT_CLIENT_URL
+		: process.env.APP_URL;
+
 const TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS = process.env.TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS || 20000;
 
 export class PaymentService {
@@ -83,8 +88,8 @@ export class PaymentService {
 			payment_method_types: ["card"],
 			line_items: lineItems,
 			mode: "payment",
-			success_url: `${process.env.CLIENT_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
-			cancel_url: `${process.env.CLIENT_URL}/purchase-cancel`,
+			success_url: `${APP_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
+			cancel_url: `${APP_URL}/purchase-cancel`,
 			discounts: coupon
 				? [
 					{

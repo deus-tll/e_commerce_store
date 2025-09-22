@@ -3,26 +3,33 @@ import { create } from "zustand";
 import axios from "../config/axios.js";
 import {handleRequestError} from "../utils/errorHandler.js";
 
-const AUTH_API_PATH = "/auth";
+const USERS_API_PATH = "/users";
 
 export const useUserStore = create((set, get) => ({
-	user: null,
+	users: [],
+	stats: null,
+	pagination: null,
 	loading: false,
-	checkingAuth: true,
+	error: null,
 
-	signup: async ({ name, email, password, confirmPassword }) => {
-		set({ loading: true });
+	fetchUsers: async (page = 1, limit = 10, filters = {}) => {
+		set({ loading: true, error: null });
 
 		try {
-			if (password !== confirmPassword) {
-				set({ loading: false });
-				throw new Error("Passwords don't match");
-			}
+			const params = new URLSearchParams({
+				page: page.toString(),
+				limit: limit.toString(),
+				...filters
+			});
 
-			const res = await axios.post(`${AUTH_API_PATH}/signup`, { name, email, password });
-			set({ user: res.data });
+			const res = await axios.get(`${USERS_API_PATH}?${params}`);
+			set({ 
+				users: res.data.users,
+				pagination: res.data.pagination
+			});
 		}
 		catch (error) {
+			set({ error: error.message });
 			handleRequestError(error);
 			throw error;
 		}
@@ -31,101 +38,29 @@ export const useUserStore = create((set, get) => ({
 		}
 	},
 
-	login: async ({ email, password }) => {
-		set({ loading: true });
-
+	fetchStats: async () => {
 		try {
-			const res = await axios.post(`${AUTH_API_PATH}/login`, { email, password });
-			set({ user: res.data });
+			const res = await axios.get(`${USERS_API_PATH}/stats`);
+			set({ stats: res.data });
 		}
 		catch (error) {
 			handleRequestError(error);
-		}
-		finally {
-			set({ loading: false });
+			throw error;
 		}
 	},
 
-	logout: async () => {
-		try {
-			await axios.post(`${AUTH_API_PATH}/logout`);
-			set({ user: null });
-		}
-		catch (error) {
-			handleRequestError(error);
-		}
-	},
-
-	checkAuth: async () => {
-		set({ checkingAuth: true });
+	createUser: async (userData) => {
+		set({ loading: true, error: null });
 
 		try {
-			const res = await axios.get(`${AUTH_API_PATH}/profile`);
-			set({ user: res.data });
-		}
-		catch (error) {
-			set({ user: null });
-			handleRequestError(error, "", false);
-		}
-		finally {
-			set({ checkingAuth: false });
-		}
-	},
+			const res = await axios.post(USERS_API_PATH, userData);
 
-	refreshToken: async () => {
-		if (get().checkingAuth) return;
+			await get().fetchUsers();
 
-		set({ checkingAuth: true });
-
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/refresh-token`);
 			return res.data;
 		}
 		catch (error) {
-			set({ user: null });
-			throw error;
-		}
-		finally {
-			set({ checkingAuth: false });
-		}
-	},
-
-	verifyEmail: async (code) => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/verify-email`, { code });
-			set({ user: res.data });
-		}
-		catch (error) {
-			handleRequestError(error);
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	resendVerification: async () => {
-		set({ loading: true });
-
-		try {
-			await axios.post(`${AUTH_API_PATH}/resend-verification`);
-		}
-		catch (error) {
-			handleRequestError(error);
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	forgotPassword: async (email) => {
-		set({ loading: true });
-
-		try {
-			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
-		}
-		catch (error) {
+			set({ error: error.message });
 			handleRequestError(error);
 			throw error;
 		}
@@ -134,56 +69,45 @@ export const useUserStore = create((set, get) => ({
 		}
 	},
 
-	resetPassword: async ({token, password, confirmPassword}) => {
-		set({ loading: true });
+	updateUser: async (userId, userData) => {
+		set({ loading: true, error: null });
 
 		try {
-			if (password !== confirmPassword) {
-				set({ loading: false });
-				throw new Error("Passwords don't match");
-			}
+			const res = await axios.put(`${USERS_API_PATH}/${userId}`, userData);
 
-			const res = await axios.post(`${AUTH_API_PATH}/reset-password/${token}`, { password });
-			set({ user: res.data });
+			await get().fetchUsers();
+
+			return res.data;
 		}
 		catch (error) {
+			set({ error: error.message });
 			handleRequestError(error);
 			throw error;
 		}
 		finally {
 			set({ loading: false });
 		}
+	},
+
+	deleteUser: async (userId) => {
+		set({ loading: true, error: null });
+
+		try {
+			await axios.delete(`${USERS_API_PATH}/${userId}`);
+
+			await get().fetchUsers();
+		}
+		catch (error) {
+			set({ error: error.message });
+			handleRequestError(error);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	clearError: () => {
+		set({ error: null });
 	}
 }));
-
-let refreshPromise = null;
-
-axios.interceptors.response.use(
-	(response) => response,
-	async (error) => {
-		const originalRequest = error.config;
-
-		if (error.response?.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
-
-			try {
-				if (refreshPromise) {
-					await refreshPromise;
-					return axios(originalRequest);
-				}
-
-				refreshPromise = useUserStore.getState().refreshToken();
-				await refreshPromise;
-				refreshPromise = null;
-
-				return axios(originalRequest);
-			}
-			catch (refreshError) {
-				await useUserStore.getState().logout();
-				return Promise.reject(refreshError);
-			}
-		}
-
-		return Promise.reject(error);
-	}
-);

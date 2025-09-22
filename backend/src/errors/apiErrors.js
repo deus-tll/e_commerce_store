@@ -1,8 +1,9 @@
 export class ApiError extends Error {
-	constructor(message, status = 500) {
+	constructor(message, status = 500, code = null) {
 		super(message);
 		this.name = this.constructor.name;
 		this.status = status;
+		this.code = code;
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
@@ -14,8 +15,32 @@ export class BadRequestError extends ApiError {
 }
 
 export class UnauthorizedError extends ApiError {
-	constructor(message = "Unauthorized") {
-		super(message, 401);
+	constructor(message = "Unauthorized", code = "UNAUTHORIZED") {
+		super(message, 401, code);
+	}
+}
+
+export class InvalidCredentialsError extends UnauthorizedError {
+	constructor(message = "Invalid credentials") {
+		super(message);
+	}
+}
+
+export class TokenExpiredError extends UnauthorizedError {
+	constructor(message = "Token expired") {
+		super(message, "TOKEN_EXPIRED");
+	}
+}
+
+export class InvalidTokenError extends UnauthorizedError {
+	constructor(message = "Invalid token") {
+		super(message);
+	}
+}
+
+export class AccountNotVerifiedError extends UnauthorizedError {
+	constructor(message = "Account not verified") {
+		super(message);
 	}
 }
 

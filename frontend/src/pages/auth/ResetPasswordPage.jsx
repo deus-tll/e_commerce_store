@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {Lock} from "lucide-react";
 import {toast} from "react-hot-toast";
 
-import {useUserStore} from "../../stores/useUserStore.js";
+import {useAuthStore} from "../../stores/useAuthStore.js";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import FormInput from "../../components/FormInput.jsx";
@@ -18,7 +18,7 @@ const ResetPasswordPage = () => {
 	const { token } = useParams();
 	const navigate = useNavigate();
 
-	const { loading, resetPassword } = useUserStore();
+	const { loading, resetPassword } = useAuthStore();
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;

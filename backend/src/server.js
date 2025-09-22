@@ -12,9 +12,12 @@ import cartRouter from "./routers/cart.js";
 import couponsRouter from "./routers/coupons.js";
 import paymentsRouter from "./routers/payments.js";
 import analyticsRouter from "./routers/analytics.js";
+import usersRouter from "./routers/users.js";
+import reviewsRouter from "./routers/reviews.js";
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
 import {CategorySeeder} from "./seeders/CategorySeeder.js";
+import {AdminSeeder} from "./seeders/AdminSeeder.js";
 
 const PORT = process.env.PORT || 3001;
 
@@ -43,13 +46,18 @@ app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponsRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/reviews", reviewsRouter);
 
 app.use(errorHandler);
 
 const categorySeeder = new CategorySeeder();
+const adminSeeder = new AdminSeeder();
 
 connectDB().then(async () => {
 	await categorySeeder.seed();
+	await adminSeeder.seed();
+
 	app.listen(PORT, () => {
 		console.log(`Server is running on port ${PORT}`);
 	});

@@ -1,8 +1,8 @@
 import {Navigate} from "react-router-dom";
-import {useUserStore} from "../stores/useUserStore.js";
+import {useAuthStore} from "../stores/useAuthStore.js";
 
 export const RedirectAuthenticatedUser = ({children}) => {
-	const { user } = useUserStore();
+	const { user } = useAuthStore();
 
 	if (user) {
 		return <Navigate to="/" replace />;
@@ -12,7 +12,7 @@ export const RedirectAuthenticatedUser = ({children}) => {
 }
 
 export const ProtectedAdminRoute = ({children}) => {
-	const { user } = useUserStore();
+	const { user } = useAuthStore();
 
 	if (!user) {
 		return <Navigate to="/login" replace />;
@@ -26,7 +26,7 @@ export const ProtectedAdminRoute = ({children}) => {
 }
 
 export const ProtectedRoute = ({children}) => {
-	const { user } = useUserStore();
+	const { user } = useAuthStore();
 
 	if (!user) {
 		return <Navigate to="/login" replace />;

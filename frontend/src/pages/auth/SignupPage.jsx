@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {Link, useNavigate} from "react-router-dom";
 import { UserPlus, Mail, Lock, User, ArrowRight } from "lucide-react";
 
-import {useUserStore} from "../../stores/useUserStore.js";
+import {useAuthStore} from "../../stores/useAuthStore.js";
 
 import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
 import FormInput from "../../components/FormInput.jsx";
@@ -18,7 +18,7 @@ const SignupPage = () => {
 
 	const navigate = useNavigate();
 
-	const { loading, signup } = useUserStore();
+	const { loading, signup } = useAuthStore();
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
