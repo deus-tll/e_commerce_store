@@ -28,5 +28,3 @@ const Table = ({ columns = [], data = [], rowKey }) => {
 };
 
 export default Table;
-
-

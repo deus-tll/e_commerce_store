@@ -1,13 +1,26 @@
-import { Trash, Star } from "lucide-react";
+import { Trash, Star, Pencil, Search } from "lucide-react";
 import IconButton from "../ui/IconButton.jsx";
 import Card from "../ui/Card.jsx";
 import Table from "../ui/Table.jsx";
 import {useProductStore} from "../../stores/useProductStore.js";
 import { formatCurrency } from "../../utils/format.js";
 import EmptyState from "../ui/EmptyState.jsx";
+import Pagination from "../ui/Pagination.jsx";
+import { useState, useEffect } from "react";
+import ProductEditForm from "./ProductEditForm.jsx";
+import Toolbar from "../ui/Toolbar.jsx";
+import Button from "../ui/Button.jsx";
+import { Input } from "../ui/Input.jsx";
 
-const ProductsList = () => {
-    const { deleteProduct, toggleFeaturedProduct, products } = useProductStore();
+const ProductsList = ({ onCreate }) => {
+    const { deleteProduct, toggleFeaturedProduct, products, pagination, fetchAllProducts } = useProductStore();
+    const [page, setPage] = useState(1);
+    const [editing, setEditing] = useState(null);
+    const [search, setSearch] = useState("");
+
+    useEffect(() => {
+        fetchAllProducts(page, 10);
+    }, [page, fetchAllProducts]);
 
     const columns = [
         {
@@ -58,21 +71,59 @@ const ProductsList = () => {
             title: 'Actions',
             dataIndex: 'actions',
             render: (_, product) => (
-                <IconButton variant="ghost" onClick={() => deleteProduct(product._id)} className="text-red-400 hover:text-red-300">
-                    <Trash className="h-5 w-5" />
-                </IconButton>
+                <div className="flex gap-2">
+                    <IconButton variant="ghost" onClick={() => setEditing(product)} className="text-emerald-400 hover:text-emerald-300">
+                        <Pencil className="h-5 w-5" />
+                    </IconButton>
+                    <IconButton variant="ghost" onClick={() => deleteProduct(product._id)} className="text-red-400 hover:text-red-300">
+                        <Trash className="h-5 w-5" />
+                    </IconButton>
+                </div>
             )
         }
     ];
 
+    const filtered = search.trim() ? products.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.category && (typeof p.category === 'object' ? p.category.name : p.category).toLowerCase().includes(search.toLowerCase()))
+    ) : products;
+
     return (
-        <Card className="overflow-hidden max-w-4xl mx-auto">
-            {(!products || products.length === 0) ? (
-                <EmptyState title="No products" description="Create a product to get started." />
-            ) : (
-                <Table columns={columns} data={products} rowKey="_id" />
-            )}
-        </Card>
+        <div className="max-w-7xl mx-auto">
+            <Card className="p-6 mb-6">
+                <Toolbar>
+                    <div className="relative flex-1 max-w-md">
+                        <Input leftIcon={Search} type="text" placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+                    </div>
+                    <Button onClick={onCreate} className="flex items-center gap-2">
+                        <Pencil className="h-4 w-4" /> Create Product
+                    </Button>
+                    {pagination && (
+                        <div className="text-gray-300 text-sm">
+                            Showing {((page - 1) * pagination.limit) + 1} to {Math.min(page * pagination.limit, pagination.total)} of {pagination.total} products
+                        </div>
+                    )}
+                </Toolbar>
+            </Card>
+
+            <Card className="overflow-hidden">
+                {(!filtered || filtered.length === 0) ? (
+                    <EmptyState title="No products" description="Create a product to get started." />
+                ) : (
+                    <>
+                        <Table columns={columns} data={filtered} rowKey="_id" />
+                        {pagination && pagination.pages > 1 && (
+                            <div className="p-4">
+                                <Pagination page={page} pages={pagination.pages} onChange={setPage} />
+                            </div>
+                        )}
+                    </>
+                )}
+                {editing && (
+                    <ProductEditForm product={editing} onClose={() => setEditing(null)} />
+                )}
+            </Card>
+        </div>
     );
 };
 

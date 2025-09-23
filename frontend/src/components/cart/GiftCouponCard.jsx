@@ -29,17 +29,6 @@ const GiftCouponCard = () => {
 		setUserInputCode("");
 	};
 
-	const buttonClasses = (color) => {
-		const colorClasses = {
-			emerald: "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-300",
-			red: "bg-red-600 hover:bg-red-700 focus:ring-red-300",
-		};
-
-		const commonClasses = `flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-4`;
-
-		return `${commonClasses} ${colorClasses[color]}`;
-	};
-
 	return (
 		<Card className="space-y-4 p-4 sm:p-6">
 			<div className="space-y-4">

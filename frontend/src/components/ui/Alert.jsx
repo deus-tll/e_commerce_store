@@ -12,5 +12,3 @@ const Alert = ({ variant = "info", children }) => {
 };
 
 export default Alert;
-
-

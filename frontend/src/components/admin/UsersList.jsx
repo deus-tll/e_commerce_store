@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import Card from "../ui/Card.jsx";
 import Badge from "../ui/Badge.jsx";
-import { Trash, Edit, Search, Filter, ChevronLeft, ChevronRight, UserCheck, UserX } from "lucide-react";
+import { Trash, Edit, Search, Filter, UserPlus } from "lucide-react";
 import Table from "../ui/Table.jsx";
 import Pagination from "../ui/Pagination.jsx";
 import Toolbar from "../ui/Toolbar.jsx";
-import Alert from "../ui/Alert.jsx";
 import Button from "../ui/Button.jsx";
 import IconButton from "../ui/IconButton.jsx";
 import { Input, Select } from "../ui/Input.jsx";
@@ -14,6 +13,7 @@ import { useUserStore } from "../../stores/useUserStore.js";
 import { formatDate } from "../../utils/format.js";
 import LoadingSpinner from "../LoadingSpinner.jsx";
 import UserEditForm from "./UserEditForm.jsx";
+import Modal from "../ui/Modal.jsx";
 import EmptyState from "../ui/EmptyState.jsx";
 
 const UsersList = () => {
@@ -33,7 +33,8 @@ const UsersList = () => {
 		role: "",
 		isVerified: ""
 	});
-	const [editingUser, setEditingUser] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
+    const [showCreate, setShowCreate] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
 	const limit = 10;
@@ -102,6 +103,9 @@ const UsersList = () => {
                     <div className="relative flex-1 max-w-md">
                         <Input leftIcon={Search} type="text" placeholder="Search users..." value={filters.search} onChange={handleSearch} />
                     </div>
+                    <Button onClick={() => setShowCreate(true)} className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" /> Create User
+                    </Button>
                     <Button variant="secondary" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
                         <Filter className="h-4 w-4" />
                         Filters
@@ -193,8 +197,55 @@ const UsersList = () => {
 					onClose={handleCloseEdit}
 				/>
 			)}
+
+            {/* Create User Modal (simple inline) */}
+            {showCreate && (
+                <Modal open={true} onClose={() => setShowCreate(false)} title="Create User">
+                    <CreateUserForm onClose={() => setShowCreate(false)} />
+                </Modal>
+            )}
 		</div>
 	);
+};
+
+const CreateUserForm = ({ onClose }) => {
+    const { createUser, loading } = useUserStore();
+    const [form, setForm] = useState({ name: "", email: "", password: "", role: "customer" });
+    const onChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const onSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await createUser(form);
+            onClose();
+        } catch (_) {}
+    };
+    return (
+        <form onSubmit={onSubmit} className="space-y-4">
+            <div>
+                <label className="block text-sm mb-1 text-gray-300">Name</label>
+                <input name="name" className="w-full bg-gray-800 rounded px-3 py-2" value={form.name} onChange={onChange} />
+            </div>
+            <div>
+                <label className="block text-sm mb-1 text-gray-300">Email</label>
+                <input type="email" name="email" className="w-full bg-gray-800 rounded px-3 py-2" value={form.email} onChange={onChange} />
+            </div>
+            <div>
+                <label className="block text-sm mb-1 text-gray-300">Password</label>
+                <input type="password" name="password" className="w-full bg-gray-800 rounded px-3 py-2" value={form.password} onChange={onChange} />
+            </div>
+            <div>
+                <label className="block text-sm mb-1 text-gray-300">Role</label>
+                <select name="role" className="w-full bg-gray-800 rounded px-3 py-2" value={form.role} onChange={onChange}>
+                    <option value="customer">Customer</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div className="flex gap-2">
+                <button type="button" className="px-4 py-2 rounded bg-gray-700" onClick={onClose}>Cancel</button>
+                <button disabled={loading} className="px-4 py-2 rounded bg-emerald-600">Create</button>
+            </div>
+        </form>
+    );
 };
 
 export default UsersList;

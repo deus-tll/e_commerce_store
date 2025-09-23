@@ -38,4 +38,3 @@ export const useAnalyticsStore = create((set, get) => ({
 		}
 	}
 }));
-

@@ -46,7 +46,3 @@ export const FileInput = ({ id, name, label = "Upload", accept = "image/*", onCh
         </div>
     );
 };
-
-export default Input;
-
-

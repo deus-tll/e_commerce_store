@@ -14,5 +14,3 @@ const FormField = ({ label, error, children, hint }) => {
 };
 
 export default FormField;
-
-

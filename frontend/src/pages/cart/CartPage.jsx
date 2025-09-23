@@ -1,4 +1,3 @@
-
 import {useCartStore} from "../../stores/useCartStore.js";
 
 import EmptyCart from "../../components/cart/EmptyCart.jsx";

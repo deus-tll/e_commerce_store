@@ -4,11 +4,11 @@ import {useCartStore} from "../../stores/useCartStore.js";
 import Card from "../ui/Card.jsx";
 import Button from "../ui/Button.jsx";
 import { formatCurrency } from "../../utils/format.js";
+import IconButton from "../ui/IconButton.jsx";
 
 const CartItem = ({ item }) => {
 	const { removeFromCart, updateQuantity } = useCartStore();
 
-    // consolidated: use shared Button variants instead of custom classes
 	return (
 		<Card className="p-4 md:p-6">
 			<div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
@@ -20,15 +20,25 @@ const CartItem = ({ item }) => {
 
 				<div className="flex items-center justify-between md:order-3 md:justify-end">
                 <div className="flex items-center gap-2">
-                    <Button variant="secondary" onClick={() => updateQuantity(item._id, item.quantity - 1)} className="h-7 w-7 p-0 flex items-center justify-center">
+                    <IconButton
+                        variant="secondary"
+                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        className="p-2 rounded"
+                        aria-label="Decrease quantity"
+                    >
                         <Minus className="h-4 w-4" />
-                    </Button>
+                    </IconButton>
 
-						<p>{item.quantity}</p>
+					<p>{item.quantity}</p>
 
-                    <Button variant="secondary" onClick={() => updateQuantity(item._id, item.quantity + 1)} className="h-7 w-7 p-0 flex items-center justify-center">
+                    <IconButton
+                        variant="secondary"
+                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        className="p-2 rounded"
+                        aria-label="Increase quantity"
+                    >
                         <Plus className="h-4 w-4" />
-                    </Button>
+                    </IconButton>
 					</div>
 
 					<div className="text-end md:order-4 md:w-32">

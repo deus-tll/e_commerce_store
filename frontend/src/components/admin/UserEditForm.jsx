@@ -57,7 +57,6 @@ const UserEditForm = ({ user, onClose }) => {
 			[name]: type === "checkbox" ? checked : value
 		}));
 
-		// Clear error when user starts typing
 		if (errors[name]) {
 			setErrors(prev => ({
 				...prev,
@@ -82,12 +81,6 @@ const UserEditForm = ({ user, onClose }) => {
 			console.error("Error updating user:", error);
 		} finally {
 			setIsSubmitting(false);
-		}
-	};
-
-	const handleBackdropClick = (e) => {
-		if (e.target === e.currentTarget) {
-			onClose();
 		}
 	};
 

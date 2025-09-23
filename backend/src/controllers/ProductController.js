@@ -7,8 +7,9 @@ export class ProductController {
 
 	getProducts = async (req, res, next) => {
 		try {
-			const products = await this.productService.getProducts();
-			res.status(200).json(products);
+			const { page, limit } = req.query;
+			const result = await this.productService.getProducts({ page, limit });
+			res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);
@@ -51,6 +52,17 @@ export class ProductController {
 		try {
 			const product = await this.productService.createProduct(req.body);
 			res.status(201).json(product);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
+	updateProduct = async (req, res, next) => {
+		try {
+			const { id } = req.params;
+			const updated = await this.productService.updateProduct(id, req.body);
+			res.status(200).json(updated);
 		}
 		catch (error) {
 			next(error);

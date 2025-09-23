@@ -21,9 +21,33 @@ export class ProductService {
 		}
 	}
 
-	async getProducts() {
-		return Product.find({}).populate({ path: "category", select: "name slug" });
-	}
+    async getProducts({ page = 1, limit = 10 } = {}) {
+        const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+        const numericLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+        const filter = {};
+        const total = await Product.countDocuments(filter);
+        const pages = Math.max(Math.ceil(total / numericLimit), 1);
+        const currentPage = Math.min(numericPage, pages);
+        const skip = (currentPage - 1) * numericLimit;
+
+        const products = await Product.find(filter)
+            .populate({ path: "category", select: "name slug" })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(numericLimit)
+            .lean();
+
+        return {
+            products,
+            pagination: {
+                total,
+                page: currentPage,
+                pages,
+                limit: numericLimit
+            }
+        };
+    }
 
 	async getProductById(productId, options = {}) {
 		const { populated = false, throwIfNotFound = true } = options;
@@ -95,6 +119,40 @@ export class ProductService {
 
 		return product;
 	}
+
+    async updateProduct(productId, productData) {
+        const { image, category, ...rest } = productData;
+
+        const update = { ...rest };
+
+        // If category provided as slug or id
+        if (typeof category === "string" && category.trim() !== "") {
+            try {
+                const categoryDoc = await this.categoryService.getBySlug(category);
+                update.category = categoryDoc._id;
+            } catch (_) {
+                const createdCategory = await this.categoryService.createCategory({ name: category });
+                update.category = createdCategory._id;
+            }
+        } else if (category) {
+            update.category = category;
+        }
+
+        // If image is a base64 data URL, upload and replace
+        if (image && typeof image === "string" && image.startsWith("data:")) {
+            const imageUrl = await this.storageProductService.upload(image);
+            update.image = imageUrl;
+        }
+
+        const updated = await Product.findByIdAndUpdate(productId, update, { new: true })
+            .populate({ path: "category", select: "name slug" });
+
+        if (!updated) {
+            throw new NotFoundError("Product not found");
+        }
+
+        return updated;
+    }
 
 	async toggleFeaturedProduct(productId) {
 		const product = await Product.findById(productId);

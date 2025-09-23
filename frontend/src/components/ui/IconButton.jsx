@@ -9,5 +9,3 @@ const IconButton = ({ variant = "ghost", className = "p-2", children, ...props }
 };
 
 export default IconButton;
-
-
