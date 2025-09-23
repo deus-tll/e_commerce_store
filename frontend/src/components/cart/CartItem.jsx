@@ -1,14 +1,16 @@
 import { Minus, Plus, Trash } from "lucide-react";
 
 import {useCartStore} from "../../stores/useCartStore.js";
+import Card from "../ui/Card.jsx";
+import Button from "../ui/Button.jsx";
+import { formatCurrency } from "../../utils/format.js";
 
 const CartItem = ({ item }) => {
 	const { removeFromCart, updateQuantity } = useCartStore();
 
-	const plusMinusButtonsClasses = "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-600 " +
-									"bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500";
+    // consolidated: use shared Button variants instead of custom classes
 	return (
-		<div className="rounded-lg border p-4 shadow-sm border-gray-700 bg-gray-800 md:p-6">
+		<Card className="p-4 md:p-6">
 			<div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
 				<div className="shrink-0 md:order-1">
 					<img src={item.image} alt="Cart item" className="h-20 md:h-32 rounded object-cover"/>
@@ -17,26 +19,22 @@ const CartItem = ({ item }) => {
 				<label className="sr-only">Choose quantity:</label>
 
 				<div className="flex items-center justify-between md:order-3 md:justify-end">
-					<div className="flex items-center gap-2">
-						<button onClick={() => updateQuantity(item._id, item.quantity - 1)}
-						        className={plusMinusButtonsClasses}
-						>
-							<Minus className="text-gray-300" />
-						</button>
+                <div className="flex items-center gap-2">
+                    <Button variant="secondary" onClick={() => updateQuantity(item._id, item.quantity - 1)} className="h-7 w-7 p-0 flex items-center justify-center">
+                        <Minus className="h-4 w-4" />
+                    </Button>
 
 						<p>{item.quantity}</p>
 
-						<button onClick={() => updateQuantity(item._id, item.quantity + 1)}
-						        className={plusMinusButtonsClasses}
-						>
-							<Plus className="text-gray-300" />
-						</button>
+                    <Button variant="secondary" onClick={() => updateQuantity(item._id, item.quantity + 1)} className="h-7 w-7 p-0 flex items-center justify-center">
+                        <Plus className="h-4 w-4" />
+                    </Button>
 					</div>
 
 					<div className="text-end md:order-4 md:w-32">
-						<p className="text-base font-bold text-emerald-400">
-							${item.price}
-						</p>
+                    <p className="text-base font-bold text-emerald-400">
+                        {formatCurrency(item.price)}
+                    </p>
 					</div>
 				</div>
 
@@ -50,17 +48,14 @@ const CartItem = ({ item }) => {
 					</p>
 
 					<div className="flex items-center gap-4">
-						<button
-							onClick={() => removeFromCart(item._id)}
-							className="inline-flex items-center text-sm font-medium text-red-400
-							hover:text-red-300 hover:underline"
-						>
+						<Button variant="danger" onClick={() => removeFromCart(item._id)} className="inline-flex items-center gap-2 text-sm">
 							<Trash />
-						</button>
+							Remove
+						</Button>
 					</div>
 				</div>
 			</div>
-		</div>
+		</Card>
 	);
 };
 

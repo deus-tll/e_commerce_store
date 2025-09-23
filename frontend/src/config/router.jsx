@@ -1,5 +1,5 @@
 import {useEffect} from "react";
-import {Routes, Route, Navigate} from "react-router-dom";
+import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
@@ -26,24 +26,26 @@ const AppRouter = () => {
 		getCartItems();
 	}, [getCartItems, user]);
 
-	if (checkingAuth) return <LoadingSpinner />;
+    const location = useLocation();
 
-	return (
-		<div className="pt-10">
-			<Routes>
-				{PublicRoutes}
-				{AuthRoutes}
-				{AdminRoutes}
-				{ProtectedRoutes}
+    if (checkingAuth) return <LoadingSpinner />;
 
-				<Route path="/verify-email" element={
-					user && !user.isVerified
-						? <EmailVerificationPage />
-						: <Navigate to='/' />
-				} />
-			</Routes>
-		</div>
-	);
+    return (
+        <div className="pt-16">
+                <Routes location={location}>
+			        {PublicRoutes}
+			        {AuthRoutes}
+			        {AdminRoutes}
+			        {ProtectedRoutes}
+
+			        <Route path="/verify-email" element={
+				        user && !user.isVerified
+					        ? <EmailVerificationPage />
+					        : <Navigate to='/' />
+			        } />
+                </Routes>
+        </div>
+    );
 }
 
 export default AppRouter;

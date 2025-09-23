@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import Card from "../ui/Card.jsx";
+import Button from "../ui/Button.jsx";
 
 import {useCartStore} from "../../stores/useCartStore.js";
 
-import FormInput from "../FormInput.jsx";
+import FormField from "../ui/FormField.jsx";
+import { Input } from "../ui/Input.jsx";
 
 const GiftCouponCard = () => {
 	const [userInputCode, setUserInputCode] = useState("");
@@ -39,33 +41,13 @@ const GiftCouponCard = () => {
 	};
 
 	return (
-		<motion.div
-			className="space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.5, delay: 0.2 }}
-		>
+		<Card className="space-y-4 p-4 sm:p-6">
 			<div className="space-y-4">
-				<FormInput
-					label="Do you have a voucher or gift card?"
-					inputElement="input"
-					id="voucher"
-					name="voucher"
-					type="text"
-					value={userInputCode}
-					onChange={(e) => setUserInputCode(e.target.value)}
-					placeholder="Enter code here"
-				/>
+				<FormField label="Do you have a voucher or gift card?">
+					<Input id="voucher" name="voucher" type="text" value={userInputCode} onChange={(e) => setUserInputCode(e.target.value)} placeholder="Enter code here" />
+				</FormField>
 
-				<motion.button
-					type="button"
-					className={buttonClasses("emerald")}
-					whileHover={{ scale: 1.05 }}
-					whileTap={{ scale: 0.95 }}
-					onClick={handleApplyCoupon}
-				>
-					Apply Code
-				</motion.button>
+				<Button type="button" onClick={handleApplyCoupon} className="w-full justify-center">Apply Code</Button>
 			</div>
 
 			{coupon && (
@@ -79,19 +61,11 @@ const GiftCouponCard = () => {
 					</p>
 
 					{isCouponApplied && (
-						<motion.button
-							type="button"
-							className={`mt-2 ${buttonClasses("red")}`}
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
-							onClick={handleRemoveCoupon}
-						>
-							Remove Coupon
-						</motion.button>
+						<Button type="button" variant="danger" className="mt-2" onClick={handleRemoveCoupon}>Remove Coupon</Button>
 					)}
 				</div>
 			)}
-		</motion.div>
+		</Card>
 	);
 };
 

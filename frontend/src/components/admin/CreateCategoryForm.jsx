@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PlusCircle } from "lucide-react";
 
 import { useCategoryStore } from "../../stores/useCategoryStore.js";
-import FormInput from "../FormInput.jsx";
-import SubmitButton from "../SubmitButton.jsx";
-import FormFileInput from "../FormFileInput.jsx";
+import FormField from "../ui/FormField.jsx";
+import { Input, FileInput } from "../ui/Input.jsx";
+import Button from "../ui/Button.jsx";
+import Card from "../ui/Card.jsx";
 
 const template = { name: "", image: "" };
 
@@ -34,36 +34,23 @@ const CreateCategoryForm = () => {
 		reader.readAsDataURL(file);
 	};
 
-	return (
-		<motion.div className="bg-gray-800 shadow-lg rounded-lg p-8 mb-8 max-w-xl mx-auto"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.8 }}
-		>
+    return (
+        <Card className="p-8 mb-8 max-w-xl mx-auto">
 			<h2 className="text-2xl font-semibold mb-6 text-emerald-300">Create Category</h2>
 
 			<form onSubmit={handleSubmit} className="space-y-5">
-				<FormInput
-					label="Category Name"
-					inputElement="input"
-					id="name"
-					name="name"
-					type="text"
-					value={formData.name}
-					onChange={handleInputChange}
-				/>
+				<FormField label="Category Name">
+					<Input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} />
+				</FormField>
 
-				<FormFileInput
-					label="Upload Image"
-					id="image"
-					name="image"
-					value={formData.image}
-					onChange={handleImageChange}
-				/>
+                <FileInput id="image" name="image" label="Upload Image" value={formData.image} onChange={handleImageChange} />
 
-				<SubmitButton loading={loading} text="Create Category" icon={PlusCircle} />
+				<Button disabled={loading} className="w-full justify-center">
+					<PlusCircle className="h-4 w-4" />
+					Create Category
+				</Button>
 			</form>
-		</motion.div>
+        </Card>
 	);
 };
 

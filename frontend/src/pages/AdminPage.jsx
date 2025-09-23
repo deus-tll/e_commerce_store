@@ -1,6 +1,9 @@
 import {useEffect, useState} from "react";
 import {PlusCircle, ShoppingBasket, BarChart, Users, UserCog} from "lucide-react";
-import { motion } from "framer-motion";
+import Container from "../components/ui/Container.jsx";
+import SectionHeader from "../components/ui/SectionHeader.jsx";
+import Card from "../components/ui/Card.jsx";
+import Button from "../components/ui/Button.jsx";
 
 import {useProductStore} from "../stores/useProductStore.js";
 
@@ -31,49 +34,38 @@ const AdminPage = () => {
 		fetchAllProducts();
 	}, [fetchAllProducts]);
 
-	return (
-		<div className="relative overflow-hidden">
-			<div className="relative z-10 container mx-auto px-4 pt-16 pb-10">
-				<motion.h1
-					className="text-4xl font-bold mb-8 text-emerald-400 text-center"
-					initial={{ opacity: 0, y: -20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8 }}
-				>
-					Admin Dashboard
-				</motion.h1>
+    return (
+        <Container size="lg">
+            <SectionHeader title="Admin Dashboard" />
+            <Card className="p-6 mb-8 bg-transparent">
+                <div className="flex justify-center flex-wrap gap-3">
+                    {tabs.map((tab) => (
+                        <Button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            variant={activeTab === tab.id ? "primary" : "secondary"}
+                            className="flex items-center"
+                        >
+                            <tab.icon className="mr-2 h-5 w-5" />
+                            {tab.label}
+                        </Button>
+                    ))}
+                </div>
+            </Card>
 
-				<div className="flex justify-center mb-8">
-					{tabs.map((tab) => (
-						<button
-							key={tab.id}
-							onClick={() => setActiveTab(tab.id)}
-							className={`flex items-center px-4 py-2 mx-2 rounded-md transition-colors duration-200 ${
-								activeTab === tab.id
-									? "bg-emerald-600 text-white"
-									: "bg-gray-700 text-gray-300 hover:bg-gray-600"
-							}`}
-						>
-							<tab.icon className="mr-2 h-5 w-5" />
-							{tab.label}
-						</button>
-					))}
-				</div>
-
-				{activeTab === "create" && <CreateProductForm />}
-				{activeTab === "categories" && (
-					<div>
-						<CreateCategoryForm />
-						<CategoriesList />
-					</div>
-				)}
-				{activeTab === "products" && <ProductsList />}
-				{activeTab === "users" && <UsersList />}
-				{activeTab === "user-stats" && <UserStats />}
-				{activeTab === "analytics" && <AnalyticsTab />}
-			</div>
-		</div>
-	);
+            {activeTab === "create" && <CreateProductForm />}
+            {activeTab === "categories" && (
+                <div>
+                    <CreateCategoryForm />
+                    <CategoriesList />
+                </div>
+            )}
+            {activeTab === "products" && <ProductsList />}
+            {activeTab === "users" && <UsersList />}
+            {activeTab === "user-stats" && <UserStats />}
+            {activeTab === "analytics" && <AnalyticsTab />}
+        </Container>
+    );
 };
 
 export default AdminPage;

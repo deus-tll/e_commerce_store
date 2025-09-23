@@ -3,8 +3,10 @@ import {Link, useNavigate} from "react-router-dom";
 import {ArrowRight, Verified} from "lucide-react";
 import {toast} from "react-hot-toast";
 
-import AuthFormContainer from "../../components/auth/AuthFormContainer.jsx";
-import SubmitButton from "../../components/SubmitButton.jsx";
+import Container from "../../components/ui/Container.jsx";
+import Card from "../../components/ui/Card.jsx";
+import SectionHeader from "../../components/ui/SectionHeader.jsx";
+import Button from "../../components/ui/Button.jsx";
 import {useAuthStore} from "../../stores/useAuthStore.js";
 
 const EmailVerificationPage = () => {
@@ -64,36 +66,39 @@ const EmailVerificationPage = () => {
 		}
 	}, [code]);
 
-	return (
-		<AuthFormContainer title="Verify Your Email">
-			<p className='text-center text-gray-300 mb-6'>Enter the 6-digit code sent to your email address.</p>
-
-			<form onSubmit={handleSubmit} className='space-y-6'>
-				<div className="flex justify-between">
-					{code.map((digit, index) => (
-						<input
-							key={index}
-							ref={(el) => (inputRefs.current[index] = el)}
-							type="text"
-							maxLength="6"
-							value={digit}
-							onChange={(e) => handleChange(index, e.target.value)}
-							onKeyDown={(e) => handleKeyDown(index, e)}
-							className="w-12 h-12 text-center text-2xl font-bold bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:border-green-500 focus:outline-none"
-						/>
-					))}
-				</div>
-
-				<SubmitButton loading={loading} text="Verify" icon={Verified} />
-			</form>
-
-			<p className="mt-8 text-center text-sm text-gray-400">
-				<Link to="/" className="font-medium text-emerald-400 hover:text-emerald-300">
-					Verify later <ArrowRight className="inline h-4 w-4" />
-				</Link>
-			</p>
-		</AuthFormContainer>
-	);
+    return (
+        <Container size="sm">
+            <SectionHeader title="Verify Your Email" />
+            <Card className="py-8 px-4 sm:px-10">
+                <p className='text-center text-gray-300 mb-6'>Enter the 6-digit code sent to your email address.</p>
+                <form onSubmit={handleSubmit} className='space-y-6'>
+                    <div className="flex justify-between">
+                        {code.map((digit, index) => (
+                            <input
+                                key={index}
+                                ref={(el) => (inputRefs.current[index] = el)}
+                                type="text"
+                                maxLength="6"
+                                value={digit}
+                                onChange={(e) => handleChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                className="w-12 h-12 text-center text-2xl font-bold bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:border-green-500 focus:outline-none"
+                            />
+                        ))}
+                    </div>
+                    <Button disabled={loading} className="w-full justify-center">
+                        <Verified className="h-4 w-4" />
+                        Verify
+                    </Button>
+                </form>
+                <p className="mt-8 text-center text-sm text-gray-400">
+                    <Link to="/" className="font-medium text-emerald-400 hover:text-emerald-300">
+                        Verify later <ArrowRight className="inline h-4 w-4" />
+                    </Link>
+                </p>
+            </Card>
+        </Container>
+    );
 };
 
 export default EmailVerificationPage;
