@@ -1,103 +1,79 @@
-import { motion } from "framer-motion";
 import { Trash, Star } from "lucide-react";
-
+import IconButton from "../ui/IconButton.jsx";
+import Card from "../ui/Card.jsx";
+import Table from "../ui/Table.jsx";
 import {useProductStore} from "../../stores/useProductStore.js";
+import { formatCurrency } from "../../utils/format.js";
+import EmptyState from "../ui/EmptyState.jsx";
 
 const ProductsList = () => {
-	const { deleteProduct, toggleFeaturedProduct, products } = useProductStore();
+    const { deleteProduct, toggleFeaturedProduct, products } = useProductStore();
 
-	const thScope = "col";
-	const thClasses = "px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider";
-	const tdClasses = "px-6 py-4 whitespace-nowrap";
+    const columns = [
+        {
+            key: 'product',
+            title: 'Product',
+            dataIndex: 'name',
+            render: (_, product) => (
+                <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10">
+                        <img className='h-10 w-10 rounded-full object-cover' src={product.image} alt={product.name} />
+                    </div>
+                    <div className="ml-4">
+                        <div className="text-sm font-medium text-white">{product.name}</div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'price',
+            title: 'Price',
+            dataIndex: 'price',
+            render: (value) => <div className="text-sm text-gray-300">{formatCurrency(value)}</div>
+        },
+        {
+            key: 'category',
+            title: 'Category',
+            dataIndex: 'category',
+            render: (value) => (
+                <div className="text-sm text-gray-300">{typeof value === 'object' && value !== null ? value.name : value}</div>
+            )
+        },
+        {
+            key: 'featured',
+            title: 'Featured',
+            dataIndex: 'isFeatured',
+            render: (_, product) => (
+                <IconButton
+                    variant={product.isFeatured ? 'warning' : 'secondary'}
+                    onClick={() => toggleFeaturedProduct(product._id)}
+                    className={`p-2 rounded-full ${product.isFeatured ? 'bg-yellow-500 text-gray-900' : ''}`}
+                >
+                    <Star className="h-5 w-5" />
+                </IconButton>
+            )
+        },
+        {
+            key: 'actions',
+            title: 'Actions',
+            dataIndex: 'actions',
+            render: (_, product) => (
+                <IconButton variant="ghost" onClick={() => deleteProduct(product._id)} className="text-red-400 hover:text-red-300">
+                    <Trash className="h-5 w-5" />
+                </IconButton>
+            )
+        }
+    ];
 
-	return (
-		<motion.div
-			className="bg-gray-800 shadow-lg rounded-lg overflow-hidden max-w-4xl mx-auto"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.8 }}
-		>
-			<table className="min-w-full divide-y divide-gray-700">
-				<thead className="bg-gray-700">
-				<tr>
-					<th scope={thScope} className={thClasses}>
-						Product
-					</th>
-
-					<th scope={thScope} className={thClasses}>
-						Price
-					</th>
-
-					<th scope={thScope} className={thClasses}>
-						Category
-					</th>
-
-					<th scope={thScope} className={thClasses}>
-						Featured
-					</th>
-
-					<th scope={thScope} className={thClasses}>
-						Actions
-					</th>
-				</tr>
-				</thead>
-
-				<tbody className="bg-gray-800 divide-y divide-gray-700">
-				{products.map((product) => (
-					<tr key={product._id} className="hover:bg-gray-700">
-						<td className={tdClasses}>
-							<div className="flex items-center">
-								<div className="flex-shrink-0 h-10 w-10">
-									<img className='h-10 w-10 rounded-full object-cover'
-										src={product.image} alt={product.name}
-									/>
-								</div>
-
-								<div className="ml-4">
-									<div className="text-sm font-medium text-white">
-										{product.name}
-									</div>
-								</div>
-							</div>
-						</td>
-
-						<td className={tdClasses}>
-							<div className="text-sm text-gray-300">
-								${product.price.toFixed(2)}
-							</div>
-						</td>
-
-						<td className={tdClasses}>
-						<div className="text-sm text-gray-300">
-							{typeof product.category === "object" && product.category !== null ? product.category.name : product.category}
-						</div>
-						</td>
-
-						<td className={tdClasses}>
-							<button
-								onClick={() => toggleFeaturedProduct(product._id)}
-								className={`p-1 rounded-full ${
-									product.isFeatured ? "bg-yellow-400 text-gray-900" : "bg-gray-600 text-gray-300"
-								} hover:bg-yellow-500 transition-colors duration-200`}
-							>
-								<Star className="h-5 w-5" />
-							</button>
-						</td>
-
-						<td className={`${tdClasses} text-sm font-medium`}>
-							<button
-								onClick={() => deleteProduct(product._id)}
-								className="text-red-400 hover:text-red-300"
-							>
-								<Trash className="h-5 w-5" />
-							</button>
-						</td>
-					</tr>
-				))}
-				</tbody>
-			</table>
-		</motion.div>
-	);
+    return (
+        <Card className="overflow-hidden max-w-4xl mx-auto">
+            {(!products || products.length === 0) ? (
+                <EmptyState title="No products" description="Create a product to get started." />
+            ) : (
+                <Table columns={columns} data={products} rowKey="_id" />
+            )}
+        </Card>
+    );
 };
 
 export default ProductsList;

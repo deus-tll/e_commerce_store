@@ -1,16 +1,15 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { MoveRight } from "lucide-react";
+import Card from "../ui/Card.jsx";
+import Button from "../ui/Button.jsx";
 
 import {useCartStore} from "../../stores/useCartStore.js";
+import { formatCurrency } from "../../utils/format.js";
 
 const OrderSummary = () => {
 	const { total, subtotal, coupon, isCouponApplied, createCheckoutSession } = useCartStore();
 
-	const savings = subtotal - total;
-	const formattedSubtotal = subtotal.toFixed(2);
-	const formattedTotal = total.toFixed(2);
-	const formattedSavings = savings.toFixed(2);
+    const savings = subtotal - total;
 
 	const handlePayment = async () => {
 		await createCheckoutSession();
@@ -20,12 +19,7 @@ const OrderSummary = () => {
 	const dtClasses = "text-base font-normal text-gray-300";
 
 	return (
-		<motion.div
-			className="space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.5 }}
-		>
+		<Card className="space-y-4 p-4 sm:p-6">
 			<p className="text-xl font-semibold text-emerald-400">
 				Order summary
 			</p>
@@ -34,13 +28,13 @@ const OrderSummary = () => {
 				<div className="space-y-2">
 					<dl className={dlClasses}>
 						<dt className={dtClasses}>Original price</dt>
-						<dd className="text-base font-medium text-white">${formattedSubtotal}</dd>
+                        <dd className="text-base font-medium text-white">{formatCurrency(subtotal)}</dd>
 					</dl>
 
 					{savings > 0 && (
 						<dl className={dlClasses}>
 							<dt className={dtClasses}>Savings</dt>
-							<dd className="text-base font-medium text-emerald-400">-${formattedSavings}</dd>
+                            <dd className="text-base font-medium text-emerald-400">-{formatCurrency(savings)}</dd>
 						</dl>
 					)}
 
@@ -53,18 +47,11 @@ const OrderSummary = () => {
 
 					<dl className={`${dlClasses} border-t border-gray-600 pt-2`}>
 						<dt className="text-base font-bold text-white">Total</dt>
-						<dd className="text-base font-bold text-emerald-400">${formattedTotal}</dd>
+                        <dd className="text-base font-bold text-emerald-400">{formatCurrency(total)}</dd>
 					</dl>
 				</div>
 
-				<motion.button
-					className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300"
-					whileHover={{ scale: 1.05 }}
-					whileTap={{ scale: 0.95 }}
-					onClick={handlePayment}
-				>
-					Proceed to Checkout
-				</motion.button>
+				<Button onClick={handlePayment} className="w-full justify-center">Proceed to Checkout</Button>
 
 				<div className="flex items-center justify-center gap-2">
 					<span className="text-sm font-normal text-gray-400">
@@ -80,7 +67,7 @@ const OrderSummary = () => {
 					</Link>
 				</div>
 			</div>
-		</motion.div>
+		</Card>
 	);
 };
 

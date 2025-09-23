@@ -4,7 +4,8 @@ import axios from "../../config/axios.js";
 import {PRODUCTS_API_PATH} from "../../stores/useProductStore.js";
 
 import LoadingSpinner from "../LoadingSpinner.jsx";
-import ProductCard from "../ProductCard.jsx";
+import ProductGrid from "../ProductGrid.jsx";
+import SectionHeader from "../ui/SectionHeader.jsx";
 import {handleRequestError} from "../../utils/errorHandler.js";
 
 const PeopleAlsoBought = () => {
@@ -30,19 +31,12 @@ const PeopleAlsoBought = () => {
 
 	if (isLoading) return <LoadingSpinner />;
 
-	return (
-		<div className="mt-8">
-			<h3 className="text-2xl font-semibold text-emerald-400">
-				People also bought
-			</h3>
-
-			<div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg: grid-col-3">
-				{recommendedProducts.map((product) => (
-					<ProductCard key={product._id} product={product} />
-				))}
-			</div>
-		</div>
-	);
+    return (
+        <div className="mt-8">
+            <SectionHeader title="People also bought" />
+            <ProductGrid products={recommendedProducts} />
+        </div>
+    );
 };
 
 export default PeopleAlsoBought;

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import Button from "./ui/Button.jsx";
 
 import {useCartStore} from "../stores/useCartStore.js";
+import { formatCurrency } from "../utils/format.js";
 
 const FeaturedProducts = ({ featuredProducts }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -62,18 +64,14 @@ const FeaturedProducts = ({ featuredProducts }) => {
 												{product.name}
 											</h3>
 
-											<p className="text-emerald-300 font-medium mb-4">
-												${product.price.toFixed(2)}
-											</p>
+                                            <p className="text-emerald-300 font-medium mb-4">
+                                                {formatCurrency(product.price)}
+                                            </p>
 
-											<button
-												onClick={() => addToCart(product)}
-												className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4
-												rounded transition-colors duration-300 flex items-center justify-center"
-											>
-												<ShoppingCart className="w-5 h-5 mr-2" />
-												Add to Cart
-											</button>
+                                            <Button onClick={() => addToCart(product)} className="w-full justify-center">
+                                                <ShoppingCart className="w-5 h-5" />
+                                                Add to Cart
+                                            </Button>
 										</div>
 									</div>
 								</div>
@@ -81,23 +79,21 @@ const FeaturedProducts = ({ featuredProducts }) => {
 						</div>
 					</div>
 
-					<button
-						onClick={prevSlide}
-						disabled={isStartDisabled}
-						className={`absolute top-1/2 -left-4 transform -translate-y-1/2 p-2 rounded-full transition-colors duration-300 
-						${isStartDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500"}`}
-					>
-						<ChevronLeft className="w-6 h-6" />
-					</button>
+                    <Button
+                        onClick={prevSlide}
+                        disabled={isStartDisabled}
+                        className={`absolute top-1/2 -left-4 transform -translate-y-1/2 p-2 rounded-full ${isStartDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </Button>
 
-					<button
-						onClick={nextSlide}
-						disabled={isEndDisabled}
-						className={`absolute top-1/2 -right-4 transform -translate-y-1/2 p-2 rounded-full transition-colors duration-300 
-						${isEndDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500"}`}
-					>
-						<ChevronRight className="w-6 h-6" />
-					</button>
+                    <Button
+                        onClick={nextSlide}
+                        disabled={isEndDisabled}
+                        className={`absolute top-1/2 -right-4 transform -translate-y-1/2 p-2 rounded-full ${isEndDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </Button>
 				</div>
 			</div>
 		</div>

@@ -80,14 +80,20 @@ export class ProductService {
 		}
 
 		// Resolve category if provided as slug or name
+		let categoryName;
 		if (rest.category && typeof rest.category === "string") {
 			const categoryDoc = await this.categoryService.getBySlug(rest.category).catch(async () => {
 				return await this.categoryService.createCategory({ name: rest.category });
 			});
 			rest.category = categoryDoc._id;
+			categoryName = categoryDoc.name;
 		}
 
-		return await Product.create({ ...rest, image: imageUrl });
+		const product = await Product.create({ ...rest, image: imageUrl });
+
+		product.category.name = categoryName;
+
+		return product;
 	}
 
 	async toggleFeaturedProduct(productId) {

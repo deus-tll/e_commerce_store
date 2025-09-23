@@ -1,9 +1,12 @@
 import {useEffect} from 'react';
-import { motion } from "framer-motion";
+import Container from "../ui/Container.jsx";
+import SectionHeader from "../ui/SectionHeader.jsx";
+import Card from "../ui/Card.jsx";
 import { Users, Package, ShoppingCart, DollarSign } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 import {useAnalyticsStore} from "../../stores/useAnalyticsStore.js";
+import { formatCurrency } from "../../utils/format.js";
 
 import AnalyticsCard from "./AnalyticsCard.jsx";
 import LoadingSpinner from "../LoadingSpinner.jsx";
@@ -21,9 +24,10 @@ const AnalyticsTab = () => {
 		return <div>Error: {error}</div>;
 	}
 
-	return (
-		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    return (
+        <Container size="lg">
+            <SectionHeader title="Analytics" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 				<AnalyticsCard
 					title="Total Users"
 					value={analyticsData.users.toLocaleString()}
@@ -44,18 +48,13 @@ const AnalyticsTab = () => {
 				/>
 				<AnalyticsCard
 					title='Total Revenue'
-					value={`$${analyticsData.totalRevenue.toLocaleString()}`}
+                    value={formatCurrency(analyticsData.totalRevenue)}
 					icon={DollarSign}
 					color="from-emerald-500 to-lime-700"
 				/>
 			</div>
 
-			<motion.div
-				className="bg-gray-800/60 rounded-lg p-6 shadow-lg"
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5, delay: 0.25 }}
-			>
+            <Card className="p-6">
 				<ResponsiveContainer width="100%" height={400}>
 					<LineChart data={dailySalesData}>
 						<CartesianGrid strokeDasharray="3 3" />
@@ -82,8 +81,8 @@ const AnalyticsTab = () => {
 						/>
 					</LineChart>
 				</ResponsiveContainer>
-			</motion.div>
-		</div>
+            </Card>
+        </Container>
 	);
 };
 

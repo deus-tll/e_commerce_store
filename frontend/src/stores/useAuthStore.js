@@ -32,7 +32,7 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -48,7 +48,7 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -62,7 +62,7 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: null });
 		}
 		catch (error) {
-			handleRequestError(error, "", false);
+            handleRequestError(error, "", false);
 		}
 		finally {
 			set({ user: null });
@@ -111,7 +111,7 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -126,7 +126,7 @@ export const useAuthStore = create((set, get) => ({
 			await axios.post(`${AUTH_API_PATH}/resend-verification`);
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -141,7 +141,7 @@ export const useAuthStore = create((set, get) => ({
 			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -162,7 +162,7 @@ export const useAuthStore = create((set, get) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+            handleRequestError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {

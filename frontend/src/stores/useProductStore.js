@@ -19,8 +19,8 @@ export const useProductStore = create((set, get) => ({
 				products: [ ...prevState.products, res.data ]
 			}));
 		}
-		catch (error) {
-			handleRequestError(error);
+        catch (error) {
+            handleRequestError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -34,8 +34,8 @@ export const useProductStore = create((set, get) => ({
 			const res = await axios.get(PRODUCTS_API_PATH);
 			set({ products: res.data });
 		}
-		catch (error) {
-			handleRequestError(error);
+        catch (error) {
+            handleRequestError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -49,8 +49,8 @@ export const useProductStore = create((set, get) => ({
 			const res = await axios.get(`${PRODUCTS_API_PATH}/category/${category}`);
 			set({ products: res.data });
 		}
-		catch (error) {
-			handleRequestError(error);
+        catch (error) {
+            handleRequestError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -66,8 +66,8 @@ export const useProductStore = create((set, get) => ({
 				products: prevState.products.filter((product) => product._id !== productId)
 			}));
 		}
-		catch (error) {
-			handleRequestError(error);
+        catch (error) {
+            handleRequestError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -100,8 +100,8 @@ export const useProductStore = create((set, get) => ({
 				};
 			});
 		}
-		catch (error) {
-			handleRequestError(error);
+        catch (error) {
+            handleRequestError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
