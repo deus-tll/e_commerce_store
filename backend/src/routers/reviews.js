@@ -8,7 +8,7 @@ const reviewController = new ReviewController();
 
 router.post("/product/:id", protectRoute, reviewController.addReview);
 router.get("/product/:id", reviewController.getReviewsByProduct);
-router.patch("/:reviewId", protectRoute, reviewController.updateReview);
+router.put("/:reviewId", protectRoute, reviewController.updateReview);
 router.delete("/:reviewId", protectRoute, reviewController.deleteReview);
 
 export default router;

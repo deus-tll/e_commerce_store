@@ -7,7 +7,7 @@ import FormField from "../ui/FormField.jsx";
 import { Input, Select } from "../ui/Input.jsx";
 import Button from "../ui/Button.jsx";
 
-const UserEditForm = ({ user, onClose }) => {
+const EditUserForm = ({ user, onClose }) => {
 	const { updateUser, loading } = useUserStore();
 	
 	const [formData, setFormData] = useState({
@@ -126,4 +126,4 @@ const UserEditForm = ({ user, onClose }) => {
     );
 };
 
-export default UserEditForm;
+export default EditUserForm;

@@ -12,7 +12,7 @@ import { Input, Select } from "../ui/Input.jsx";
 import { useUserStore } from "../../stores/useUserStore.js";
 import { formatDate } from "../../utils/format.js";
 import LoadingSpinner from "../LoadingSpinner.jsx";
-import UserEditForm from "./UserEditForm.jsx";
+import EditUserForm from "./EditUserForm.jsx";
 import Modal from "../ui/Modal.jsx";
 import EmptyState from "../ui/EmptyState.jsx";
 
@@ -192,7 +192,7 @@ const UsersList = () => {
 
 			{/* Edit User Modal */}
 			{editingUser && (
-				<UserEditForm
+				<EditUserForm
 					user={editingUser}
 					onClose={handleCloseEdit}
 				/>

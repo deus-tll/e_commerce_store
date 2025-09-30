@@ -6,7 +6,7 @@ import FormField from "../ui/FormField.jsx";
 import { Input } from "../ui/Input.jsx";
 import Button from "../ui/Button.jsx";
 
-const CategoryEditForm = ({ category, onClose }) => {
+const EditCategoryForm = ({ category, onClose }) => {
     const { updateCategory, loading } = useCategoryStore();
 
     const [formData, setFormData] = useState({ name: category?.name || "", image: "" });
@@ -84,6 +84,6 @@ const CategoryEditForm = ({ category, onClose }) => {
     );
 };
 
-export default CategoryEditForm;
+export default EditCategoryForm;
 
 

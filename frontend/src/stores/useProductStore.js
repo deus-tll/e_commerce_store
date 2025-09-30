@@ -9,6 +9,7 @@ export const useProductStore = create((set, get) => ({
 	products: [],
 	pagination: null,
 	featuredProducts: [],
+	currentProduct: null,
 	loading: false,
 
 	createProduct: async (productData) => {
@@ -22,6 +23,25 @@ export const useProductStore = create((set, get) => ({
 		}
         catch (error) {
             handleRequestError(error, "An error occurred", false);
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	clearCurrentProduct: () => set({ currentProduct: null }),
+
+	fetchProductById: async (productId) => {
+		set({ loading: true });
+
+		try {
+			const res = await axios.get(`${PRODUCTS_API_PATH}/${productId}`);
+			set({ currentProduct: res.data });
+			return res.data;
+		}
+		catch (error) {
+			handleRequestError(error, "An error occurred", false);
+			throw error;
 		}
 		finally {
 			set({ loading: false });

@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+const imageSchema = new mongoose.Schema({
+	mainImage: {
+		type: String,
+		required: true
+	},
+	additionalImages: {
+		type: [String],
+		default: []
+	}
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
 	name: {
 		type: String,
@@ -14,9 +25,9 @@ const productSchema = new mongoose.Schema({
 		min: 0,
 		required: true
 	},
-	image: {
-		type: String,
-		required: [true, "Image is required"]
+	images: {
+		type: imageSchema,
+		required: [true, "Product must have images data."]
 	},
 	category: {
 		type: mongoose.Schema.Types.ObjectId,

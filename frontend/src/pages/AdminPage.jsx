@@ -23,7 +23,6 @@ const tabs = [
 	{ id: "analytics", label: "Analytics", icon: BarChart },
 ];
 
-
 const AdminPage = () => {
     const [activeTab, setActiveTab] = useState("products");
     const [showCreateProduct, setShowCreateProduct] = useState(false);
@@ -88,11 +87,21 @@ const AdminPage = () => {
 
             {activeTab === "analytics" && <AnalyticsTab />}
 
-            <Modal open={showCreateProduct} onClose={() => setShowCreateProduct(false)} title="Create Product">
+            <Modal
+	            title="Create Product"
+	            open={showCreateProduct}
+	            onClose={() => setShowCreateProduct(false)}
+	            maxWidth="max-w-xl"
+            >
                 {showCreateProduct && <CreateProductForm />}
             </Modal>
 
-            <Modal open={showCreateCategory} onClose={() => setShowCreateCategory(false)} title="Create Category">
+            <Modal
+	            title="Create Category"
+	            open={showCreateCategory}
+	            onClose={() => setShowCreateCategory(false)}
+	            maxWidth="max-w-xl"
+            >
                 {showCreateCategory && <CreateCategoryForm />}
             </Modal>
         </Container>

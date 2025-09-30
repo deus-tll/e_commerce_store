@@ -10,6 +10,7 @@ router.get("/", protectRoute, adminRoute, productController.getProducts);
 router.get("/featured", productController.getFeaturedProducts);
 router.get("/category/:category", productController.getProductsByCategory);
 router.get("/recommended", productController.getRecommendedProducts);
+router.get("/:id", productController.getProductById);
 router.post("/", protectRoute, adminRoute, productController.createProduct);
 router.put("/:id", protectRoute, adminRoute, productController.updateProduct);
 router.patch("/:id", protectRoute, adminRoute, productController.toggleFeaturedProduct);

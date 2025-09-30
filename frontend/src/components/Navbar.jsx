@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, User } from "lucide-react";
-import Container from "./ui/Container.jsx";
 import Button from "./ui/Button.jsx";
 
 import {useAuthStore} from "../stores/useAuthStore.js";
@@ -34,8 +33,6 @@ const Navbar = () => {
 
 						</Link>
 						)}
-
-					{/* Profile first, then Dashboard if admin */}
 
 					{ user ? (
 						<>

@@ -16,6 +16,17 @@ export class ProductController {
 		}
 	}
 
+	getProductById = async (req, res, next) => {
+		try {
+			const { id } = req.params;
+			const product = await this.productService.getProductById(id, { populated: true });
+			res.status(200).json(product);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
 	getFeaturedProducts = async (req, res, next) => {
 		try {
 			const featuredProducts = await this.productService.getFeaturedProducts();

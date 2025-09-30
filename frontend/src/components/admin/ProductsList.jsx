@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 import { Trash, Star, Pencil, Search } from "lucide-react";
 import IconButton from "../ui/IconButton.jsx";
 import Card from "../ui/Card.jsx";
@@ -7,7 +8,7 @@ import { formatCurrency } from "../../utils/format.js";
 import EmptyState from "../ui/EmptyState.jsx";
 import Pagination from "../ui/Pagination.jsx";
 import { useState, useEffect } from "react";
-import ProductEditForm from "./ProductEditForm.jsx";
+import EditProductForm from "./EditProductForm.jsx";
 import Toolbar from "../ui/Toolbar.jsx";
 import Button from "../ui/Button.jsx";
 import { Input } from "../ui/Input.jsx";
@@ -28,14 +29,17 @@ const ProductsList = ({ onCreate }) => {
             title: 'Product',
             dataIndex: 'name',
             render: (_, product) => (
-                <div className="flex items-center">
+                <Link to={`/product/${product._id}`} className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
-                        <img className='h-10 w-10 rounded-full object-cover' src={product.image} alt={product.name} />
+                        <img className='h-10 w-10 rounded-full object-cover' src={product?.images?.mainImage} alt={product.name} />
                     </div>
+
                     <div className="ml-4">
-                        <div className="text-sm font-medium text-white">{product.name}</div>
+                        <div className="text-sm font-medium text-white hover:underline">
+                            {product.name}
+                        </div>
                     </div>
-                </div>
+                </Link>
             )
         },
         {
@@ -75,6 +79,7 @@ const ProductsList = ({ onCreate }) => {
                     <IconButton variant="ghost" onClick={() => setEditing(product)} className="text-emerald-400 hover:text-emerald-300">
                         <Pencil className="h-5 w-5" />
                     </IconButton>
+
                     <IconButton variant="ghost" onClick={() => deleteProduct(product._id)} className="text-red-400 hover:text-red-300">
                         <Trash className="h-5 w-5" />
                     </IconButton>
@@ -95,9 +100,11 @@ const ProductsList = ({ onCreate }) => {
                     <div className="relative flex-1 max-w-md">
                         <Input leftIcon={Search} type="text" placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
                     </div>
+
                     <Button onClick={onCreate} className="flex items-center gap-2">
                         <Pencil className="h-4 w-4" /> Create Product
                     </Button>
+
                     {pagination && (
                         <div className="text-gray-300 text-sm">
                             Showing {((page - 1) * pagination.limit) + 1} to {Math.min(page * pagination.limit, pagination.total)} of {pagination.total} products
@@ -120,7 +127,7 @@ const ProductsList = ({ onCreate }) => {
                     </>
                 )}
                 {editing && (
-                    <ProductEditForm product={editing} onClose={() => setEditing(null)} />
+                    <EditProductForm product={editing} onClose={() => setEditing(null)} />
                 )}
             </Card>
         </div>

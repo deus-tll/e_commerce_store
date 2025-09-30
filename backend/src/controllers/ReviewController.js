@@ -35,7 +35,7 @@ export class ReviewController {
 			const reviewDTO = this.reviewService.toDTO(review);
 
 			reviewDTO.user = {
-				id: req.user._id.toString(),
+				_id: req.user._id.toString(),
 				name: req.user.name
 			};
 

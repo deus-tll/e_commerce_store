@@ -1,4 +1,5 @@
-const base = "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const base = "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const basePadding = "px-4 py-2";
 
 const variants = {
     primary: "bg-emerald-600 text-white hover:bg-emerald-500",
@@ -8,9 +9,17 @@ const variants = {
     ghost: "bg-transparent text-gray-200 hover:bg-gray-700",
 };
 
-const Button = ({ variant = "primary", className = "", children, ...props }) => {
+const Button = ({ variant = "primary", className = "", applyBasePadding = true, children, ...props }) => {
     return (
-        <button className={`${base} ${variants[variant]} ${className}`} {...props}>
+        <button
+            className={`
+                ${base} 
+                ${variants[variant]} 
+                ${className} 
+                ${applyBasePadding ? basePadding : ""}
+            `}
+            {...props}
+        >
             {children}
         </button>
     );

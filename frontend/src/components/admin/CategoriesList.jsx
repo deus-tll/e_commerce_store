@@ -5,7 +5,7 @@ import Modal from "../ui/Modal.jsx";
 import IconButton from "../ui/IconButton.jsx";
 import EmptyState from "../ui/EmptyState.jsx";
 import Card from "../ui/Card.jsx";
-import CategoryEditForm from "./CategoryEditForm.jsx";
+import EditCategoryForm from "./EditCategoryForm.jsx";
 import Toolbar from "../ui/Toolbar.jsx";
 import Button from "../ui/Button.jsx";
 import { Input } from "../ui/Input.jsx";
@@ -76,7 +76,7 @@ const CategoriesList = ({ onCreate }) => {
             )}
             <Modal open={!!editingCategory} onClose={closeEdit} title="Edit Category">
                 {editingCategory && (
-                    <CategoryEditForm category={editingCategory} onClose={closeEdit} />
+                    <EditCategoryForm category={editingCategory} onClose={closeEdit} />
                 )}
             </Modal>
         </Card>
