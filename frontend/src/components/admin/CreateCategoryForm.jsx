@@ -5,7 +5,6 @@ import { useCategoryStore } from "../../stores/useCategoryStore.js";
 import FormField from "../ui/FormField.jsx";
 import { Input, FileInput } from "../ui/Input.jsx";
 import Button from "../ui/Button.jsx";
-import Card from "../ui/Card.jsx";
 
 const template = { name: "", image: "" };
 
@@ -35,22 +34,18 @@ const CreateCategoryForm = () => {
 	};
 
     return (
-        <Card className="p-8 mb-8 max-w-xl mx-auto">
-			<h2 className="text-2xl font-semibold mb-6 text-emerald-300">Create Category</h2>
+	    <form onSubmit={handleSubmit} className="space-y-5">
+		    <FormField label="Category Name">
+			    <Input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} />
+		    </FormField>
 
-			<form onSubmit={handleSubmit} className="space-y-5">
-				<FormField label="Category Name">
-					<Input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} />
-				</FormField>
+		    <FileInput id="image" name="image" label="Upload Image" value={formData.image} onChange={handleImageChange} />
 
-                <FileInput id="image" name="image" label="Upload Image" value={formData.image} onChange={handleImageChange} />
-
-				<Button disabled={loading} className="w-full justify-center">
-					<PlusCircle className="h-4 w-4" />
-					Create Category
-				</Button>
-			</form>
-        </Card>
+		    <Button disabled={loading} className="w-full justify-center">
+			    <PlusCircle className="h-4 w-4" />
+			    Create Category
+		    </Button>
+	    </form>
 	);
 };
 

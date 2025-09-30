@@ -7,7 +7,6 @@ import Button from '../components/ui/Button.jsx';
 
 import { useAuthStore } from '../stores/useAuthStore.js';
 
-
 import { formatDate } from '../utils/format.js';
 
 const ProfilePage = () => {
@@ -73,5 +72,3 @@ return (
 }
 
 export default ProfilePage;
-
-

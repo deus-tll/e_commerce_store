@@ -16,5 +16,3 @@ const Badge = ({ children, color = "gray", leftIcon: LeftIcon, className = "" })
 };
 
 export default Badge;
-
-

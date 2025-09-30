@@ -1,5 +1,4 @@
 import {useState} from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {Lock} from "lucide-react";
 
 import {useAuthStore} from "../../stores/useAuthStore.js";
@@ -18,7 +17,6 @@ const ResetPasswordPage = () => {
 	});
 
 	const { token } = useParams();
-	const navigate = useNavigate();
 
     const { loading, resetPassword } = useAuthStore();
     const [errors, setErrors] = useState({});

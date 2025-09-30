@@ -11,5 +11,3 @@ const SectionHeader = ({ title, subtitle, right }) => {
 };
 
 export default SectionHeader;
-
-

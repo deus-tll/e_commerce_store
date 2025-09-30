@@ -9,5 +9,3 @@ const EmptyState = ({ title = "Nothing here", description = "", action = null })
 };
 
 export default EmptyState;
-
-

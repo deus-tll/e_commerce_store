@@ -1,8 +1,8 @@
 import Product from "../models/Product.js";
-import { CategoryService } from "./CategoryService.js";
+import {CategoryService} from "./CategoryService.js";
 import {redis} from "../config/redis.js";
 import {StorageProductService} from "./storages/StorageProductService.js";
-import {NotFoundError} from "../errors/apiErrors.js";
+import {InternalServerError, NotFoundError} from "../errors/apiErrors.js";
 
 
 export class ProductService {
@@ -21,9 +21,33 @@ export class ProductService {
 		}
 	}
 
-	async getProducts() {
-		return Product.find({}).populate({ path: "category", select: "name slug" });
-	}
+    async getProducts({ page = 1, limit = 10 } = {}) {
+        const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+        const numericLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+        const filter = {};
+        const total = await Product.countDocuments(filter);
+        const pages = Math.max(Math.ceil(total / numericLimit), 1);
+        const currentPage = Math.min(numericPage, pages);
+        const skip = (currentPage - 1) * numericLimit;
+
+        const products = await Product.find(filter)
+            .populate({ path: "category", select: "name slug" })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(numericLimit)
+            .lean();
+
+        return {
+            products,
+            pagination: {
+                total,
+                page: currentPage,
+                pages,
+                limit: numericLimit
+            }
+        };
+    }
 
 	async getProductById(productId, options = {}) {
 		const { populated = false, throwIfNotFound = true } = options;
@@ -67,34 +91,103 @@ export class ProductService {
 	async getRecommendedProducts() {
 		return Product.aggregate([
 			{ $sample: { size: 4 } },
-			{ $project: { _id: 1, name: 1, description: 1, price: 1, image: 1 } }
+			{ $project: { _id: 1, name: 1, description: 1, price: 1, images: 1 } }
 		]);
 	}
 
 	async createProduct(productData) {
-		const { image, ...rest } = productData;
-		let imageUrl = "";
+		const { images: inputImages, ...rest } = productData;
 
-		if (image) {
-			imageUrl = await this.storageProductService.upload(image);
+		let productImages = { mainImage: "", additionalImages: [] };
+
+		if (inputImages?.mainImage) {
+			productImages.mainImage = await this.storageProductService.upload(inputImages.mainImage);
+		}
+
+		if (Array.isArray(inputImages?.additionalImages) && inputImages.additionalImages.length > 0) {
+			productImages.additionalImages = await Promise.all(
+				inputImages.additionalImages.map(base64Image =>
+					this.storageProductService.upload(base64Image)
+				)
+			);
 		}
 
 		// Resolve category if provided as slug or name
-		let categoryName;
 		if (rest.category && typeof rest.category === "string") {
 			const categoryDoc = await this.categoryService.getBySlug(rest.category).catch(async () => {
 				return await this.categoryService.createCategory({ name: rest.category });
 			});
 			rest.category = categoryDoc._id;
-			categoryName = categoryDoc.name;
 		}
 
-		const product = await Product.create({ ...rest, image: imageUrl });
+		const product = await Product.create({ ...rest, images: productImages });
 
-		product.category.name = categoryName;
+		const populatedProduct = await this.getProductById(product._id, {
+			populated: true,
+			throwIfNotFound: false
+		});
 
-		return product;
+		if (!populatedProduct) {
+			throw new InternalServerError("Failed to retrieve created product after saving.");
+		}
+
+		return populatedProduct;
 	}
+
+    async updateProduct(productId, productData) {
+	    const { images: newImages, category, ...rest } = productData;
+
+        const update = { ...rest };
+
+        // If category provided as slug or id
+        if (typeof category === "string" && category.trim() !== "") {
+            try {
+                const categoryDoc = await this.categoryService.getBySlug(category);
+                update.category = categoryDoc._id;
+            } catch (_) {
+                const createdCategory = await this.categoryService.createCategory({ name: category });
+                update.category = createdCategory._id;
+            }
+        } else if (category) {
+            update.category = category;
+        }
+
+        // If image is a base64 data URL, upload and replace
+        if (newImages) {
+	        if (newImages.mainImage && typeof newImages.mainImage === "string" && newImages.mainImage.startsWith("data:")) {
+		        const imageUrl = await this.storageProductService.upload(newImages.mainImage);
+		        update['images.mainImage'] = imageUrl;
+	        }
+	        else if (newImages.mainImage !== undefined && typeof newImages.mainImage === "string") {
+		        update['images.mainImage'] = newImages.mainImage;
+	        }
+
+	        if (Array.isArray(newImages.additionalImages)) {
+		        const uploadedUrls = [];
+
+		        for (const image of newImages.additionalImages) {
+			        if (typeof image === "string" && image.startsWith("data:")) {
+				        const url = await this.storageProductService.upload(image);
+				        uploadedUrls.push(url);
+			        }
+			        else if (typeof image === "string") {
+				        uploadedUrls.push(image);
+			        }
+		        }
+
+		        update['images.additionalImages'] = uploadedUrls;
+	        }
+        }
+
+        const updated = await Product.findByIdAndUpdate(productId, { $set: update }, { new: true })
+            .populate({ path: "category", select: "name slug" });
+
+        if (!updated) {
+            throw new NotFoundError("Product not found");
+        }
+
+        return updated;
+    }
 
 	async toggleFeaturedProduct(productId) {
 		const product = await Product.findById(productId);
@@ -121,7 +214,15 @@ export class ProductService {
 			await this.#updateFeaturedProductsCache();
 		}
 
-		await this.storageProductService.delete(product.image);
+		if (product.images) {
+			await this.storageProductService.delete(product.images.mainImage);
+
+			if (Array.isArray(product.images.additionalImages)) {
+				await Promise.all(
+					product.images.additionalImages.map(url => this.storageProductService.delete(url))
+				);
+			}
+		}
 
 		return product;
 	}

@@ -7,5 +7,3 @@ const Toolbar = ({ children, className = "" }) => {
 };
 
 export default Toolbar;
-
-

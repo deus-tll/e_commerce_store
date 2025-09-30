@@ -54,12 +54,14 @@ export class PaymentService {
 			const amount = this.#convertToCents(product.price);
 			initialTotalAmount += amount * product.quantity;
 
+			const mainImageUrl = product.images?.mainImage;
+
 			return {
 				price_data: {
 					currency: "usd",
 					product_data: {
 						name: product.name,
-						images: [product.image],
+						images: mainImageUrl ? [mainImageUrl] : []
 					},
 					unit_amount: amount,
 				},

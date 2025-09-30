@@ -7,7 +7,9 @@ export const PRODUCTS_API_PATH = "/products";
 
 export const useProductStore = create((set, get) => ({
 	products: [],
+	pagination: null,
 	featuredProducts: [],
+	currentProduct: null,
 	loading: false,
 
 	createProduct: async (productData) => {
@@ -27,12 +29,57 @@ export const useProductStore = create((set, get) => ({
 		}
 	},
 
-	fetchAllProducts: async () => {
+	clearCurrentProduct: () => set({ currentProduct: null }),
+
+	fetchProductById: async (productId) => {
 		set({ loading: true });
 
 		try {
-			const res = await axios.get(PRODUCTS_API_PATH);
-			set({ products: res.data });
+			const res = await axios.get(`${PRODUCTS_API_PATH}/${productId}`);
+			set({ currentProduct: res.data });
+			return res.data;
+		}
+		catch (error) {
+			handleRequestError(error, "An error occurred", false);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	updateProduct: async (productId, productData) => {
+		set({ loading: true });
+
+		try {
+			const res = await axios.put(`${PRODUCTS_API_PATH}/${productId}`, productData);
+			// refresh current page after update if pagination exists
+			const { pagination } = get();
+			if (pagination) {
+				await get().fetchAllProducts(pagination.page, pagination.limit);
+			} else {
+				set((prev) => ({
+					products: prev.products.map(p => p._id === productId ? res.data : p)
+				}));
+			}
+			return res.data;
+		}
+		catch (error) {
+			handleRequestError(error, "An error occurred", false);
+			throw error;
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	fetchAllProducts: async (page = 1, limit = 10) => {
+		set({ loading: true });
+
+		try {
+			const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+			const res = await axios.get(`${PRODUCTS_API_PATH}?${params}`);
+			set({ products: res.data.products, pagination: res.data.pagination });
 		}
         catch (error) {
             handleRequestError(error, "An error occurred", false);

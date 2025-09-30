@@ -8,8 +8,6 @@ import CategoryItem from "../components/CategoryItem.jsx";
 import FeaturedProducts from "../components/FeaturedProducts.jsx";
 import { useCategoryStore } from "../stores/useCategoryStore.js";
 
-
-
 const HomePage = () => {
 	const { fetchFeaturedProducts, featuredProducts, isLoading } = useProductStore();
 	const { categories, fetchCategories } = useCategoryStore();
