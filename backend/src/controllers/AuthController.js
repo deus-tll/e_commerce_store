@@ -1,7 +1,12 @@
 import {AuthService} from "../services/AuthService.js";
 import {BadRequestError} from "../errors/apiErrors.js";
+import { MS_PER_MINUTE, MS_PER_DAY } from "../utils/timeConstants.js";
+import {ttlToMilliseconds} from "../utils/timeUtils.js";
 
 const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict" : "lax";
+
+const ACCESS_TOKEN_COOKIE_MAX_AGE = ttlToMilliseconds(process.env.ACCESS_TOKEN_TTL);
+const REFRESH_TOKEN_COOKIE_MAX_AGE = ttlToMilliseconds(process.env.REFRESH_TOKEN_TTL);
 
 export class AuthController {
 	constructor() {
@@ -18,8 +23,8 @@ export class AuthController {
 	}
 
 	#setCookies(res, accessToken, refreshToken) {
-		res.cookie("accessToken", accessToken, this.#setCookieToken(15 * 60 * 1000));
-		res.cookie("refreshToken", refreshToken, this.#setCookieToken(7 * 24 * 60 * 60 * 1000));
+		res.cookie("accessToken", accessToken, this.#setCookieToken(ACCESS_TOKEN_COOKIE_MAX_AGE));
+		res.cookie("refreshToken", refreshToken, this.#setCookieToken(REFRESH_TOKEN_COOKIE_MAX_AGE));
 	}
 
 	#clearCookies(res) {
@@ -102,7 +107,7 @@ export class AuthController {
 			const { refreshToken } = req.cookies;
 			const { accessToken } = await this.authService.refreshAccessToken(refreshToken);
 
-			res.cookie("accessToken", accessToken, this.#setCookieToken(15 * 60 * 1000));
+			res.cookie("accessToken", accessToken, this.#setCookieToken(ACCESS_TOKEN_COOKIE_MAX_AGE));
 
 			return res.status(200).json({ message: "Token refreshed successfully" });
 		}

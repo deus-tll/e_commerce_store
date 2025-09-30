@@ -11,6 +11,12 @@ import {
 	TokenExpiredError
 } from "../errors/apiErrors.js";
 import {TokenTypes} from "../utils/constants.js";
+import {MS_PER_DAY, MS_PER_HOUR, SECONDS_PER_DAY} from "../utils/timeConstants.js";
+
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL;
+const REFRESH_TOKEN_TTL = process.env.REFRESH_TOKEN_TTL;
 
 const APP_URL =
 	process.env.NODE_ENV !== "production"
@@ -31,14 +37,14 @@ export class AuthService {
 	}
 
 	#signAccessToken(userId) {
-		return jwt.sign({userId}, process.env.ACCESS_TOKEN_SECRET, {
-			expiresIn: "15m"
+		return jwt.sign({userId}, ACCESS_TOKEN_SECRET, {
+			expiresIn: ACCESS_TOKEN_TTL
 		});
 	}
 
 	#signRefreshToken(userId) {
-		return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
-			expiresIn: "7d"
+		return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
+			expiresIn: REFRESH_TOKEN_TTL
 		});
 	}
 
@@ -50,7 +56,7 @@ export class AuthService {
 	}
 
 	async #storeRefreshToken(userId, refreshToken) {
-		await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+		await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * SECONDS_PER_DAY);
 	}
 
 	async #removeRefreshToken(userId) {
@@ -89,7 +95,7 @@ export class AuthService {
 		});
 
 		const verificationToken = this.emailService.generateVerificationToken();
-		const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+		const verificationTokenExpiresAt = Date.now() + MS_PER_DAY;
 
 		await this.userService.setVerificationToken(
 			user._id,
@@ -191,7 +197,7 @@ export class AuthService {
 		}
 
 		const verificationToken = this.emailService.generateVerificationToken();
-		const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+		const verificationTokenExpiresAt = Date.now() + MS_PER_DAY;
 
 		await this.userService.setVerificationToken(
 			userId,
@@ -210,7 +216,7 @@ export class AuthService {
 		});
 
 		const resetToken = this.emailService.generateResetToken();
-		const resetPasswordTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
+		const resetPasswordTokenExpiresAt = Date.now() + MS_PER_HOUR;
 
 		await this.userService.setResetPasswordToken(
 			user._id,

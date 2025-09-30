@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import {MS_PER_DAY} from "../utils/timeConstants.js";
 
 
 export class AnalyticsService {
@@ -42,7 +43,7 @@ export class AnalyticsService {
 
 	async getDailySalesData() {
 		const endDate = new Date();
-		const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+		const startDate = new Date(endDate.getTime() - 7 * MS_PER_DAY);
 
 		const dailySalesData = await Order.aggregate([
 			{

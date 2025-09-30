@@ -2,6 +2,7 @@ import Coupon from "../models/Coupon.js";
 import Order from "../models/Order.js";
 import {stripe} from "../config/stripe.js";
 import {BadRequestError} from "../errors/apiErrors.js";
+import {MS_PER_DAY} from "../utils/timeConstants.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== "production"
@@ -34,7 +35,7 @@ export class PaymentService {
 		const newCoupon = {
 			code: "GIFT" + Math.random().toString(36).substr(2, 10).toUpperCase(),
 			discountPercentage: 10,
-			expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			expirationDate: new Date(Date.now() + 30 * MS_PER_DAY),
 			userId: userId,
 		};
 
