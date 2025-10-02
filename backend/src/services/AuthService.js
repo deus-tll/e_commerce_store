@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import {redis} from "../config/redis.js";
 
-import {UserService} from "./UserService.js";
-import {EmailService} from "./EmailService.js";
+import {IAuthService} from "../interfaces/IAuthService.js";
+import {IUserService} from "../interfaces/user/IUserService.js";
+import {IEmailService} from "../interfaces/IEmailService.js";
 
 import {
 	BadRequestError,
@@ -23,10 +24,40 @@ const APP_URL =
 		? process.env.DEVELOPMENT_CLIENT_URL
 		: process.env.APP_URL;
 
-export class AuthService {
-	constructor() {
-		this.userService = new UserService();
-		this.emailService = new EmailService();
+/**
+ * @typedef {IUserService} IUserService
+ * @typedef {IEmailService} IEmailService
+ */
+
+/**
+ * @typedef {object} UserDTO
+ * @property {string} _id
+ * @property {string} name
+ * @property {string} email
+ * @property {string} role
+ * @property {boolean} isVerified
+ * @property {Date} lastLogin
+ * @property {Date} createdAt
+ */
+
+export class AuthService extends IAuthService {
+	/**
+	 * @type {IUserService}
+	 */
+	userService;
+	/**
+	 * @type {IEmailService}
+	 */
+	emailService;
+
+	/**
+	 * @param {IUserService} userService
+	 * @param {IEmailService} emailService
+	 */
+	constructor(userService, emailService) {
+		super();
+		this.userService = userService;
+		this.emailService = emailService;
 	}
 
 	#userWithTokensResponse({ user, accessToken, refreshToken }) {
@@ -86,7 +117,7 @@ export class AuthService {
 	}
 
 	async signup(name, email, password) {
-		const user = await this.userService.createUser({
+		const user = await this.userService.create({
 			name,
 			email,
 			password,
@@ -112,19 +143,22 @@ export class AuthService {
 	}
 
 	async login(email, password) {
-		const user = await this.userService.getUserByEmail(email, {
+		const user = await this.userService.getByEmail(email, {
 			withPassword: true,
 			throwIfNotFound: true
 		});
+		const userId = user._id;
 
-		if (!(await user.comparePassword(password))) {
+		const isMatch = await this.userService.comparePassword(user, password);
+
+		if (!isMatch) {
 			throw new InvalidCredentialsError("Invalid credentials");
 		}
 
-		const { accessToken, refreshToken } = this.#generateTokens(user._id);
-		await this.#storeRefreshToken(user._id, refreshToken);
+		const { accessToken, refreshToken } = this.#generateTokens(userId);
+		await this.#storeRefreshToken(userId, refreshToken);
 
-		await this.userService.updateLastLogin(user._id);
+		await this.userService.updateLastLogin(userId);
 
 		return this.#userWithTokensResponse({ user, accessToken, refreshToken });
 	}
@@ -142,14 +176,14 @@ export class AuthService {
 	}
 
 	async getProfile(userId) {
-		const user = await this.userService.getUserById(userId);
+		const user = await this.userService.getById(userId);
 		return this.userService.toDTO(user);
 	}
 
 	async validateAccessToken(token) {
 		const decoded = await this.#verifyToken(token, process.env.ACCESS_TOKEN_SECRET, TokenTypes.ACCESS_TOKEN);
 
-		const user = await this.userService.getUserById(decoded.userId, {
+		const user = await this.userService.getById(decoded.userId, {
 			throwIfNotFound: false
 		});
 
@@ -173,7 +207,7 @@ export class AuthService {
 			throw new InvalidTokenError("Refresh token not found or revoked");
 		}
 
-		await this.userService.getUserById(decoded.userId);
+		await this.userService.getById(decoded.userId);
 
 		const accessToken = this.#signAccessToken(decoded.userId);
 
@@ -181,7 +215,7 @@ export class AuthService {
 	}
 
 	async verifyEmail(code) {
-		const user = await this.userService.verifyUser(code);
+		const user = await this.userService.verify(code);
 
 		const { accessToken, refreshToken } = this.#generateTokens(user._id);
 		await this.#storeRefreshToken(user._id, refreshToken);
@@ -190,7 +224,7 @@ export class AuthService {
 	}
 
 	async resendVerificationEmail(userId) {
-		const user = await this.userService.getUserById(userId);
+		const user = await this.userService.getById(userId);
 
 		if (user.isVerified) {
 			throw new BadRequestError("Email is already verified");
@@ -211,7 +245,7 @@ export class AuthService {
 	}
 
 	async forgotPassword(email) {
-		const user = await this.userService.getUserByEmail(email, {
+		const user = await this.userService.getByEmail(email, {
 			throwIfNotFound: true
 		});
 
@@ -234,7 +268,7 @@ export class AuthService {
 	}
 
 	async resetPassword(token, password) {
-		const user = await this.userService.resetUserPassword(token, password);
+		const user = await this.userService.resetPassword(token, password);
 
 		await this.emailService.sendPasswordResetSuccessEmail(user.email);
 
@@ -249,11 +283,13 @@ export class AuthService {
 	}
 
 	async changePassword(userId, currentPassword, newPassword) {
-		const user = await this.userService.getUserById(userId, {
+		const user = await this.userService.getById(userId, {
 			withPassword: true
 		});
 
-		if (!(await user.comparePassword(currentPassword))) {
+		const isMatch = await this.userService.comparePassword(user, currentPassword);
+
+		if (!isMatch) {
 			throw new InvalidCredentialsError("Current password is incorrect");
 		}
 

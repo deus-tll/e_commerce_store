@@ -8,9 +8,21 @@ const SAME_SITE_COOKIE_SETTER = process.env.NODE_ENV === "production" ? "strict"
 const ACCESS_TOKEN_COOKIE_MAX_AGE = ttlToMilliseconds(process.env.ACCESS_TOKEN_TTL);
 const REFRESH_TOKEN_COOKIE_MAX_AGE = ttlToMilliseconds(process.env.REFRESH_TOKEN_TTL);
 
+/**
+ * @typedef {import('../interfaces/IAuthService.js').IAuthService} IAuthService
+ */
+
 export class AuthController {
-	constructor() {
-		this.authService = new AuthService();
+	/**
+	 * @type {IAuthService}
+	 */
+	authService;
+
+	/**
+	 * @param {IAuthService} authService
+	 */
+	constructor(authService) {
+		this.authService = authService;
 	}
 
 	#setCookieToken(maxAge) {

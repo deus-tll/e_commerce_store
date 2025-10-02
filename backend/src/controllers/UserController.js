@@ -1,65 +1,12 @@
-import {UserService} from "../services/UserService.js";
+import { IUserService } from "../interfaces/user/IUserService.js";
 import {BadRequestError, ForbiddenError} from "../errors/apiErrors.js";
 
 export class UserController {
-	constructor() {
-		this.userService = new UserService();
-	}
-
-	getAllUsers = async (req, res, next) => {
-		try {
-			const page = parseInt(req.query.page) || 1;
-			const limit = parseInt(req.query.limit) || 10;
-
-			if (page < 1 || limit < 1) {
-				throw new BadRequestError("Page and limit must be positive numbers");
-			}
-
-			if (limit > 100) {
-				throw new BadRequestError("Limit cannot exceed 100 users per page");
-			}
-
-			const filters = {};
-			if (req.query.role && ['customer', 'admin'].includes(req.query.role)) {
-				filters.role = req.query.role;
-			}
-			if (req.query.isVerified !== undefined) {
-				filters.isVerified = req.query.isVerified === 'true';
-			}
-			if (req.query.search?.trim()) {
-				filters.search = req.query.search.trim();
-			}
-
-			const result = await this.userService.getAllUsers(page, limit, filters);
-
-			const usersDTO = result.users.map(user => this.userService.toDTO(user));
-
-			return res.status(200).json({
-				users: usersDTO,
-				pagination: result.pagination
-			});
-		}
-		catch (error) {
-			next(error);
-		}
-	}
-
-	getUserById = async (req, res, next) => {
-		try {
-			const { userId } = req.params;
-
-			if (!userId?.trim()) {
-				throw new BadRequestError("User ID is required");
-			}
-
-			const user = await this.userService.getUserById(userId.trim());
-			const userDTO = this.userService.toDTO(user);
-
-			return res.status(200).json(userDTO);
-		}
-		catch (error) {
-			next(error);
-		}
+	/**
+	 * @param {IUserService} userService
+	 */
+	constructor(userService) {
+		this.userService = userService;
 	}
 
 	createUser = async (req, res, next) => {
@@ -82,7 +29,7 @@ export class UserController {
 				isVerified: isVerified === true
 			};
 
-			const user = await this.userService.createUser(userData);
+			const user = await this.userService.create(userData);
 			const userDTO = this.userService.toDTO(user);
 
 			return res.status(201).json(userDTO);
@@ -118,7 +65,7 @@ export class UserController {
 				throw new BadRequestError("Invalid role. Must be 'customer' or 'admin'");
 			}
 
-			const updatedUser = await this.userService.updateUser(userId.trim(), filteredData);
+			const updatedUser = await this.userService.update(userId.trim(), filteredData);
 			const userDTO = this.userService.toDTO(updatedUser);
 
 			return res.status(200).json(userDTO);
@@ -140,8 +87,64 @@ export class UserController {
 				throw new ForbiddenError("You cannot delete your own account");
 			}
 
-			const deletedUser = await this.userService.deleteUser(userId.trim());
+			const deletedUser = await this.userService.delete(userId.trim());
 			const userDTO = this.userService.toDTO(deletedUser);
+
+			return res.status(200).json(userDTO);
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
+	getAllUsers = async (req, res, next) => {
+		try {
+			const page = parseInt(req.query.page) || 1;
+			const limit = parseInt(req.query.limit) || 10;
+
+			if (page < 1 || limit < 1) {
+				throw new BadRequestError("Page and limit must be positive numbers");
+			}
+
+			if (limit > 100) {
+				throw new BadRequestError("Limit cannot exceed 100 users per page");
+			}
+
+			const filters = {};
+			if (req.query.role && ['customer', 'admin'].includes(req.query.role)) {
+				filters.role = req.query.role;
+			}
+			if (req.query.isVerified !== undefined) {
+				filters.isVerified = req.query.isVerified === 'true';
+			}
+			if (req.query.search?.trim()) {
+				filters.search = req.query.search.trim();
+			}
+
+			const result = await this.userService.getAll(page, limit, filters);
+
+			const usersDTO = result.users.map(user => this.userService.toDTO(user));
+
+			return res.status(200).json({
+				users: usersDTO,
+				pagination: result.pagination
+			});
+		}
+		catch (error) {
+			next(error);
+		}
+	}
+
+	getUserById = async (req, res, next) => {
+		try {
+			const { userId } = req.params;
+
+			if (!userId?.trim()) {
+				throw new BadRequestError("User ID is required");
+			}
+
+			const user = await this.userService.getById(userId.trim());
+			const userDTO = this.userService.toDTO(user);
 
 			return res.status(200).json(userDTO);
 		}
@@ -153,9 +156,9 @@ export class UserController {
 	getUserStats = async (req, res, next) => {
 		try {
 			const [totalUsers, verifiedUsers, adminUsers] = await Promise.all([
-				this.userService.getAllUsers(1, 1),
-				this.userService.getAllUsers(1, 1, { isVerified: true }),
-				this.userService.getAllUsers(1, 1, { role: 'admin' })
+				this.userService.getAll(1, 1),
+				this.userService.getAll(1, 1, { isVerified: true }),
+				this.userService.getAll(1, 1, { role: 'admin' })
 			]);
 
 			const stats = {

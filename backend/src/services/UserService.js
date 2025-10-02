@@ -1,40 +1,37 @@
-import User from "../models/User.js";
-import {BadRequestError, ConflictError, NotFoundError} from "../errors/apiErrors.js";
+import {IUserService} from "../interfaces/user/IUserService.js";
+import {BadRequestError, NotFoundError} from "../errors/apiErrors.js";
 
-export class UserService {
-	toDTO(user) {
+export class UserService extends IUserService {
+	/**
+	 * @type {IUserRepository}
+	 */
+	userRepository;
+
+	/**
+	 * @param {IUserRepository} userRepository - The repository implementation.
+	 */
+	constructor(userRepository) {
+		super();
+		this.userRepository = userRepository;
+	}
+
+	toDTO(entity) {
 		return {
-			_id: user._id,
-			name: user.name,
-			email: user.email,
-			role: user.role,
-			isVerified: user.isVerified,
-			lastLogin: user.lastLogin,
-			createdAt: user.createdAt
+			_id: entity._id,
+			name: entity.name,
+			email: entity.email,
+			role: entity.role,
+			isVerified: entity.isVerified,
+			lastLogin: entity.lastLogin,
+			createdAt: entity.createdAt
 		};
 	}
 
-	async createUser({ name, email, password, role = "customer", isVerified = false }) {
-		try {
-			return await User.create({
-				name,
-				email,
-				password,
-				role,
-				isVerified
-			});
-		}
-		catch (error) {
-			// MongoDB duplicate key error (11000)
-			if (error.code === 11000 && error.keyPattern?.email) {
-				throw new ConflictError("User with this email already exists");
-			}
-
-			throw error;
-		}
+	async create(data) {
+		return await this.userRepository.create(data);
 	}
 
-	async updateUser(userId, data) {
+	async update(id, data) {
 		const restrictedFields = [
 			'password', 'verificationToken', 'verificationTokenExpiresAt',
 			'resetPasswordToken', 'resetPasswordTokenExpiresAt'
@@ -45,7 +42,7 @@ export class UserService {
 			throw new BadRequestError("Cannot update restricted fields directly");
 		}
 
-		const user = await User.findByIdAndUpdate(userId, data, {
+		const user = await this.userRepository.updateById(id, data, {
 			new: true,
 			runValidators: true
 		});
@@ -57,20 +54,20 @@ export class UserService {
 		return user;
 	}
 
-	async updateLastLogin(userId) {
-		return await this.updateUser(userId, { lastLogin: new Date() });
+	async updateLastLogin(id) {
+		return await this.update(id, { lastLogin: new Date() });
 	}
 
-	async setVerificationToken(userId, token, expiresAt) {
-		return User.findByIdAndUpdate(userId, {
+	async setVerificationToken(id, token, expiresAt) {
+		return this.userRepository.updateById(id, {
 			verificationToken: token,
 			verificationTokenExpiresAt: expiresAt
 		}, { new: true });
 	}
 
-	async verifyUser(verificationToken) {
-		const user = await User.findOne({
-			verificationToken,
+	async verify(token) {
+		const user = await this.userRepository.findOne({
+			verificationToken: token,
 			verificationTokenExpiresAt: { $gt: Date.now() }
 		});
 
@@ -78,25 +75,29 @@ export class UserService {
 			throw new BadRequestError("Invalid or expired verification token");
 		}
 
-		user.isVerified = true;
-		user.verificationToken = undefined;
-		user.verificationTokenExpiresAt = undefined;
+		const updatedUser = await this.userRepository.updateById(user._id, {
+			isVerified: true,
+			verificationToken: undefined,
+			verificationTokenExpiresAt: undefined,
+		}, { new: true });
 
-		await user.save();
+		if (!updatedUser) {
+			throw new NotFoundError("User not found during verification update");
+		}
 
-		return user;
+		return updatedUser;
 	}
 
-	async setResetPasswordToken(userId, token, expiresAt) {
-		return User.findByIdAndUpdate(userId, {
+	async setResetPasswordToken(id, token, expiresAt) {
+		return this.userRepository.updateById(id, {
 			resetPasswordToken: token,
 			resetPasswordTokenExpiresAt: expiresAt
 		}, { new: true });
 	}
 
-	async resetUserPassword(resetToken, newPassword) {
-		const user = await User.findOne({
-			resetPasswordToken: resetToken,
+	async resetPassword(token, newPassword) {
+		const user = await this.userRepository.findOne({
+			resetPasswordToken: token,
 			resetPasswordTokenExpiresAt: { $gt: Date.now() }
 		});
 
@@ -104,38 +105,46 @@ export class UserService {
 			throw new BadRequestError("Invalid or expired reset token");
 		}
 
-		user.password = newPassword;
-		user.resetPasswordToken = undefined;
-		user.resetPasswordTokenExpiresAt = undefined;
+		const updatedUser = await this.userRepository.updateById(user._id, {
+			password: newPassword,
+			resetPasswordToken: undefined,
+			resetPasswordTokenExpiresAt: undefined,
+		}, { new: true });
 
-		await user.save();
+		if (!updatedUser) {
+			throw new NotFoundError("User not found during password reset");
+		}
 
-		return user;
+		return updatedUser;
 	}
 
-	async changePassword(user, newPassword) {
+	async changePassword(entity, newPassword) {
+		if (!entity) {
+			throw new NotFoundError("User not found");
+		}
+
+		const updatedUser = await this.userRepository.updateById(entity._id, {
+			password: newPassword,
+		}, { new: true });
+
+		if (!updatedUser) {
+			throw new NotFoundError("User not found during password change");
+		}
+
+		return updatedUser;
+	}
+
+	async delete(id) {
+		const user = await this.userRepository.deleteById(id);
+
 		if (!user) {
 			throw new NotFoundError("User not found");
 		}
 
-		user.password = newPassword;
-
-		await user.save();
-
 		return user;
 	}
 
-	async deleteUser(userId) {
-		const user = await User.findByIdAndDelete(userId);
-
-		if (!user) {
-			throw new NotFoundError("User not found");
-		}
-
-		return user;
-	}
-
-	async getAllUsers(page = 1, limit = 10, filters = {}) {
+	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
 
 		const query = {};
@@ -148,13 +157,10 @@ export class UserService {
 			];
 		}
 
-		const [users, total] = await Promise.all([
-			User.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
-			User.countDocuments(query)
-		]);
+		const { users, total } = await this.userRepository.findAndCount(query, skip, limit);
 
 		return {
-			users: users,
+			users: users.map(this.toDTO),
 			pagination: {
 				page,
 				limit,
@@ -164,16 +170,10 @@ export class UserService {
 		};
 	}
 
-	async getUserById(userId, options = {}) {
-		const { withPassword = false, throwIfNotFound = true } = options;
+	async getById(id, options = {}) {
+		const { throwIfNotFound = true } = options;
 
-		let query = User.findById(userId);
-
-		if (withPassword) {
-			query = query.select('+password');
-		}
-
-		const user = await query;
+		const user = await this.userRepository.findById(id, options);
 
 		if (!user && throwIfNotFound) {
 			throw new NotFoundError("User not found");
@@ -182,16 +182,10 @@ export class UserService {
 		return user;
 	}
 
-	async getUserByEmail(email, options = {}) {
-		const { withPassword = false, throwIfNotFound = false } = options;
+	async getByEmail(email, options = {}) {
+		const { throwIfNotFound = false } = options;
 
-		let query = User.findOne({ email });
-
-		if (withPassword) {
-			query = query.select("+password");
-		}
-
-		const user = await query;
+		const user = await this.userRepository.findOne({ email }, options);
 
 		if (!user && throwIfNotFound) {
 			throw new NotFoundError("User not found");
@@ -200,18 +194,22 @@ export class UserService {
 		return user;
 	}
 
-	async checkUserExistsByEmail(email) {
-		const user = await this.getUserByEmail(email);
+	async existsByEmail(email) {
+		const user = await this.getByEmail(email);
 		return !!user;
 	}
 
-	async findOrCreateAdmin(adminData) {
-		const exists = await this.checkUserExistsByEmail(adminData.email);
+	async comparePassword(entity, password) {
+		return this.userRepository.comparePassword(entity, password);
+	}
+
+	async findOrCreateAdmin(data) {
+		const exists = await this.existsByEmail(data.email);
 
 		if (exists) return null;
 
-		return await this.createUser({
-			...adminData,
+		return await this.create({
+			...data,
 			role: "admin",
 			isVerified: true
 		});

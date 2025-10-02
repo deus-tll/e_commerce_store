@@ -5,19 +5,19 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import authRouter from "./routers/auth.js";
 import productsRouter from "./routers/products.js";
 import categoriesRouter from "./routers/categories.js";
 import cartRouter from "./routers/cart.js";
 import couponsRouter from "./routers/coupons.js";
 import paymentsRouter from "./routers/payments.js";
 import analyticsRouter from "./routers/analytics.js";
-import usersRouter from "./routers/users.js";
 import reviewsRouter from "./routers/reviews.js";
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
 import {CategorySeeder} from "./seeders/CategorySeeder.js";
-import {AdminSeeder} from "./seeders/AdminSeeder.js";
+
+import container from "./config/dependencyContainer.js";
+import {getRouter} from "./utils/iocHelpers.js";
 
 const PORT = process.env.PORT || 3001;
 
@@ -39,6 +39,9 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+const authRouter = getRouter(container, "authRouter");
+const usersRouter = getRouter(container, "usersRouter");
+
 app.use("/api/auth", authRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
@@ -52,7 +55,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use(errorHandler);
 
 const categorySeeder = new CategorySeeder();
-const adminSeeder = new AdminSeeder();
+const adminSeeder = container.get('AdminSeeder');
 
 connectDB().then(async () => {
 	await categorySeeder.seed();

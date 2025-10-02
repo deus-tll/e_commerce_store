@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import User from "../models/mongoose/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import {MS_PER_DAY} from "../utils/timeConstants.js";

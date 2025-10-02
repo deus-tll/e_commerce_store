@@ -1,8 +1,11 @@
-import {UserService} from "../services/UserService.js";
+import { IUserService } from "../interfaces/user/IUserService.js";
 
 export class AdminSeeder {
-	constructor() {
-		this.userService = new UserService();
+	/**
+	 * @param {IUserService} userService
+	 */
+	constructor(userService) {
+		this.userService = userService;
 	}
 
 	async seed() {
