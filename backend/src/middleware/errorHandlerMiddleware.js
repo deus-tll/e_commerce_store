@@ -1,5 +1,14 @@
 import { ApiError } from "../errors/apiErrors.js";
 
+/**
+ * @typedef {import('express').ErrorRequestHandler} ErrorRequestHandler
+ */
+
+/**
+ * Global error handler middleware. It catches errors passed via next(err),
+ * checks if they are custom ApiErrors, and sends a standardized JSON response.
+ * @type {ErrorRequestHandler}
+ */
 const errorHandler = (err, req, res, next) => {
 	console.error("Caught by error handler:", err);
 

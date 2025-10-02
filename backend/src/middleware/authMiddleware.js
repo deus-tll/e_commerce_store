@@ -35,28 +35,28 @@ export const createProtectRoute = (authService) => {
 }
 
 
-const authService = container.get("IAuthService");
+// const authService = container.get("IAuthService");
 
 export const protectRoute = async (req, res, next) => {
-	try {
-		const accessToken = req.cookies.accessToken ||
-			(req.headers.authorization && req.headers.authorization.split(' ')[1]);
-
-		if (!accessToken) {
-			throw new InvalidTokenError("No access token provided");
-		}
-
-		const { userId, user } = await authService.validateAccessToken(accessToken);
-
-		req.userId = userId;
-		req.user = user;
-
-		next();
-	}
-	catch (error) {
-		console.error("Error in protectRoute middleware", error.message);
-		next(error);
-	}
+	// try {
+	// 	const accessToken = req.cookies.accessToken ||
+	// 		(req.headers.authorization && req.headers.authorization.split(' ')[1]);
+	//
+	// 	if (!accessToken) {
+	// 		throw new InvalidTokenError("No access token provided");
+	// 	}
+	//
+	// 	const { userId, user } = await authService.validateAccessToken(accessToken);
+	//
+	// 	req.userId = userId;
+	// 	req.user = user;
+	//
+	// 	next();
+	// }
+	// catch (error) {
+	// 	console.error("Error in protectRoute middleware", error.message);
+	// 	next(error);
+	// }
 };
 
 export const adminRoute = async (req, res, next) => {
