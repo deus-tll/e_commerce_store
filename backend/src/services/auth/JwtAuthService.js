@@ -1,18 +1,16 @@
 import jwt from "jsonwebtoken";
-import {redis} from "../config/redis.js";
+import {redis} from "../../config/redis.js";
 
-import {IAuthService} from "../interfaces/IAuthService.js";
-import {IUserService} from "../interfaces/user/IUserService.js";
-import {IEmailService} from "../interfaces/IEmailService.js";
+import {IAuthService} from "../../interfaces/IAuthService.js";
 
 import {
 	BadRequestError,
 	InvalidCredentialsError,
 	InvalidTokenError,
 	TokenExpiredError
-} from "../errors/apiErrors.js";
-import {TokenTypes} from "../utils/constants.js";
-import {MS_PER_DAY, MS_PER_HOUR, SECONDS_PER_DAY} from "../utils/timeConstants.js";
+} from "../../errors/apiErrors.js";
+import {TokenTypes} from "../../utils/constants.js";
+import {MS_PER_DAY, MS_PER_HOUR, SECONDS_PER_DAY} from "../../utils/timeConstants.js";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -25,8 +23,8 @@ const APP_URL =
 		: process.env.APP_URL;
 
 /**
- * @typedef {IUserService} IUserService
- * @typedef {IEmailService} IEmailService
+ * @typedef {import('../../interfaces/user/IUserService.js').IUserService} IUserService
+ * @typedef {import('../../interfaces/IEmailService').IEmailService} IEmailService
  */
 
 /**
@@ -40,7 +38,7 @@ const APP_URL =
  * @property {Date} createdAt
  */
 
-export class AuthService extends IAuthService {
+export class JwtAuthService extends IAuthService {
 	/**
 	 * @type {IUserService}
 	 */

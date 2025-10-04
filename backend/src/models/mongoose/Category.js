@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {toSlug} from "../../utils/slugify.js";
 
 const categorySchema = new mongoose.Schema({
 	name: {
@@ -19,16 +20,6 @@ const categorySchema = new mongoose.Schema({
 	}
 }, { timestamps: true });
 
-function toSlug(value) {
-	return value
-		.toString()
-		.trim()
-		.toLowerCase()
-		.replace(/['"]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/(^-|-$)+/g, "");
-}
-
 categorySchema.pre("validate", function(next) {
 	if (!this.slug && this.name) {
 		this.slug = toSlug(this.name);
@@ -39,6 +30,9 @@ categorySchema.pre("validate", function(next) {
 	return next();
 });
 
+/**
+ * @type {import('mongoose').Model & import('mongoose').Document}
+ */
 const Category = mongoose.model("Category", categorySchema);
 
 export default Category;

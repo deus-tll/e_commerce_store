@@ -1,20 +1,12 @@
-import Category from "../models/Category.js";
+import Category from "../models/mongoose/Category.js";
+import {CloudinaryStorageService} from "./storages/CloudinaryStorageService.js";
 import {BadRequestError, NotFoundError} from "../errors/apiErrors.js";
-import { StorageCategoryService } from "./storages/StorageCategoryService.js";
-
-function toSlug(value) {
-	return value
-		.toString()
-		.trim()
-		.toLowerCase()
-		.replace(/['"]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/(^-|-$)+/g, "");
-}
+import {FileFolders} from "../utils/constants.js";
+import {toSlug} from "../utils/slugify.js";
 
 export class CategoryService {
 	constructor() {
-		this.storageCategoryService = new StorageCategoryService();
+		this.storageService = new CloudinaryStorageService(FileFolders.CATEGORIES);
 	}
 	async #ensureUniqueSlug(baseSlug) {
 		let slug = baseSlug;
@@ -27,7 +19,7 @@ export class CategoryService {
 		return slug;
 	}
 
-	async createCategory(name, image, options = { isPredefined: false }) {
+	async createCategory(name, image = "", options = { isPredefined: false }) {
 		if (!name || !name.trim()) {
 			throw new BadRequestError("Category name is required");
 		}
@@ -41,7 +33,7 @@ export class CategoryService {
 				imageUrl = image;
 			}
 			else {
-				imageUrl = await this.storageCategoryService.upload(image);
+				imageUrl = await this.storageService.upload(image);
 			}
 		}
 
@@ -69,8 +61,8 @@ export class CategoryService {
 		}
 
 		if (image) {
-			await this.storageCategoryService.delete(category.image);
-			category.image = await this.storageCategoryService.upload(image);
+			await this.storageService.delete(category.image);
+			category.image = await this.storageService.upload(image);
 		}
 
 		return category.save();
@@ -80,7 +72,7 @@ export class CategoryService {
 		const category = await Category.findByIdAndDelete(categoryId);
 		if (!category) throw new NotFoundError("Category not found");
 
-		await this.storageCategoryService.delete(category.image);
+		await this.storageService.delete(category.image);
 
 		return category;
 	}

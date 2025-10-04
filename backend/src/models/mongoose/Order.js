@@ -36,6 +36,9 @@ const orderSchema = new mongoose.Schema({
 	},
 }, { timestamps: true });
 
+/**
+ * @type {import('mongoose').Model & import('mongoose').Document}
+ */
 const Order = mongoose.model("Order", orderSchema);
 
 export default Order;

@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 
-import {IEmailService} from "../interfaces/IEmailService.js";
-import {mailtrapClient, sender} from "../config/mailtrap.js";
+import {IEmailService} from "../../interfaces/IEmailService.js";
+import {mailtrapClient, sender} from "../../config/mailtrap.js";
 
 const templatesDir = path.join(process.cwd(), "src", "templates");
 
-export class EmailService extends IEmailService {
+export class MailTrapEmailService extends IEmailService {
 	async #readTemplate(templateName) {
 		const templatePath = path.join(templatesDir, templateName);
 

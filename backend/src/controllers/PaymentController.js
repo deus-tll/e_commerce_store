@@ -1,8 +1,8 @@
-import {PaymentService} from "../services/PaymentService.js";
+import {StripePaymentService} from "../services/payment/StripePaymentService.js";
 
 export class PaymentController {
 	constructor() {
-		this.paymentService = new PaymentService();
+		this.paymentService = new StripePaymentService();
 	}
 
 	createCheckoutSession = async (req, res, next) => {

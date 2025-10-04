@@ -1,10 +1,16 @@
-import User from "../models/mongoose/User.js";
-import Product from "../models/Product.js";
-import Order from "../models/Order.js";
 import {MS_PER_DAY} from "../utils/timeConstants.js";
-
+import {OrderService} from "./OrderService.js";
+import {ProductService} from "./ProductService.js";
+import {UserService} from "./UserService.js";
+import {UserMongooseRepository} from "../repositories/mongoose/UserMongooseRepository.js";
 
 export class AnalyticsService {
+	constructor() {
+		this.orderService = new OrderService();
+		this.userService = new UserService(new UserMongooseRepository());
+		this.productService = new ProductService();
+	}
+
 	#getDatesInRange(startDate, endDate) {
 		const dates = [];
 		let currentDate = new Date(startDate);
@@ -18,18 +24,13 @@ export class AnalyticsService {
 	}
 
 	async getAnalyticsData() {
-		const totalUsers = await User.countDocuments();
-		const totalProducts = await Product.countDocuments();
+		const { usersPagination } = await this.userService.getAll(1, 1);
+		const { productsPagination } = await this.productService.getProducts(1, 1);
 
-		const salesData = await Order.aggregate([
-			{
-				$group: {
-					_id: null,
-					totalSales: { $sum: 1 },
-					totalRevenue: { $sum: "$totalAmount" },
-				}
-			}
-		]);
+		const totalUsers = usersPagination.total;
+		const totalProducts = productsPagination.total;
+
+		const salesData = await this.orderService.getSalesAggregation();
 
 		const { totalSales, totalRevenue } = salesData[0] || { totalSales: 0, totalRevenue: 0 };
 
@@ -45,24 +46,7 @@ export class AnalyticsService {
 		const endDate = new Date();
 		const startDate = new Date(endDate.getTime() - 7 * MS_PER_DAY);
 
-		const dailySalesData = await Order.aggregate([
-			{
-				$match: {
-					createdAt: {
-						$gte: startDate,
-						$lte: endDate
-					},
-				}
-			},
-			{
-				$group: {
-					_id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-					sales: { $sum: 1 },
-					revenue: { $sum: "$totalAmount" }
-				}
-			},
-			{ $sort: { _id: 1 } }
-		]);
+		const dailySalesData = await this.orderService.getDailySalesAggregation(startDate, endDate);
 
 		const dateArray = this.#getDatesInRange(startDate, endDate);
 

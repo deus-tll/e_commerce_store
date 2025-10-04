@@ -8,7 +8,7 @@ export class CouponController {
 	getCoupon = async (req, res, next) => {
 		try {
 			const userId = req.user._id;
-			const coupon = await this.couponService.getCoupon(userId);
+			const coupon = await this.couponService.getActiveCouponByUserId(userId);
 
 			res.status(200).json(coupon);
 		}

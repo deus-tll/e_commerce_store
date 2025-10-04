@@ -8,7 +8,7 @@ export class ProductController {
 	getProducts = async (req, res, next) => {
 		try {
 			const { page, limit } = req.query;
-			const result = await this.productService.getProducts({ page, limit });
+			const result = await this.productService.getProducts(page, limit);
 			res.status(200).json(result);
 		}
 		catch (error) {

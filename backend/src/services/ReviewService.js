@@ -1,6 +1,6 @@
 import {ProductService} from "./ProductService.js";
 import {BadRequestError, NotFoundError} from "../errors/apiErrors.js";
-import Review from "../models/Review.js";
+import Review from "../models/mongoose/Review.js";
 
 export class ReviewService {
 	constructor() {

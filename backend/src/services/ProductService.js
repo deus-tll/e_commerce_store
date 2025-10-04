@@ -1,13 +1,14 @@
-import Product from "../models/Product.js";
+import Product from "../models/mongoose/Product.js";
 import {CategoryService} from "./CategoryService.js";
 import {redis} from "../config/redis.js";
-import {StorageProductService} from "./storages/StorageProductService.js";
 import {InternalServerError, NotFoundError} from "../errors/apiErrors.js";
+import {CloudinaryStorageService} from "./storages/CloudinaryStorageService.js";
+import {FileFolders} from "../utils/constants.js";
 
 
 export class ProductService {
 	constructor() {
-		this.storageProductService = new StorageProductService();
+		this.storageService = new CloudinaryStorageService(FileFolders.PRODUCTS);
 		this.categoryService = new CategoryService();
 	}
 
@@ -21,17 +22,16 @@ export class ProductService {
 		}
 	}
 
-    async getProducts({ page = 1, limit = 10 } = {}) {
+    async getProducts(page = 1, limit = 10, filters = {}) {
         const numericPage = Math.max(parseInt(page, 10) || 1, 1);
         const numericLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
 
-        const filter = {};
-        const total = await Product.countDocuments(filter);
+        const total = await Product.countDocuments(filters);
         const pages = Math.max(Math.ceil(total / numericLimit), 1);
         const currentPage = Math.min(numericPage, pages);
         const skip = (currentPage - 1) * numericLimit;
 
-        const products = await Product.find(filter)
+        const products = await Product.find(filters)
             .populate({ path: "category", select: "name slug" })
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -48,6 +48,10 @@ export class ProductService {
             }
         };
     }
+
+	async getProductsByIds(productIds) {
+		return Product.find({ _id: { $in: productIds } });
+	}
 
 	async getProductById(productId, options = {}) {
 		const { populated = false, throwIfNotFound = true } = options;
@@ -101,13 +105,13 @@ export class ProductService {
 		let productImages = { mainImage: "", additionalImages: [] };
 
 		if (inputImages?.mainImage) {
-			productImages.mainImage = await this.storageProductService.upload(inputImages.mainImage);
+			productImages.mainImage = await this.storageService.upload(inputImages.mainImage);
 		}
 
 		if (Array.isArray(inputImages?.additionalImages) && inputImages.additionalImages.length > 0) {
 			productImages.additionalImages = await Promise.all(
 				inputImages.additionalImages.map(base64Image =>
-					this.storageProductService.upload(base64Image)
+					this.storageService.upload(base64Image)
 				)
 			);
 		}
@@ -115,7 +119,7 @@ export class ProductService {
 		// Resolve category if provided as slug or name
 		if (rest.category && typeof rest.category === "string") {
 			const categoryDoc = await this.categoryService.getBySlug(rest.category).catch(async () => {
-				return await this.categoryService.createCategory({ name: rest.category });
+				return await this.categoryService.createCategory(rest.category);
 			});
 			rest.category = categoryDoc._id;
 		}
@@ -145,7 +149,7 @@ export class ProductService {
                 const categoryDoc = await this.categoryService.getBySlug(category);
                 update.category = categoryDoc._id;
             } catch (_) {
-                const createdCategory = await this.categoryService.createCategory({ name: category });
+                const createdCategory = await this.categoryService.createCategory(category);
                 update.category = createdCategory._id;
             }
         } else if (category) {
@@ -155,7 +159,7 @@ export class ProductService {
         // If image is a base64 data URL, upload and replace
         if (newImages) {
 	        if (newImages.mainImage && typeof newImages.mainImage === "string" && newImages.mainImage.startsWith("data:")) {
-		        const imageUrl = await this.storageProductService.upload(newImages.mainImage);
+		        const imageUrl = await this.storageService.upload(newImages.mainImage);
 		        update['images.mainImage'] = imageUrl;
 	        }
 	        else if (newImages.mainImage !== undefined && typeof newImages.mainImage === "string") {
@@ -167,7 +171,7 @@ export class ProductService {
 
 		        for (const image of newImages.additionalImages) {
 			        if (typeof image === "string" && image.startsWith("data:")) {
-				        const url = await this.storageProductService.upload(image);
+				        const url = await this.storageService.upload(image);
 				        uploadedUrls.push(url);
 			        }
 			        else if (typeof image === "string") {
@@ -215,11 +219,11 @@ export class ProductService {
 		}
 
 		if (product.images) {
-			await this.storageProductService.delete(product.images.mainImage);
+			await this.storageService.delete(product.images.mainImage);
 
 			if (Array.isArray(product.images.additionalImages)) {
 				await Promise.all(
-					product.images.additionalImages.map(url => this.storageProductService.delete(url))
+					product.images.additionalImages.map(url => this.storageService.delete(url))
 				);
 			}
 		}

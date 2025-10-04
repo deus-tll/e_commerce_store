@@ -1,8 +1,7 @@
-import Coupon from "../models/Coupon.js";
-import Order from "../models/Order.js";
-import {stripe} from "../config/stripe.js";
-import {BadRequestError} from "../errors/apiErrors.js";
-import {MS_PER_DAY} from "../utils/timeConstants.js";
+import {OrderService} from "../OrderService.js";
+import {CouponService} from "../CouponService.js";
+import {stripe} from "../../config/stripe.js";
+import {BadRequestError} from "../../errors/apiErrors.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== "production"
@@ -11,7 +10,12 @@ const APP_URL =
 
 const TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS = process.env.TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS || 20000;
 
-export class PaymentService {
+export class StripePaymentService {
+	constructor() {
+		this.orderService = new OrderService();
+		this.couponService = new CouponService();
+	}
+
 	#convertToCents(value) {
 		return Math.round(value * 100);
 	};
@@ -27,21 +31,6 @@ export class PaymentService {
 		});
 
 		return coupon.id;
-	};
-
-	async #createNewCoupon(userId) {
-		await Coupon.findOneAndDelete({ userId });
-
-		const newCoupon = {
-			code: "GIFT" + Math.random().toString(36).substr(2, 10).toUpperCase(),
-			discountPercentage: 10,
-			expirationDate: new Date(Date.now() + 30 * MS_PER_DAY),
-			userId: userId,
-		};
-
-		await new Coupon(newCoupon).save();
-
-		return newCoupon;
 	};
 
 	async createCheckoutSession(products, couponCode, userId) {
@@ -74,7 +63,7 @@ export class PaymentService {
 
 		let coupon = null;
 		if (couponCode) {
-			coupon = await Coupon.findOne({ code: couponCode, userId, isActive: true });
+			coupon = await this.couponService.findActiveCouponByCodeAndUser(couponCode, userId);
 
 			if (coupon) {
 				totalAmount -= Math.round((totalAmount * coupon.discountPercentage) / 100);
@@ -82,7 +71,7 @@ export class PaymentService {
 		}
 
 		if (initialTotalAmount >= TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) {
-			this.#createNewCoupon(userId).catch(error => {
+			this.couponService.createNewGiftCoupon(userId).catch(error => {
 				console.error("Failed to create new coupon:", error);
 			});
 		}
@@ -123,7 +112,7 @@ export class PaymentService {
 
 		if (session.payment_status === "paid") {
 			// Idempotency: if an order was already created for this session, return it
-			const existingOrder = await Order.findOne({ stripeSessionId: sessionId });
+			const existingOrder = await this.orderService.findOrderByStripeSessionId(sessionId);
 			if (existingOrder) {
 				return {
 					success: true,
@@ -133,35 +122,27 @@ export class PaymentService {
 			}
 
 			if (session.metadata.couponCode) {
-				await Coupon.findOneAndUpdate(
-					{
-						code: session.metadata.couponCode,
-						userId: session.metadata.userId
-					},
-					{
-						isActive: false,
-					}
+				await this.couponService.deactivateCoupon(
+					session.metadata.couponCode,
+					session.metadata.userId
 				);
 			}
 
 			const products = JSON.parse(session.metadata.products);
-			const newOrder = new Order({
-				user: session.metadata.userId,
-				products: products.map((product) => ({
-					product: product.id,
-					quantity: product.quantity,
-					price: product.price,
-				})),
-				totalAmount: this.#convertToDollars(session.amount_total),
-				stripeSessionId: sessionId
-			});
+			const totalAmount = this.#convertToDollars(session.amount_total);
 
+			let newOrder;
 			try {
-				await newOrder.save();
+				newOrder = await this.orderService.createOrder(
+					session.metadata.userId,
+					products,
+					totalAmount,
+					sessionId
+				);
 			} catch (error) {
 				// Handle potential race condition where another request created the order
 				if (error && error.code === 11000) {
-					const order = await Order.findOne({ stripeSessionId: sessionId });
+					const order = await this.orderService.findOrderByStripeSessionId(sessionId);
 					if (order) {
 						return {
 							success: true,

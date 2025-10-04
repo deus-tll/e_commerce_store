@@ -41,6 +41,9 @@ const productSchema = new mongoose.Schema({
 	}
 }, { timestamps: true });
 
+/**
+ * @type {import('mongoose').Model & import('mongoose').Document}
+ */
 const Product = mongoose.model("Product", productSchema);
 
 export default Product;

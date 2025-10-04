@@ -1,8 +1,10 @@
 import {UserMongooseRepository} from "../repositories/mongoose/UserMongooseRepository.js";
 
+import {CloudinaryStorageService} from "../services/storages/CloudinaryStorageService.js";
+
 import {UserService} from "../services/UserService.js";
-import {EmailService} from "../services/EmailService.js";
-import {AuthService} from "../services/AuthService.js";
+import {MailTrapEmailService} from "../services/email/MailTrapEmailService.js";
+import {JwtAuthService} from "../services/auth/JwtAuthService.js";
 
 import {UserController} from "../controllers/UserController.js";
 import {AuthController} from "../controllers/AuthController.js";
@@ -11,6 +13,7 @@ import {createAuthRouter} from "../routers/authRouterFactory.js";
 
 import {AdminSeeder} from "../seeders/AdminSeeder.js";
 import {createUsersRouter} from "../routers/usersRouterFactory.js";
+import {FileFolders} from "../utils/constants.js";
 
 class Container {
 	constructor() {
@@ -50,19 +53,30 @@ const container = new Container();
 // 1. Repositories (lowest level dependency, have no dependencies)
 container.register('IUserRepository', () => new UserMongooseRepository());
 
-// 2. Services (depends on repositories)
+// 2. Shared Implementations (Low Level)
+container.register('CloudinaryStorageService', () => CloudinaryStorageService);
+
+// 3. Services (depends on repositories)
+container.register('ICategoryStorageService', (c) => {
+	const StorageClass = c.get('CloudinaryStorageService');
+	return new StorageClass(FileFolders.CATEGORIES);
+});
+container.register('IProductStorageService', (c) => {
+	const StorageClass = c.get('CloudinaryStorageService');
+	return new StorageClass(FileFolders.PRODUCTS);
+});
 container.register('IUserService', (c) => {
 	const userRepository = c.get('IUserRepository');
 	return new UserService(userRepository);
 });
-container.register('IEmailService', () => new EmailService());
+container.register('IEmailService', () => new MailTrapEmailService());
 container.register('IAuthService', (c) => {
 	const userService = c.get('IUserService');
 	const emailService = c.get('IEmailService');
-	return new AuthService(userService, emailService);
+	return new JwtAuthService(userService, emailService);
 });
 
-// 3. Controllers (depends on services)
+// 4. Controllers (depends on services)
 container.register('UserController', (c) => {
 	const userService = c.get('IUserService');
 	return new UserController(userService);
@@ -72,7 +86,7 @@ container.register('AuthController', (c) => {
 	return new AuthController(authService);
 });
 
-// 4. Routers (Depends on Controller and Middleware/Service)
+// 5. Routers (Depends on Controller and Middleware/Service)
 container.register('usersRouter', (c) => {
 	const userController = c.get('UserController');
 	const authService = c.get('IAuthService');
@@ -86,7 +100,7 @@ container.register('authRouter', (c) => {
 	return createAuthRouter(authController, authService);
 });
 
-// 5. Seeders (depends on services)
+// 6. Seeders (depends on services)
 container.register('AdminSeeder', (c) => {
 	const userService = c.get('IUserService');
 	return new AdminSeeder(userService);

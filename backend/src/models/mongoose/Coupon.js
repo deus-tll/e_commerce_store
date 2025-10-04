@@ -28,6 +28,9 @@ const couponSchema  = new mongoose.Schema({
 	}
 }, { timestamps: true });
 
+/**
+ * @type {import('mongoose').Model & import('mongoose').Document}
+ */
 const Coupon = mongoose.model("Coupon", couponSchema);
 
 export default Coupon;

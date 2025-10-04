@@ -1,9 +1,13 @@
-import Product from "../models/Product.js";
-import Cart from "../models/Cart.js";
+import Cart from "../models/mongoose/Cart.js";
 import {NotFoundError} from "../errors/apiErrors.js";
+import {ProductService} from "./ProductService.js";
 
 
 export class CartService {
+	constructor() {
+		this.productService = new ProductService();
+	}
+
 	async #getOrCreateCart(userId) {
 		let cart = await Cart.findOne({ user: userId });
 		if (!cart) {
@@ -15,7 +19,7 @@ export class CartService {
 	async getCartProducts(user) {
 		const cart = await this.#getOrCreateCart(user._id);
 		const productIds = cart.items.map(item => item.product);
-		const products = await Product.find({ _id: { $in: productIds } });
+		const products = await this.productService.getProductsByIds(productIds);
 
 		return products.map((product) => {
 			const item = cart.items.find((cartItem) => cartItem.product.toString() === product._id.toString());
