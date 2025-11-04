@@ -1,0 +1,11 @@
+# Dependencies/Runtime
+node_modules
+npm-debug.log
+.env
+.npmrc
+
+# Version Control/IDEs
+.git
+.gitignore
+.vscode
+.idea
