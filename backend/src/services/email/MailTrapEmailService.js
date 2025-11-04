@@ -1,23 +1,17 @@
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
-
-import {IEmailService} from "../../interfaces/IEmailService.js";
 import {mailtrapClient, sender} from "../../config/mailtrap.js";
 
-const templatesDir = path.join(process.cwd(), "src", "templates");
+import {IEmailService} from "../../interfaces/email/IEmailService.js";
+import {IEmailContentService} from "../../interfaces/email/IEmailContentService.js";
 
 export class MailTrapEmailService extends IEmailService {
-	async #readTemplate(templateName) {
-		const templatePath = path.join(templatesDir, templateName);
+	/** @type {IEmailContentService} */ #contentService;
 
-		try {
-			return fs.readFileSync(templatePath, "utf-8");
-		}
-		catch (error) {
-			console.error(`Error reading email template ${templateName}:`, error);
-			throw new Error("Failed to read email template");
-		}
+	/**
+	 * @param {IEmailContentService} contentService
+	 */
+	constructor(contentService) {
+		super();
+		this.#contentService = contentService;
 	}
 
 	async #sendEmail(to, subject, htmlContent, category) {
@@ -39,37 +33,38 @@ export class MailTrapEmailService extends IEmailService {
 		}
 	}
 
-	generateVerificationToken() {
-		return Math.floor(100000 + Math.random() * 900000).toString();
-	}
-
-	generateResetToken() {
-		return crypto.randomBytes(20).toString("hex");
-	}
-
 	async sendVerificationEmail(email, verificationToken) {
 		const subject = "Verify Your Email";
-		const htmlContent = await this.#readTemplate("emailVerification.html");
-		const finalHtml = htmlContent.replace("{verificationCode}", verificationToken);
 		const category = "Email Verification";
+		const finalHtml = await this.#contentService.renderTemplate(
+			"emailVerification.html",
+			{ verificationCode: verificationToken }
+		);
 
 		await this.#sendEmail(email, subject, finalHtml, category);
 	}
 
 	async sendPasswordResetEmail(email, resetPasswordUrl) {
 		const subject = "Reset Your Password";
-		const htmlContent = await this.#readTemplate("passwordResetRequest.html");
-		const finalHtml = htmlContent.replace("{resetPasswordUrl}", resetPasswordUrl);
 		const category = "Password Reset";
+
+		const finalHtml = await this.#contentService.renderTemplate(
+			"passwordResetRequest.html",
+			{ resetPasswordUrl: resetPasswordUrl }
+		);
 
 		await this.#sendEmail(email, subject, finalHtml, category);
 	}
 
 	async sendPasswordResetSuccessEmail(email) {
 		const subject = "Password Reset Successful";
-		const htmlContent = await this.#readTemplate("passwordResetSuccess.html");
 		const category = "Password Reset";
 
-		await this.#sendEmail(email, subject, htmlContent, category);
+		const finalHtml = await this.#contentService.renderTemplate(
+			"passwordResetSuccess.html",
+			{}
+		);
+
+		await this.#sendEmail(email, subject, finalHtml, category);
 	}
 }

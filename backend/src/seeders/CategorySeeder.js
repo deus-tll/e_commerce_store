@@ -1,8 +1,13 @@
-import { CategoryService } from "../services/CategoryService.js";
+import {ICategoryService} from "../interfaces/category/ICategoryService.js";
+import {BaseSeeder} from "./BaseSeeder.js";
+
+import {EnvModes} from "../utils/constants.js";
+import {CreateCategoryDTO} from "../domain/index.js";
 
 const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || EnvModes.DEV;
 const APP_URL =
-	process.env.NODE_ENV !== "production"
+	NODE_ENV !== EnvModes.PROD
 		? `http://localhost:${PORT}`
 		: process.env.APP_URL;
 
@@ -16,26 +21,33 @@ const defaultCategories = [
 	{ name: "T-Shirts", image: "/public/categories/tshirts.jpg" },
 ];
 
-export class CategorySeeder {
-	constructor() {
-		this.categoryService = new CategoryService();
+export class CategorySeeder extends BaseSeeder {
+	/** @type {ICategoryService} */ #categoryService;
+
+	/**
+	 * @param {ICategoryService} categoryService
+	 */
+	constructor(categoryService) {
+		super();
+		this.#categoryService = categoryService;
 	}
 
 	async seed() {
 		try {
-			const count = await this.categoryService.countCategories();
+			const categoryPaginationResultDTO = await this.#categoryService.getAll(1, 1);
 
-			if (count > 0) {
+			if (categoryPaginationResultDTO.pagination.total > 0) {
 				console.log("Categories already exist, skipping seeding.");
 				return;
 			}
 
 			for (const category of defaultCategories) {
-				await this.categoryService.createCategory(
-					category.name,
-					`${APP_URL}${category.image}`,
-					{ isPredefined: true }
-				);
+				const createCategoryDTO = new CreateCategoryDTO({
+					name: category.name,
+					image: `${APP_URL}${category.image}`
+				});
+
+				await this.#categoryService.create(createCategoryDTO);
 			}
 
 			console.log("Categories seeded successfully!");

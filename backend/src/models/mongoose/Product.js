@@ -11,6 +11,25 @@ const imageSchema = new mongoose.Schema({
 	}
 }, { _id: false });
 
+const ratingStatsSchema = new mongoose.Schema({
+	averageRating: {
+		type: Number,
+		default: 0,
+		min: 0,
+		max: 5
+	},
+	totalReviews: {
+		type: Number,
+		default: 0,
+		min: 0
+	},
+	ratingSum: {
+		type: Number,
+		default: 0,
+		min: 0
+	}
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
 	name: {
 		type: String,
@@ -38,6 +57,10 @@ const productSchema = new mongoose.Schema({
 	isFeatured: {
 		type: Boolean,
 		default: false
+	},
+	ratingStats: {
+		type: ratingStatsSchema,
+		default: () => ({})
 	}
 }, { timestamps: true });
 

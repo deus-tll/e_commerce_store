@@ -1,166 +1,99 @@
-import {OrderService} from "../OrderService.js";
-import {CouponService} from "../CouponService.js";
-import {stripe} from "../../config/stripe.js";
+import {IPaymentService} from "../../interfaces/payment/IPaymentService.js";
+import {IStripeService} from "../../interfaces/payment/IStripeService.js";
+import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandler.js";
+import {ICouponHandler} from "../../interfaces/coupon/ICouponHandler.js";
+import {CheckoutSessionDTO, OrderProductItem} from "../../domain/index.js";
+
 import {BadRequestError} from "../../errors/apiErrors.js";
 
-const APP_URL =
-	process.env.NODE_ENV !== "production"
-		? process.env.DEVELOPMENT_CLIENT_URL
-		: process.env.APP_URL;
+import {Currency} from "../../utils/currency.js";
 
-const TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS = process.env.TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS || 20000;
+export class StripePaymentService extends IPaymentService {
+	/** @type {IStripeService} */ #stripeService;
+	/** @type {ICheckoutOrderHandler} */ #orderHandler;
+	/** @type {ICouponHandler} */ #couponHandler;
 
-export class StripePaymentService {
-	constructor() {
-		this.orderService = new OrderService();
-		this.couponService = new CouponService();
+	/**
+	 * @param {IStripeService} stripeService
+	 * @param {ICheckoutOrderHandler} orderHandler
+	 * @param {ICouponHandler} couponHandler
+	 */
+	constructor(stripeService, orderHandler, couponHandler) {
+		super();
+		this.#stripeService = stripeService;
+		this.#orderHandler = orderHandler;
+		this.#couponHandler = couponHandler;
 	}
 
-	#convertToCents(value) {
-		return Math.round(value * 100);
-	};
-
-	#convertToDollars(value) {
-		return value / 100;
-	};
-
-	async #createStripeCoupon(discountPercentage) {
-		const coupon = await stripe.coupons.create({
-			percent_off: discountPercentage,
-			duration: "once"
+	/**
+	 * Builds simplified product data for Stripe metadata.
+	 * @param {OrderProductItem[]} products
+	 * @returns {string} JSON string of product snapshots.
+	 */
+	#getProductsMetadataSnapshot(products) {
+		const snapshot = products.map((product) => {
+			return {
+				productId: product.productId,
+				quantity: product.quantity,
+				price: product.price,
+				productName: product.productName,
+				productMainImage: product.productMainImage
+			};
 		});
 
-		return coupon.id;
-	};
+		return JSON.stringify(snapshot);
+	}
 
 	async createCheckoutSession(products, couponCode, userId) {
 		if (!Array.isArray(products) || products.length === 0) {
 			throw new BadRequestError("Invalid or empty products array");
 		}
 
-		let initialTotalAmount = 0;
+		// 1. Prepare line items
+		const { lineItems, initialTotalAmount } = this.#stripeService.processProductsForStripe(products);
 
-		const lineItems = products.map(product => {
-			const amount = this.#convertToCents(product.price);
-			initialTotalAmount += amount * product.quantity;
+		// 2. Apply coupon discount
+		const { totalAmount, appliedCoupon } = await this.#couponHandler.applyDiscount(
+			initialTotalAmount,
+			couponCode,
+			userId
+		);
 
-			const mainImageUrl = product.images?.mainImage;
+		// 3. Optionally grant new coupon
+		this.#couponHandler.grantNewCouponIfEligible(userId, initialTotalAmount);
 
-			return {
-				price_data: {
-					currency: "usd",
-					product_data: {
-						name: product.name,
-						images: mainImageUrl ? [mainImageUrl] : []
-					},
-					unit_amount: amount,
-				},
-				quantity: product.quantity || 1,
-			};
-		});
+		// 4. Prepare Stripe discounts (if coupon applied)
+		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);
 
-		let totalAmount = initialTotalAmount;
+		const productsSnapshot = this.#getProductsMetadataSnapshot(products);
 
-		let coupon = null;
-		if (couponCode) {
-			coupon = await this.couponService.findActiveCouponByCodeAndUser(couponCode, userId);
+		// 5. Create Stripe session
+		const session = await this.#stripeService.createCheckoutSession(
+			lineItems,
+			stripeDiscounts,
+			userId,
+			couponCode,
+			productsSnapshot
+		);
 
-			if (coupon) {
-				totalAmount -= Math.round((totalAmount * coupon.discountPercentage) / 100);
-			}
-		}
-
-		if (initialTotalAmount >= TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) {
-			this.couponService.createNewGiftCoupon(userId).catch(error => {
-				console.error("Failed to create new coupon:", error);
-			});
-		}
-
-		const session = await stripe.checkout.sessions.create({
-			payment_method_types: ["card"],
-			line_items: lineItems,
-			mode: "payment",
-			success_url: `${APP_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
-			cancel_url: `${APP_URL}/purchase-cancel`,
-			discounts: coupon
-				? [
-					{
-						coupon: await this.#createStripeCoupon(coupon.discountPercentage)
-					}
-				] : [],
-			metadata: {
-				userId: userId.toString(),
-				couponCode: couponCode || "",
-				products: JSON.stringify(
-					products.map((p) => ({
-						id: p._id,
-						quantity: p.quantity,
-						price: p.price
-					}))
-				)
-			}
-		});
-
-		return {
+		return new CheckoutSessionDTO({
 			id: session.id,
-			totalAmount: this.#convertToDollars(totalAmount),
-		};
+			totalAmount: Currency.fromCents(totalAmount)
+		});
 	}
 
 	async checkoutSuccess(sessionId) {
-		const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-		if (session.payment_status === "paid") {
-			// Idempotency: if an order was already created for this session, return it
-			const existingOrder = await this.orderService.findOrderByStripeSessionId(sessionId);
-			if (existingOrder) {
-				return {
-					success: true,
-					message: "Payment already processed, returning existing order",
-					orderId: existingOrder._id
-				};
-			}
-
-			if (session.metadata.couponCode) {
-				await this.couponService.deactivateCoupon(
-					session.metadata.couponCode,
-					session.metadata.userId
-				);
-			}
-
-			const products = JSON.parse(session.metadata.products);
-			const totalAmount = this.#convertToDollars(session.amount_total);
-
-			let newOrder;
-			try {
-				newOrder = await this.orderService.createOrder(
-					session.metadata.userId,
-					products,
-					totalAmount,
-					sessionId
-				);
-			} catch (error) {
-				// Handle potential race condition where another request created the order
-				if (error && error.code === 11000) {
-					const order = await this.orderService.findOrderByStripeSessionId(sessionId);
-					if (order) {
-						return {
-							success: true,
-							message: "Payment already processed concurrently, returning existing order",
-							orderId: order._id
-						};
-					}
-				}
-				throw error;
-			}
-
-			return {
-				success: true,
-				message: "Payment successful, order created, and coupon deactivated if used",
-				orderId: newOrder._id
-			};
-		} else {
-			throw new BadRequestError("Payment confirmation failed");
+		const existingOrder = await this.#orderHandler.checkExistingOrder(sessionId);
+		if (existingOrder) {
+			return existingOrder;
 		}
+
+		const sessionData = await this.#stripeService.retrievePaidSessionData(sessionId);
+
+		return await this.#orderHandler.handleOrderCreation(
+			sessionData.metadata,
+			sessionId,
+			sessionData.amountTotal
+		);
 	}
 }

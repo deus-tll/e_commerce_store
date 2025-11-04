@@ -1,11 +1,18 @@
-import { IUserService } from "../interfaces/user/IUserService.js";
+import {IUserService} from "../interfaces/user/IUserService.js";
+import {BaseSeeder} from "./BaseSeeder.js";
+import {CreateUserDTO} from "../domain/index.js";
 
-export class AdminSeeder {
+import {UserRoles} from "../utils/constants.js";
+
+export class AdminSeeder  extends BaseSeeder {
+	/** @type {IUserService} */ #userService;
+
 	/**
 	 * @param {IUserService} userService
 	 */
 	constructor(userService) {
-		this.userService = userService;
+		super();
+		this.#userService = userService;
 	}
 
 	async seed() {
@@ -13,24 +20,28 @@ export class AdminSeeder {
 			const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
 
 			if (!ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
-				console.log("Admin credentials missing in environment variables, skipping seeding.");
+				console.warn("Admin credentials missing in environment variables, skipping seeding.");
 				return;
 			}
 
-			const adminData = {
+			const exists = await this.#userService.existsByEmail(ADMIN_EMAIL);
+
+			if (exists) {
+				console.log("Admin already exists, skipping seeding.");
+				return;
+			}
+
+			const createAdminDTO = new CreateUserDTO({
 				name: ADMIN_NAME,
 				email: ADMIN_EMAIL,
-				password: ADMIN_PASSWORD
-			};
+				password: ADMIN_PASSWORD,
+				role: UserRoles.ADMIN,
+				isVerified: true
+			});
 
-			const admin = await this.userService.findOrCreateAdmin(adminData);
+			await this.#userService.create(createAdminDTO);
 
-			if (admin) {
-				console.log("Admin created successfully!");
-			}
-			else {
-				console.log("Admin already exists, skipping seeding.");
-			}
+			console.log("Admin created successfully!");
 		}
 		catch (error) {
 			console.error("Error while seeding admin:", error.message);

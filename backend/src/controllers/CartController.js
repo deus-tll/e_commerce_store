@@ -1,57 +1,106 @@
-import {CartService} from "../services/CartService.js";
+import {ICartService} from "../interfaces/cart/ICartService.js";
 
+/**
+ * Handles incoming HTTP requests related to the user's shopping cart, focusing on
+ * extracting request data and delegating business logic to the ICartService.
+ */
 export class CartController {
-	constructor() {
-		this.cartService = new CartService();
+	/** @type {ICartService} */ #cartService;
+
+	/**
+	 * @param {ICartService} cartService
+	 */
+	constructor(cartService) {
+		this.#cartService = cartService;
 	}
 
-	getCartProducts = async (req, res, next) => {
-		try {
-			const cartItems = await this.cartService.getCartProducts(req.user);
-			res.status(200).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
-	}
-
-	addProductToCart = async (req, res, next) => {
+	/**
+	 * Adds a single product to the authenticated user's cart.
+	 * @param {object} req - Express request object. Expects 'productId' in 'req.body' and 'userId' in req.userId.
+	 * @param {object} res - Express response object.
+	 * @param {function} next - Express next middleware function.
+	 * @returns {Promise<void>} - Responds with status 201 and the updated array of CartItemDTOs.
+	 */
+	addProduct = async (req, res, next) => {
 		try {
 			const { productId } = req.body;
-			const cartItems = await this.cartService.addProductToCart(req.user, productId);
 
-			res.status(201).json(cartItems);
+			const cartItems = await this.#cartService.addProduct(req.userId, productId);
+
+			return res.status(201).json(cartItems);
 		} catch (error) {
 			next(error);
 		}
 	}
 
-	removeProductFromCart = async (req, res, next) => {
+	/**
+	 * Removes a specific product entirely from the authenticated user's cart.
+	 * @param {object} req - Express request object. Expects 'productId' in req.params and 'userId' in req.userId.
+	 * @param {object} res - Express response object.
+	 * @param {function} next - Express next middleware function.
+	 * @returns {Promise<void>} - Responds with status 200 and the updated array of CartItemDTOs.
+	 */
+	removeProduct = async (req, res, next) => {
 		try {
 			const { productId } = req.params;
-			const cartItems = await this.cartService.removeProductFromCart(req.user, productId);
 
-			res.status(200).json(cartItems);
+			const cartItems = await this.#cartService.removeProduct(req.userId, productId);
+
+			return res.status(200).json(cartItems);
 		} catch (error) {
 			next(error);
 		}
 	}
 
-	clearCart = async (req, res, next) => {
+	/**
+	 * Clears all items from the authenticated user's cart.
+	 * @param {object} req - Express request object. Expects 'userId' in req.userId.
+	 * @param {object} res - Express response object.
+	 * @param {function} next - Express next middleware function.
+	 * @returns {Promise<void>} - Responds with status 200 and the newly cleared array of CartItemDTOs.
+	 */
+	clear = async (req, res, next) => {
 		try {
-			await this.cartService.clearCart(req.user);
-			res.status(204).end();
+			const cartItems = await this.#cartService.clear(req.userId);
+
+			return res.status(200).json(cartItems);
 		} catch (error) {
 			next(error);
 		}
 	}
 
-	updateProductQuantityInCart = async (req, res, next) => {
+	/**
+	 * Updates the quantity of a specific product in the authenticated user's cart.
+	 * @param {object} req - Express request object. Expects 'productId' in req.params, 'quantity' in 'req.body', and 'userId' in req.userId.
+	 * @param {object} res - Express response object.
+	 * @param {function} next - Express next middleware function.
+	 * @returns {Promise<void>} - Responds with status 200 and the updated array of CartItemDTOs.
+	 */
+	updateProductQuantity = async (req, res, next) => {
 		try {
 			const { productId } = req.params;
-			const { quantity } = req.body;
-			const cartItems = await this.cartService.updateProductQuantityInCart(req.user, productId, quantity);
+			const quantity = Number(req.body.quantity);
 
-			res.status(200).json(cartItems);
+			const cartItems = await this.#cartService.updateProductQuantity(req.userId, productId, quantity);
+
+			return res.status(200).json(cartItems);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	/**
+	 * Retrieves the complete shopping cart details for the authenticated user, including product details.
+	 * @param {object} req - Express request object. Expects 'userId' in req.userId.
+	 * @param {object} res - Express response object.
+	 * @param {function} next - Express next middleware function.
+	 * @returns {Promise<void>} - Responds with status 200 and the array of CartItemDTOs.
+	 */
+	getCartItems = async (req, res, next) => {
+		try {
+			const cartItems = await this.#cartService.getCartItems(req.userId);
+
+			return res.status(200).json(cartItems);
 		} catch (error) {
 			next(error);
 		}

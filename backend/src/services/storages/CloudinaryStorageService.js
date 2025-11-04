@@ -1,33 +1,49 @@
 import cloudinary from "../../config/cloudinary.js";
-import { InternalServerError } from "../../errors/apiErrors.js";
-import {IStorageService} from "../../interfaces/IStorageService.js";
+
+import {IStorageService} from "../../interfaces/storage/IStorageService.js";
+
+import {InternalServerError} from "../../errors/apiErrors.js";
 
 /**
  * Cloudinary implementation of the IStorageService contract.
- * The specific folder is set via constructor injection.
  * @augments IStorageService
  */
 export class CloudinaryStorageService extends IStorageService {
 	/**
-	 * @type {string}
+	 * Extracts the public ID segment (excluding folder and extension) from a secure URL.
+	 * @param {string} fileUrl
+	 * @param {string} folder - The base folder name (e.g., 'categories').
+	 * @returns {string | null} The public ID segment (e.g., 'product-123'), or null if extraction fails.
 	 */
-	#folder;
+	#extractPublicIdSegment(fileUrl, folder) {
+		// 1. Split the URL path based on the folder name.
+		const urlSegments = fileUrl.split(`${folder}/`);
 
-	/**
-	 * @param {string} folder - The base folder name in the cloud storage (e.g., 'categories', 'products').
-	 */
-	constructor(folder) {
-		super();
-		if (!folder) {
-			throw new Error("CloudinaryStorageService requires a folder name.");
+		if (urlSegments.length < 2) {
+			// Folder path wasn't found in the URL.
+			console.warn(`Cloudinary delete warning: Could not find folder path '${folder}' in URL: ${fileUrl}`);
+			return null;
 		}
-		this.#folder = folder;
+
+		const publicIdWithExt = urlSegments.pop(); // e.g., 'product-123.jpg'
+
+		// 2. Extract the public ID by removing the file extension (everything before the last dot).
+		const lastDotIndex = publicIdWithExt.lastIndexOf('.');
+
+		if (lastDotIndex === -1) {
+			// Handle case where file has no extension
+			console.warn(`Cloudinary delete warning: Could not find file extension in URL segment: ${publicIdWithExt}`);
+			return null;
+		}
+
+		// Returns the public ID segment, e.g., 'product-123'
+		return publicIdWithExt.substring(0, lastDotIndex);
 	}
 
-	async upload(file) {
+	async upload(file, folder) {
 		try {
-			const response = await cloudinary.uploader.upload(file, { folder: this.#folder });
-			return response.secure_url;
+			const response = await cloudinary.uploader.upload(file, { folder });
+			return response["secure_url"];
 		}
 		catch (error) {
 			console.error("Error uploading file to Cloudinary", error);
@@ -35,16 +51,19 @@ export class CloudinaryStorageService extends IStorageService {
 		}
 	}
 
-	async delete(fileUrl) {
+	async delete(fileUrl, folder) {
 		try {
 			if (!fileUrl) return;
 
-			// Extract public ID from the URL (e.g., /folder/id.ext -> folder/id)
-			const urlParts = fileUrl.split("/");
-			const publicIdWithExt = urlParts.pop();
-			const publicId = publicIdWithExt.split(".")[0];
+			const publicIdSegment = this.#extractPublicIdSegment(fileUrl, folder);
 
-			await cloudinary.uploader.destroy(`${this.#folder}/${publicId}`);
+			if (!publicIdSegment) {
+				return;
+			}
+
+			const fullPublicId = `${folder}/${publicIdSegment}`;
+
+			await cloudinary.uploader.destroy(fullPublicId);
 		}
 		catch (error) {
 			console.error("Error deleting file from Cloudinary", error);
