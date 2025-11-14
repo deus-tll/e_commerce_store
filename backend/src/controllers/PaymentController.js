@@ -2,7 +2,7 @@ import {IPaymentService} from "../interfaces/payment/IPaymentService.js";
 import {IProductService} from "../interfaces/product/IProductService.js";
 import {OrderProductItem} from "../domain/index.js";
 
-import {BadRequestError, NotFoundError} from "../errors/apiErrors.js";
+import {NotFoundError} from "../errors/apiErrors.js";
 
 /**
  * Handles incoming HTTP requests related to payment and checkout,
@@ -34,10 +34,6 @@ export class PaymentController {
 			const { products, couponCode } = req.body;
 			const userId = req.userId;
 
-			if (!Array.isArray(products) || products.length === 0) {
-				throw new BadRequestError("Product list is empty or invalid.");
-			}
-
 			const productIds = products.map(p => p.id);
 			const shortProducts = await this.#productService.getShortDTOsByIds(productIds);
 
@@ -47,7 +43,7 @@ export class PaymentController {
 
 			const orderItems = shortProducts.map((p) => {
 				const clientProduct = products.find((cp) => cp.id === p.id);
-				const quantity = clientProduct?.quantity ?? 1;
+				const quantity = clientProduct.quantity;
 
 				return new OrderProductItem({
 					productId: p.id,
@@ -81,8 +77,6 @@ export class PaymentController {
 	checkoutSuccess = async (req, res, next) => {
 		try {
 			const { sessionId } = req.body;
-
-			if (!sessionId) throw new BadRequestError("Missing sessionId");
 
 			const result = await this.#paymentService.checkoutSuccess(sessionId);
 

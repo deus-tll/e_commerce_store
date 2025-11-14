@@ -28,8 +28,8 @@ export class CategoryController {
 		try {
 			const { name, image } = req.body;
 
-			const creationData = new CreateCategoryDTO({ name, image });
-			const createdCategoryDTO = await this.#categoryService.create(creationData);
+			const createCategoryDTO = new CreateCategoryDTO({ name, image });
+			const createdCategoryDTO = await this.#categoryService.create(createCategoryDTO);
 
 			return res.status(201).json(createdCategoryDTO);
 		}
@@ -49,9 +49,9 @@ export class CategoryController {
 	update = async (req, res, next) => {
 		try {
 			const { id } = req.params;
-			const { name, image } = req.body;
+			const updateFields = req.body;
 
-			const updateCategoryDTO = new UpdateCategoryDTO({ name, image });
+			const updateCategoryDTO = new UpdateCategoryDTO(updateFields);
 			const updatedCategoryDTO = await this.#categoryService.update(id, updateCategoryDTO);
 
 			return res.status(200).json(updatedCategoryDTO);
@@ -95,46 +95,6 @@ export class CategoryController {
 			const categories = await this.#categoryService.getAll(page, limit);
 
 			return res.status(200).json(categories);
-		}
-		catch (error) {
-			next(error);
-		}
-	}
-
-	/**
-	 * Retrieves a single category by its ID. Extracts the ID and delegates. (Public).
-	 * @param {object} req - Express request object. Expects 'id' in req.params.
-	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
-	 * @returns {Promise<void>} - Responds with status 200 and the CategoryDTO.
-	 */
-	getById = async (req, res, next) => {
-		try {
-			const { id } = req.params;
-
-			const categoryDTO = await this.#categoryService.getById(id);
-
-			return res.status(200).json(categoryDTO);
-		}
-		catch (error) {
-			next(error);
-		}
-	}
-
-	/**
-	 * Retrieves a single category by its slug. Extracts the slug and delegates. (Public).
-	 * @param {object} req - Express request object. Expects 'slug' in req.params.
-	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
-	 * @returns {Promise<void>} - Responds with status 200 and the CategoryDTO.
-	 */
-	getBySlug = async (req, res, next) => {
-		try {
-			const { slug } = req.params;
-
-			const categoryDTO = await this.#categoryService.getBySlug(slug);
-
-			return res.status(200).json(categoryDTO);
 		}
 		catch (error) {
 			next(error);

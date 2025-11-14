@@ -4,6 +4,9 @@ import {CouponController} from "../../controllers/CouponController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";
+import {validationMiddleware} from "../middleware/validationMiddleware.js";
+
+import { validateCouponSchema } from "../validators/couponValidator.js";
 
 /**
  * A factory that creates and configures the Coupons router, injecting necessary dependencies.
@@ -19,7 +22,11 @@ export function createCouponsRouter(couponController, authService) {
 	router.use(protectRoute);
 
 	router.get("/", couponController.get);
-	router.post("/validate", couponController.validate);
+	router.post(
+		"/validate",
+		validationMiddleware(validateCouponSchema),
+		couponController.validate
+	);
 
 	return router;
 }

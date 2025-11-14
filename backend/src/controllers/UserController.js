@@ -1,9 +1,7 @@
 import {IUserService} from "../interfaces/user/IUserService.js";
 import {CreateUserDTO, UpdateUserDTO} from "../domain/index.js";
 
-import {BadRequestError, ForbiddenError} from "../errors/apiErrors.js";
-
-import {UserRoles} from "../utils/constants.js";
+import {ForbiddenError} from "../errors/apiErrors.js";
 
 /**
  * Handles incoming HTTP requests related to user management (CRUD for Admins),
@@ -32,20 +30,12 @@ export class UserController {
 		try {
 			const { name, email, password, role, isVerified } = req.body;
 
-			if (!name?.trim() || !email?.trim() || !password) {
-				throw new BadRequestError("Name, email and password are required");
-			}
-
-			if (role && ![UserRoles.CUSTOMER, UserRoles.ADMIN].includes(role)) {
-				throw new BadRequestError(`Invalid role. Must be '${UserRoles.CUSTOMER}' or '${UserRoles.ADMIN}'`);
-			}
-
 			const createUserDTO = new CreateUserDTO({
-				name: name.trim(),
-				email: email.trim(),
+				name,
+				email,
 				password,
-				role: role || UserRoles.CUSTOMER,
-				isVerified: isVerified === true
+				role,
+				isVerified
 			});
 
 			const userDTO = await this.#userService.create(createUserDTO);
@@ -70,32 +60,11 @@ export class UserController {
 			const { userId } = req.params;
 			const updateData = req.body;
 
-			if (!userId?.trim()) {
-				throw new BadRequestError("User ID is required");
-			}
-
-			const allowedFields = ['name', 'email', 'role', 'isVerified'];
-			const filteredData = {};
-
-			allowedFields.forEach(field => {
-				if (updateData[field] !== undefined) {
-					filteredData[field] = updateData[field];
-				}
-			});
-
-			if (Object.keys(filteredData).length === 0) {
-				throw new BadRequestError("No valid fields provided for update");
-			}
-
-			if (filteredData.role && ![UserRoles.CUSTOMER, UserRoles.ADMIN].includes(filteredData.role)) {
-				throw new BadRequestError(`Invalid role. Must be '${UserRoles.CUSTOMER}' or '${UserRoles.ADMIN}'`);
-			}
-
 			const updateUserDTO = new UpdateUserDTO({
-				...filteredData
+				...updateData
 			});
 
-			const userDTO = await this.#userService.update(userId.trim(), updateUserDTO);
+			const userDTO = await this.#userService.update(userId, updateUserDTO);
 
 			return res.status(200).json(userDTO);
 		}
@@ -116,15 +85,11 @@ export class UserController {
 		try {
 			const { userId } = req.params;
 
-			if (!userId?.trim()) {
-				throw new BadRequestError("User ID is required");
-			}
-
 			if (userId === req.userId.toString()) {
 				throw new ForbiddenError("You cannot delete your own account");
 			}
 
-			const userDTO = await this.#userService.delete(userId.trim());
+			const userDTO = await this.#userService.delete(userId);
 
 			return res.status(200).json(userDTO);
 		}
@@ -143,27 +108,10 @@ export class UserController {
 	 */
 	getAll = async (req, res, next) => {
 		try {
-			const page = parseInt(req.query.page) || 1;
-			const limit = parseInt(req.query.limit) || 10;
+			const page = req.query.page;
+			const limit = req.query.limit;
 
-			if (page < 1 || limit < 1) {
-				throw new BadRequestError("Page and limit must be positive numbers");
-			}
-
-			if (limit > 100) {
-				throw new BadRequestError("Limit cannot exceed 100 users per page");
-			}
-
-			const filters = {};
-			if (req.query.role && [UserRoles.CUSTOMER, UserRoles.ADMIN].includes(req.query.role)) {
-				filters.role = req.query.role;
-			}
-			if (req.query.isVerified !== undefined) {
-				filters.isVerified = req.query.isVerified === 'true';
-			}
-			if (req.query.search?.trim()) {
-				filters.search = req.query.search.trim();
-			}
+			const filters = req.query;
 
 			const result = await this.#userService.getAll(page, limit, filters);
 
@@ -184,10 +132,6 @@ export class UserController {
 	getById = async (req, res, next) => {
 		try {
 			const { userId } = req.params;
-
-			if (!userId?.trim()) {
-				throw new BadRequestError("User ID is required");
-			}
 
 			const userDTO = await this.#userService.getByIdOrFail(userId);
 

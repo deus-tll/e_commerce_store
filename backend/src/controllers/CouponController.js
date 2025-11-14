@@ -25,6 +25,7 @@ export class CouponController {
 	get = async (req, res, next) => {
 		try {
 			const userId = req.userId;
+
 			const coupon = await this.#couponService.getActiveByUserIdOrFail(userId);
 
 			return res.status(200).json(coupon);
@@ -49,31 +50,6 @@ export class CouponController {
 			const validationResult = await this.#couponService.validate(code, userId);
 
 			return res.status(200).json(validationResult);
-		}
-		catch (error) {
-			next(error);
-		}
-	}
-
-	/**
-	 * Deactivates a coupon for the authenticated user based on its code.
-	 * Extracts the code and user ID, maps them to an `UpdateCouponDTO`, and delegates.
-	 * @param {object} req - Express request object. Expects a 'code' in 'req.body' and 'userId' in req.userId.
-	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
-	 * @returns {Promise<void>} - Responds with status 200 and the deactivated CouponDTO.
-	 */
-	deactivate = async (req, res, next) => {
-		try {
-			const { code } = req.body;
-			const userId = req.userId;
-
-			const deactivatedCoupon = await this.#couponService.deactivate(code, userId);
-
-			return res.status(200).json({
-				message: "Coupon deactivated successfully",
-				coupon: deactivatedCoupon
-			});
 		}
 		catch (error) {
 			next(error);

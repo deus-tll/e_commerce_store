@@ -1,8 +1,6 @@
 import {IProductService} from "../interfaces/product/IProductService.js";
 import {CreateProductDTO, UpdateProductDTO} from "../domain/index.js";
 
-import {BadRequestError} from "../errors/apiErrors.js";
-
 /**
  * Handles incoming HTTP requests related to products, extracting request data,
  * mapping it to DTOs, and delegating business logic to the IProductService.
@@ -27,28 +25,20 @@ export class ProductController {
 	 */
 	create = async (req, res, next) => {
 		try {
-			// Explicitly extract all fields from req.body
 			const { name, description, price, images, categoryId, isFeatured } = req.body;
 
-			// 1. Validation (Required fields)
-			if (!name || !name.trim()) throw new BadRequestError("Product name is required.");
-			if (!description || !description.trim()) throw new BadRequestError("Product description is required.");
-			if (!price === undefined || typeof price !== 'number' || price <= 0) throw new BadRequestError("Price must be a positive number.");
-			if (!categoryId || !categoryId.trim()) throw new BadRequestError("Category ID is required.");
-			if (!images || !images.mainImage) throw new BadRequestError("Main image is required.");
-
-			// 2. Create Agnostic Creation DTO
-			const creationData = new CreateProductDTO({
-				name: name.trim(),
-				description: description.trim(),
+			const createProductDTO = new CreateProductDTO({
+				name,
+				description,
 				price,
 				images,
-				categoryId: categoryId.trim(),
+				categoryId,
 				isFeatured,
 			});
 
-			const result = await this.#productService.create(creationData);
-			res.status(201).json(result);
+			const result = await this.#productService.create(createProductDTO);
+
+			return res.status(201).json(result);
 		}
 		catch (error) {
 			next(error);
@@ -66,53 +56,13 @@ export class ProductController {
 	update = async (req, res, next) => {
 		try {
 			const { id } = req.params;
+			const updateFields = req.body;
 
-			// Explicitly extract all potential update fields from req.body
-			const { name, description, price, images, categoryId, isFeatured } = req.body;
+			const updateProductDTO = new UpdateProductDTO(updateFields);
 
-			// 1. Validation and sparse object creation
-			const updateFields = {};
-			let hasUpdateFields = false;
+			const updated = await this.#productService.update(id, updateProductDTO);
 
-			if (name !== undefined) {
-				if (!name || !name.trim()) throw new BadRequestError("Product name cannot be empty.");
-				updateFields.name = name.trim();
-				hasUpdateFields = true;
-			}
-			if (description !== undefined) {
-				if (!description || !description.trim()) throw new BadRequestError("Product description cannot be empty.");
-				updateFields.description = description.trim();
-				hasUpdateFields = true;
-			}
-			if (price !== undefined) {
-				if (typeof price !== 'number' || price <= 0) throw new BadRequestError("Price must be a positive number.");
-				updateFields.price = price;
-				hasUpdateFields = true;
-			}
-			if (images !== undefined) {
-				if (images && images.mainImage === null) throw new BadRequestError("The main image is required and cannot be set to null.");
-				updateFields.images = images;
-				hasUpdateFields = true;
-			}
-			if (categoryId !== undefined) {
-				if (!categoryId || !categoryId.trim()) throw new BadRequestError("Category ID cannot be empty.");
-				updateFields.categoryId = categoryId.trim();
-				hasUpdateFields = true;
-			}
-			if (isFeatured !== undefined) {
-				updateFields.isFeatured = isFeatured;
-				hasUpdateFields = true;
-			}
-
-			if (!hasUpdateFields) {
-				throw new BadRequestError("At least one field (name, description, price, images, categoryId, isFeatured) must be provided for update.");
-			}
-
-			// 2. Create Agnostic Update DTO
-			const updateData = new UpdateProductDTO(updateFields);
-
-			const updated = await this.#productService.update(id, updateData);
-			res.status(200).json(updated);
+			return res.status(200).json(updated);
 		}
 		catch (error) {
 			next(error);
@@ -132,7 +82,7 @@ export class ProductController {
 			const { id } = req.params;
 			const updated = await this.#productService.toggleFeatured(id);
 
-			res.status(200).json(updated);
+			return res.status(200).json(updated);
 		}
 		catch (error) {
 			next(error);
@@ -151,7 +101,7 @@ export class ProductController {
 			const { id } = req.params;
 			await this.#productService.delete(id);
 
-			res.status(204).end();
+			return res.status(204).end();
 		}
 		catch (error) {
 			next(error);
@@ -168,7 +118,6 @@ export class ProductController {
 	 */
 	getAll = async (req, res, next) => {
 		try {
-			// Extract pagination and filtering parameters
 			const { page, limit, categorySlug, search } = req.query;
 
 			// Build the agnostic filters object for the service layer
@@ -178,7 +127,7 @@ export class ProductController {
 
 			const result = await this.#productService.getAll(page, limit, filters);
 
-			res.status(200).json(result);
+			return res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);
@@ -195,8 +144,10 @@ export class ProductController {
 	getById = async (req, res, next) => {
 		try {
 			const { id } = req.params;
+
 			const result = await this.#productService.getByIdOrFail(id);
-			res.status(200).json(result);
+
+			return res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);
@@ -213,7 +164,7 @@ export class ProductController {
 	getFeatured = async (req, res, next) => {
 		try {
 			const result = await this.#productService.getFeatured();
-			res.status(200).json(result);
+			return res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);
@@ -230,7 +181,7 @@ export class ProductController {
 	getRecommended = async (req, res, next) => {
 		try {
 			const result = await this.#productService.getRecommended();
-			res.status(200).json(result);
+			return res.status(200).json(result);
 		}
 		catch (error) {
 			next(error);
