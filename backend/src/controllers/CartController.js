@@ -79,7 +79,7 @@ export class CartController {
 	updateProductQuantity = async (req, res, next) => {
 		try {
 			const { productId } = req.params;
-			const quantity = Number(req.body.quantity);
+			const { quantity } = req.body;
 
 			const cartItems = await this.#cartService.updateProductQuantity(req.userId, productId, quantity);
 

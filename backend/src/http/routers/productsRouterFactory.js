@@ -4,6 +4,14 @@ import {ProductController} from "../../controllers/ProductController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
+import {validationMiddleware} from "../middleware/validationMiddleware.js";
+
+import {
+	createProductSchema,
+	updateProductSchema,
+	getAllProductsSchema,
+	productIdSchema
+} from "../validators/productValidator.js";
 
 /**
  * A factory that creates and configures the Products router, injecting necessary dependencies.
@@ -16,14 +24,39 @@ export function createProductsRouter(productController, authService) {
 
 	const protectRoute = createProtectRoute(authService);
 
-	router.get("/", protectRoute, adminRoute, productController.getAll);
 	router.get("/featured", productController.getFeatured);
 	router.get("/recommended", productController.getRecommended);
-	router.get("/:id", productController.getById);
-	router.post("/", protectRoute, adminRoute, productController.create);
-	router.put("/:id", protectRoute, adminRoute, productController.update);
-	router.patch("/:id", protectRoute, adminRoute, productController.toggleFeatured);
-	router.delete("/:id", protectRoute, adminRoute, productController.delete);
+	router.get("/",
+		protectRoute,
+		adminRoute,
+		validationMiddleware(getAllProductsSchema),
+		productController.getAll
+	);
+	router.get("/:id", validationMiddleware(productIdSchema), productController.getById);
+	router.post("/",
+		protectRoute,
+		adminRoute,
+		validationMiddleware(createProductSchema),
+		productController.create
+	);
+	router.patch("/:id/featured",
+		protectRoute,
+		adminRoute,
+		validationMiddleware(productIdSchema),
+		productController.toggleFeatured
+	);
+	router.patch("/:id",
+		protectRoute,
+		adminRoute,
+		validationMiddleware(updateProductSchema),
+		productController.update
+	);
+	router.delete("/:id",
+		protectRoute,
+		adminRoute,
+		validationMiddleware(productIdSchema),
+		productController.delete
+	);
 
 	return router;
 }

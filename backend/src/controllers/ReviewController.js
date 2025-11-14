@@ -1,8 +1,6 @@
 import {IReviewService} from "../interfaces/review/IReviewService.js";
 import {CreateReviewDTO, UpdateReviewDTO} from "../domain/index.js";
 
-import {BadRequestError} from "../errors/apiErrors.js";
-
 /**
  * Handles incoming HTTP requests related to product reviews, extracting request data,
  * mapping it to DTOs, and delegating business logic to the IReviewService.
@@ -31,26 +29,14 @@ export class ReviewController {
 			const { rating, comment } = req.body;
 			const userId = req.userId;
 
-			if (!productId || !productId.trim()) {
-				throw new BadRequestError("Product ID is required");
-			}
-
-			if (!rating || rating < 1 || rating > 5) {
-				throw new BadRequestError("Rating must be between 1 and 5");
-			}
-
-			if (!comment?.trim()) {
-				throw new BadRequestError("Comment cannot be empty");
-			}
-
-			const creationData = new CreateReviewDTO({
-				productId: productId.trim(),
-				userId: userId,
-				rating: rating,
-				comment: comment.trim()
+			const createReviewDTO = new CreateReviewDTO({
+				productId,
+				userId,
+				rating,
+				comment
 			});
 
-			const reviewDTO = await this.#reviewService.create(creationData);
+			const reviewDTO = await this.#reviewService.create(createReviewDTO);
 
 			return res.status(201).json(reviewDTO);
 		}
@@ -73,31 +59,14 @@ export class ReviewController {
 			const { rating, comment } = req.body;
 			const userId = req.userId;
 
-			if (!reviewId || !reviewId.trim()) {
-				throw new BadRequestError("Review ID is required");
-			}
-
-			const hasRating = rating !== undefined;
-			const hasComment = comment !== undefined;
-
-			if (hasRating && (typeof rating !== 'number' || rating < 1 || rating > 5)) {
-				throw new BadRequestError("Rating must be a number between 1 and 5.");
-			}
-			if (hasComment && !comment.trim()) {
-				throw new BadRequestError("Comment cannot be empty.");
-			}
-			if (!hasRating && !hasComment) {
-				throw new BadRequestError("At least 'rating' or 'comment' must be provided for update.");
-			}
-
-			const updateData = new UpdateReviewDTO({
-				reviewId: reviewId.trim(),
-				userId: userId,
-				rating: hasRating ? rating : undefined,
-				comment: hasComment ? comment.trim() : undefined
+			const updateReviewDTO = new UpdateReviewDTO({
+				reviewId,
+				userId,
+				rating,
+				comment
 			});
 
-			const reviewDTO = await this.#reviewService.update(updateData);
+			const reviewDTO = await this.#reviewService.update(updateReviewDTO);
 
 			return res.status(200).json(reviewDTO);
 		}
@@ -119,11 +88,7 @@ export class ReviewController {
 			const { reviewId } = req.params;
 			const userId = req.userId;
 
-			if (!reviewId || !reviewId.trim()) {
-				throw new BadRequestError("Review ID is required");
-			}
-
-			const reviewDTO = await this.#reviewService.delete(userId, reviewId.trim());
+			const reviewDTO = await this.#reviewService.delete(userId, reviewId);
 
 			return res.status(200).json(reviewDTO);
 		}
@@ -143,22 +108,10 @@ export class ReviewController {
 	getByProduct = async (req, res, next) => {
 		try {
 			const { id: productId } = req.params;
-			const page = parseInt(req.query.page) || 1;
-			const limit = parseInt(req.query.limit) || 10;
+			const page = req.query.page;
+			const limit = req.query.limit;
 
-			if (!productId || !productId.trim()) {
-				throw new BadRequestError("Product ID is required");
-			}
-
-			if (page < 1 || limit < 1) {
-				throw new BadRequestError("Page and limit must be positive numbers");
-			}
-
-			if (limit > 50) {
-				throw new BadRequestError("Limit cannot exceed 50 reviews per page");
-			}
-
-			const result = await this.#reviewService.getAllByProduct(productId.trim(), page, limit);
+			const result = await this.#reviewService.getAllByProduct(productId, page, limit);
 
 			return res.status(200).json(result);
 		}

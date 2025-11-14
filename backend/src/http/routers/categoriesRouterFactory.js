@@ -4,6 +4,14 @@ import {CategoryController} from "../../controllers/CategoryController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
+import {validationMiddleware} from "../middleware/validationMiddleware.js";
+
+import {
+	createCategorySchema,
+	updateCategorySchema,
+	categoryIdSchema,
+	getAllCategoriesSchema
+} from "../validators/categoryValidator.js";
 
 /**
  * A factory that creates and configures the Categories router, injecting necessary dependencies.
@@ -16,10 +24,10 @@ export function createCategoriesRouter(categoryController, authService) {
 
 	const protectRoute = createProtectRoute(authService);
 
-	router.get("/", categoryController.getAll);
-	router.post("/", protectRoute, adminRoute, categoryController.create);
-	router.put("/:id", protectRoute, adminRoute, categoryController.update);
-	router.delete("/:id", protectRoute, adminRoute, categoryController.delete);
+	router.get("/", validationMiddleware(getAllCategoriesSchema), categoryController.getAll);
+	router.post("/", protectRoute, adminRoute, validationMiddleware(createCategorySchema), categoryController.create);
+	router.patch("/:id", protectRoute, adminRoute, validationMiddleware(updateCategorySchema), categoryController.update);
+	router.delete("/:id", protectRoute, adminRoute, validationMiddleware(categoryIdSchema), categoryController.delete);
 
 	return router;
 }

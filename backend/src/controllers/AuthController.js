@@ -1,10 +1,8 @@
 import {ISessionAuthService} from "../interfaces/auth/ISessionAuthService.js";
-import { IUserAccountService } from "../interfaces/user/IUserAccountService.js";
+import {IUserAccountService} from "../interfaces/user/IUserAccountService.js";
 import {CreateUserDTO} from "../domain/index.js";
 
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
-
-import {BadRequestError} from "../errors/apiErrors.js";
 
 import {UserRoles} from "../utils/constants.js";
 
@@ -42,19 +40,15 @@ export class AuthController {
 		try {
 			const { name, email, password } = req.body;
 
-			if (!name?.trim() || !email?.trim() || !password) {
-				throw new BadRequestError("Name, email and password are required");
-			}
-
-			const signupData = new CreateUserDTO({
-				name: name.trim(),
-				email: email.trim(),
-				password: password,
+			const createUserDTO = new CreateUserDTO({
+				name,
+				email,
+				password,
 				role: UserRoles.CUSTOMER,
 				isVerified: false,
 			});
 
-			const { user, tokens } = await this.#userAccountService.signup(signupData);
+			const { user, tokens } = await this.#userAccountService.signup(createUserDTO);
 
 			this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
@@ -75,12 +69,7 @@ export class AuthController {
 	verifyEmail = async (req, res, next) => {
 		try {
 			const { code } = req.body;
-
-			if (!code?.trim()) {
-				throw new BadRequestError("Verification code is required");
-			}
-
-			const { user, tokens } = await this.#userAccountService.verifyEmail(code.trim());
+			const { user, tokens } = await this.#userAccountService.verifyEmail(code);
 
 			this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
@@ -118,12 +107,7 @@ export class AuthController {
 	forgotPassword = async (req, res, next) => {
 		try {
 			const { email } = req.body;
-
-			if (!email?.trim()) {
-				throw new BadRequestError("Email is required");
-			}
-
-			const result = await this.#userAccountService.forgotPassword(email.trim());
+			const result = await this.#userAccountService.forgotPassword(email);
 
 			return res.status(200).json(result);
 		}
@@ -144,15 +128,7 @@ export class AuthController {
 			const { token } = req.params;
 			const { password } = req.body;
 
-			if (!token?.trim()) {
-				throw new BadRequestError("Reset token is required");
-			}
-
-			if (!password) {
-				throw new BadRequestError("Password is required");
-			}
-
-			const { user, tokens } = await this.#userAccountService.resetPassword(token.trim(), password);
+			const { user, tokens } = await this.#userAccountService.resetPassword(token, password);
 
 			this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
@@ -174,10 +150,6 @@ export class AuthController {
 	changePassword = async (req, res, next) => {
 		try {
 			const { currentPassword, newPassword } = req.body;
-
-			if (!currentPassword || !newPassword) {
-				throw new BadRequestError("Current password and new password are required");
-			}
 
 			const result = await this.#userAccountService.changePassword(
 				req.userId,
@@ -207,12 +179,7 @@ export class AuthController {
 	login = async (req, res, next) => {
 		try {
 			const { email, password } = req.body;
-
-			if (!email?.trim() || !password) {
-				throw new BadRequestError("Email and password are required");
-			}
-
-			const { user, tokens } = await this.#sessionAuthService.login(email.trim(), password);
+			const { user, tokens } = await this.#sessionAuthService.login(email, password);
 
 			this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
