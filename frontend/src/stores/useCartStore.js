@@ -165,8 +165,13 @@ export const useCartStore = create((set, get) => {
 			try {
 				const stripe = await stripePromise;
 
+				const simplifiedProducts = cart.map(p => ({
+					id: p.id,
+					quantity: p.quantity || 1
+				}));
+
 				const res = await axios.post(`${PAYMENTS_API_PATH}/create-checkout-session`, {
-					products: cart,
+					products: simplifiedProducts,
 					couponCode: coupon ? coupon.code : null,
 				});
 
@@ -197,7 +202,7 @@ export const useCartStore = create((set, get) => {
 
 			try {
 				await axios.post(`${PAYMENTS_API_PATH}/checkout-success`, { sessionId });
-				await get().clearCart();
+				await get().clear();
 			}
 			catch (error) {
 				set({ checkoutError: "Failed to finalize the order. Please contact support." });
