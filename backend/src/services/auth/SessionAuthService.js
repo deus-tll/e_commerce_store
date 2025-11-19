@@ -88,7 +88,14 @@ export class SessionAuthService extends ISessionAuthService {
 			throw new InvalidTokenError("No refresh token provided");
 		}
 
-		const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
+		let decoded;
+		try {
+			decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
+		} catch (error) {
+			// If the token is simply invalid (e.g., malformed or expired), just fail.
+			throw new InvalidTokenError("Invalid refresh token");
+		}
+
 		const userId = decoded.userId;
 
 		const [_, storedToken] = await Promise.all(
@@ -98,13 +105,17 @@ export class SessionAuthService extends ISessionAuthService {
 			])
 		);
 
-		if (storedToken !== refreshToken) {
+		// 1. REUSE DETECTION AND INVALIDATION
+		if (!storedToken || storedToken !== refreshToken) {
 			await this.#authCacheService.invalidateAllSessions(userId);
-			throw new InvalidTokenError("Refresh token not found or revoked");
+			throw new InvalidTokenError("Refresh token not found or revoked (Possible session hijacking)");
 		}
 
-		const accessToken = this.#jwtProvider.signAccessToken(userId);
+		// 2. TOKEN ROTATION
+		await this.#authCacheService.removeRefreshToken(userId);
+		const { accessToken, refreshToken: newRefreshToken } = this.#jwtProvider.generateTokens(userId);
+		await this.#authCacheService.storeRefreshToken(userId, newRefreshToken);
 
-		return { accessToken };
+		return { accessToken, refreshToken: newRefreshToken };
 	}
 }
