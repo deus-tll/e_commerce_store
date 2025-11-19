@@ -27,9 +27,18 @@ export const validationMiddleware = (schema) => (req, res, next) => {
 		throw new BadRequestError(`Validation Failed: ${messages.join("; ")}`);
 	}
 
-	req.body = value.body || req.body;
-	req.params = value.params || req.params;
-	req.query = value.query || req.query;
+	if (value.body) {
+		Object.keys(req.body).forEach(key => delete req.body[key]);
+		Object.assign(req.body, value.body);
+	}
+	if (value.params) {
+		Object.keys(req.params).forEach(key => delete req.params[key]);
+		Object.assign(req.params, value.params);
+	}
+	if (value.query) {
+		Object.keys(req.query).forEach(key => delete req.query[key]);
+		Object.assign(req.query, value.query);
+	}
 
 	next();
 }
