@@ -73,31 +73,24 @@ export const useProductStore = create((set, get) => ({
 		}
 	},
 
-	fetchAllProducts: async (page = 1, limit = 10) => {
+	fetchProducts: async (page = 1, limit = 10, filters = {}) => {
 		set({ loading: true });
 
 		try {
-			const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+			const params = new URLSearchParams({
+				page: String(page),
+				limit: String(limit),
+				...filters
+			});
+
 			const res = await axios.get(`${PRODUCTS_API_PATH}?${params}`);
-			set({ products: res.data.products, pagination: res.data.pagination });
-		}
-        catch (error) {
-            handleRequestError(error, "An error occurred", false);
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
 
-	fetchProductsByCategory: async (category) => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.get(`${PRODUCTS_API_PATH}/category/${category}`);
-			set({ products: res.data });
+			const { products: newProducts, pagination: newPagination } = res.data;
+			set({ products: newProducts, pagination: newPagination });
 		}
-        catch (error) {
-            handleRequestError(error, "An error occurred", false);
+		catch (error) {
+			handleRequestError(error, "An error occurred while fetching products", false);
+			set({ products: [], pagination: null });
 		}
 		finally {
 			set({ loading: false });

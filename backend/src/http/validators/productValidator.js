@@ -51,19 +51,30 @@ export const updateProductSchema = Joi.object({
 	query: Joi.object({}).optional(),
 });
 
-/**
- * Joi schema for validating the GET /products request (Get All Products).
- */
-export const getAllProductsSchema = Joi.object({
+const emptyParamAndBody = {
 	params: Joi.object({}).optional(),
 	body: Joi.object({}).optional(),
+};
 
-	query: Joi.object({
-		page: Joi.number().integer().min(1).default(1).optional(),
-		limit: Joi.number().integer().min(1).max(50).default(10).optional(),
+/**
+ * Minimal base query schema (Only pagination fields).
+ */
+const minimalBaseProductsQuerySchema = Joi.object({
+	page: Joi.number().integer().min(1).default(1).optional(),
+	limit: Joi.number().integer().min(1).max(50).default(10).optional(),
+}).unknown(false);
+
+/**
+ * Joi schema for validating the GET /products
+ * - All filtering and searching fields are OPTIONAL.
+ */
+export const getAllProductsPublicSchema = Joi.object({
+	...emptyParamAndBody,
+	query: minimalBaseProductsQuerySchema.keys({
 		categorySlug: Joi.string().trim().optional(),
-		search: Joi.string().trim().optional(),
-	}).unknown(false),
+		search: Joi.string().trim().min(1).optional()
+	})
+		.unknown(false),
 });
 
 /**
