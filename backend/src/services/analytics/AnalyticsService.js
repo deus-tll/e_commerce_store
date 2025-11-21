@@ -5,7 +5,7 @@ import {IProductRepository} from "../../interfaces/repositories/IProductReposito
 import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
 import {AnalyticsSummaryDTO, DailySalesDataDTO, FullAnalyticsResponseDTO} from "../../domain/index.js";
 
-import {MS_PER_DAY} from "../../utils/timeConstants.js";
+import {MS_PER_DAY} from "../../constants/time.js";
 
 export class AnalyticsService extends IAnalyticsService {
 	/** @type {IOrderRepository} */ #orderRepository;

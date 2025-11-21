@@ -1,5 +1,6 @@
 import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
-import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from "../../utils/timeConstants.js";
+
+import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from "../../constants/time.js";
 
 /**
  * Concrete implementation of IDateTimeService for general date and time utility.

@@ -7,7 +7,7 @@ import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
 import {InvalidCredentialsError, InvalidTokenError, NotFoundError} from "../../errors/apiErrors.js";
 
-import {TokenTypes} from "../../utils/constants.js";
+import {TokenTypes} from "../../constants/auth.js";
 
 /**
  * Implements the ISessionAuthService contract, focusing only on active user

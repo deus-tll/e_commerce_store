@@ -3,10 +3,10 @@ import {IStripeService} from "../../interfaces/payment/IStripeService.js";
 
 import {BadRequestError} from "../../errors/apiErrors.js";
 
-import {EnvModes} from "../../utils/constants.js";
 import {Currency} from "../../utils/currency.js";
-import {StripeCouponDurations} from "../../utils/stripeConstants.js";
-import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../utils/paymentConstants.js";
+import {EnvModes} from "../../constants/app.js";
+import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../constants/payment.js";
+import {StripeCouponDurations} from "../../constants/stripe.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== EnvModes.PROD

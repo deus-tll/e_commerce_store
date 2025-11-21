@@ -1,7 +1,7 @@
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
 import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
 
-import {BASE64_PREFIX} from "../../utils/constants.js";
+import {BASE64_PREFIX} from "../../constants/file.js";
 
 /**
  * @augments ICategoryImageManager

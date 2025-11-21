@@ -1,6 +1,7 @@
 import {ICouponFactory} from "../../interfaces/coupon/ICouponFactory.js";
 import {CreateCouponDTO} from "../../domain/index.js";
-import {MS_PER_DAY} from "../../utils/timeConstants.js";
+
+import {MS_PER_DAY} from "../../constants/time.js";
 
 const COUPON_DISCOUNT_PERCENTAGE = process.env.COUPON_DISCOUNT_PERCENTAGE || 10;
 

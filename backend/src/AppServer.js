@@ -9,9 +9,10 @@ import {DependencyLocator} from "./core/ioc/DependencyLocator.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {RouterTypes, SeederTypes} from "./utils/iocConstants.js";
-import {EnvModes, ServerPaths} from "./utils/constants.js";
-import {RouteTypes} from "./utils/apiConstants.js";
+import {EnvModes} from "./constants/app.js";
+import {RouterTypes, SeederTypes} from "./constants/ioc.js";
+import {ServerPaths} from "./constants/file.js";
+import {RouteTypes} from "./constants/api.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

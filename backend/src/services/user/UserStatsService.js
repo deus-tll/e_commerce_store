@@ -1,7 +1,7 @@
-import { IUserStatsService } from "../../interfaces/user/IUserStatsService.js";
-import { IUserRepository } from "../../interfaces/repositories/IUserRepository.js";
-import { UserStatsDTO } from "../../domain/index.js";
-import { UserRoles } from "../../utils/constants.js";
+import {IUserStatsService} from "../../interfaces/user/IUserStatsService.js";
+import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
+import {UserStatsDTO} from "../../domain/index.js";
+import {UserRoles} from "../../constants/app.js";
 
 /**
  * @augments IUserStatsService

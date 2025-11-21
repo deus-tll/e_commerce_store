@@ -8,8 +8,8 @@ import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
 import {BadRequestError, InvalidCredentialsError} from "../../errors/apiErrors.js";
 
-import {EnvModes} from "../../utils/constants.js";
-import {MS_PER_DAY, MS_PER_HOUR} from "../../utils/timeConstants.js";
+import {EnvModes} from "../../constants/app.js";
+import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== EnvModes.PROD

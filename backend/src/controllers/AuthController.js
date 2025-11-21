@@ -4,7 +4,7 @@ import {CreateUserDTO} from "../domain/index.js";
 
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
 
-import {UserRoles} from "../utils/constants.js";
+import {UserRoles} from "../constants/app.js";
 
 /**
  * Handles incoming HTTP requests related to user authentication and account management.

@@ -1,5 +1,6 @@
 import {BaseCacheService} from "./BaseCacheService.js";
-import {CacheKeys} from "../utils/constants.js";
+
+import {CacheKeys} from "../constants/app.js";
 
 /**
  * Manages the storage and retrieval of product related data in the cache (Redis).

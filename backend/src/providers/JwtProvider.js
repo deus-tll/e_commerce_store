@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 import { InvalidTokenError, TokenExpiredError } from "../errors/apiErrors.js";
 
-import { TokenTypes } from "../utils/constants.js";
+import { TokenTypes } from "../constants/auth.js";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;

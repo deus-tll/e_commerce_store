@@ -1,5 +1,7 @@
-import { IDateTimeService } from "../../interfaces/utils/IDateTimeService.js";
-import { CookieTokenTypes, EnvModes, SameSiteCookieOptions } from "../../utils/constants.js";
+import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
+
+import {EnvModes} from "../../constants/app.js";
+import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 
 const NODE_ENV = process.env.NODE_ENV;
 const IS_PROD = NODE_ENV === EnvModes.PROD;

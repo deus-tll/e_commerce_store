@@ -1,7 +1,7 @@
 import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
 import {IStorageService} from "../../interfaces/storage/IStorageService.js";
 
-import {FileFolders} from "../../utils/constants.js";
+import {FileFolders} from "../../constants/file.js";
 
 const FOLDER_NAME = FileFolders.CATEGORIES;
 

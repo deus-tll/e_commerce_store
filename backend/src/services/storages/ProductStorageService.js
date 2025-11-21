@@ -1,7 +1,7 @@
-import { IStorageService } from "../../interfaces/storage/IStorageService.js";
-import { IProductStorageService } from "../../interfaces/storage/IProductStorageService.js";
+import {IStorageService} from "../../interfaces/storage/IStorageService.js";
+import {IProductStorageService} from "../../interfaces/storage/IProductStorageService.js";
 
-import { FileFolders } from "../../utils/constants.js";
+import {FileFolders} from "../../constants/file.js";
 
 const FOLDER_NAME = FileFolders.PRODUCTS;
 

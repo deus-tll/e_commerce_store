@@ -1,6 +1,3 @@
-import {IUserMapper} from "../interfaces/mappers/IUserMapper.js";
-import {IReviewValidator} from "../interfaces/review/IReviewValidator.js";
-
 export const RepositoryTypes = Object.freeze({
 	CART: "ICartRepository",
 	CATEGORY: "ICategoryRepository",

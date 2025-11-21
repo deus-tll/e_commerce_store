@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-import { UserRoles } from "../../utils/constants.js";
+import {UserRoles} from "../../constants/app.js";
 
 // --- Exported Reusable Joi Schemas ---
 

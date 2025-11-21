@@ -1,7 +1,7 @@
 import {ICategoryService} from "../interfaces/category/ICategoryService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
 
-import {EnvModes} from "../utils/constants.js";
+import {EnvModes} from "../constants/app.js";
 import {CreateCategoryDTO} from "../domain/index.js";
 
 const PORT = process.env.PORT || 3001;

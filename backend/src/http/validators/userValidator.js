@@ -7,7 +7,8 @@ import {
 	emailSchema,
 	passwordSchema
 } from "./common.joi.js";
-import {UserRoles} from "../../utils/constants.js";
+
+import {UserRoles} from "../../constants/app.js";
 
 /**
  * Joi schema for validating the POST /users request (User Creation).

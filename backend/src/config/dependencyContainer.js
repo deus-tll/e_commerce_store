@@ -93,7 +93,7 @@ import {
 	ImageManagerTypes,
 	CacheManagerTypes,
 	QueryBuilderTypes, ValidatorTypes, FactoryTypes
-} from "../utils/iocConstants.js";
+} from "../constants/ioc.js";
 
 class Container {
 	constructor() {
