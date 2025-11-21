@@ -1,21 +1,26 @@
-import { Link } from "react-router-dom";
-import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, User } from "lucide-react";
-import Button from "./ui/Button.jsx";
+import {Link} from "react-router-dom";
+import {ShoppingCart, UserPlus, LogIn, LogOut, Lock, User} from "lucide-react";
 
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
 
+import {UserRoles} from "../constants/app.js";
+
+import Button from "./ui/Button.jsx";
+
+const APP_NAME = import.meta.env.VITE_APP_NAME;
+
 const Navbar = () => {
 	const { user, logout } = useAuthStore();
 	const { cart } = useCartStore();
-	const isAdmin = user?.role === "admin";
+	const isAdmin = user?.role === UserRoles.ADMIN;
 
     return (
         <header className="fixed top-0 left-0 w-full bg-gray-900 bg-opacity-90 backdrop-blur-md shadow-lg z-40 transition-all duration-300 border-b border-emerald-800">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex flex-wrap justify-between items-center">
 					<Link to="/" className="text-2xl font-bold text-emerald-400 items-center space-x-2 flex">
-						E-Commerce
+						{APP_NAME}
 					</Link>
 
                     <nav className="flex flex-wrap items-center gap-4">
