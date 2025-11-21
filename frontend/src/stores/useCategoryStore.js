@@ -3,16 +3,27 @@ import axios from "../config/axios.js";
 import { handleRequestError } from "../utils/errorHandler.js";
 
 export const CATEGORIES_API_PATH = "/categories";
+export const DEFAULT_LIMIT = 12;
 
 export const useCategoryStore = create((set) => ({
 	categories: [],
+	pagination: null,
 	loading: false,
 
-	fetchCategories: async () => {
+	fetchCategories: async (page = 1, limit = DEFAULT_LIMIT) => {
 		set({ loading: true });
 		try {
-			const res = await axios.get(CATEGORIES_API_PATH);
-			set({ categories: res.data });
+			const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+			const requestPath = `${CATEGORIES_API_PATH}?${params}`;
+
+			const res = await axios.get(requestPath);
+
+			const { categories: newCategories, pagination: newPagination } = res.data;
+
+			set((prev) => ({
+				categories: page === 1 ? newCategories : [...prev.categories, ...newCategories],
+				pagination: newPagination
+			}));
 		}
 		catch (error) {
 			handleRequestError(error, "Error fetching categories");
