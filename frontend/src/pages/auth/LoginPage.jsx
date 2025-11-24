@@ -1,15 +1,17 @@
 import {useState} from 'react';
-import { Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, LogIn } from "lucide-react";
+import {Link} from "react-router-dom";
+import {Mail, Lock, ArrowRight, LogIn} from "lucide-react";
 
 import {useAuthStore} from "../../stores/useAuthStore.js";
+import {getErrorMessage} from "../../utils/errorParser.js";
 
 import Container from "../../components/ui/Container.jsx";
 import Card from "../../components/ui/Card.jsx";
 import SectionHeader from "../../components/ui/SectionHeader.jsx";
 import FormField from "../../components/ui/FormField.jsx";
-import { Input } from "../../components/ui/Input.jsx";
+import {Input} from "../../components/ui/Input.jsx";
 import Button from "../../components/ui/Button.jsx";
+import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 
 const LoginPage = () => {
 	const [formData, setFormData] = useState({
@@ -35,11 +37,13 @@ const LoginPage = () => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+
 		if (!validate()) return;
+
 		try {
 			await login(formData);
 		} catch (err) {
-			const msg = err?.response?.data?.message || err?.message || "Login failed";
+			const msg = getErrorMessage(err, "Login failed. Please check your credentials.");
 			setErrors((prev) => ({ ...prev, form: msg }));
 		}
 	};
@@ -49,18 +53,14 @@ const LoginPage = () => {
 			<SectionHeader title="Login to your account" />
 			<Card className="py-8 px-4 sm:px-10">
 				<form onSubmit={handleSubmit} className="space-y-6">
-					{errors.form && (
-						<div className="bg-red-600 text-white p-3 rounded">{errors.form}</div>
-					)}
+					<ErrorMessage message={errors.form} />
+
 					<FormField label="Email address" error={errors.email}>
 						<Input leftIcon={Mail} id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="you@example.com" />
 					</FormField>
 					<FormField label="Password" error={errors.password}>
 						<Input leftIcon={Lock} id="password" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" />
 					</FormField>
-					{(errors.email || errors.password) && (
-						<p className="text-sm text-red-400">{errors.email || errors.password}</p>
-					)}
 
 					<div className='flex items-center mb-6'>
 						<Link to='/forgot-password' className='text-sm text-emerald-400 hover:text-emerald-300 hover:underline'>

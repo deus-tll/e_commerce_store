@@ -1,25 +1,29 @@
 import {useState} from "react";
+import {useParams} from "react-router-dom";
 import {Lock} from "lucide-react";
 
 import {useAuthStore} from "../../stores/useAuthStore.js";
+import {getErrorMessage} from "../../utils/errorParser.js";
 
 import Container from "../../components/ui/Container.jsx";
 import Card from "../../components/ui/Card.jsx";
 import SectionHeader from "../../components/ui/SectionHeader.jsx";
 import FormField from "../../components/ui/FormField.jsx";
-import { Input } from "../../components/ui/Input.jsx";
+import {Input} from "../../components/ui/Input.jsx";
 import Button from "../../components/ui/Button.jsx";
+import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 
 const ResetPasswordPage = () => {
 	const [formData, setFormData] = useState({
 		password: "",
 		confirmPassword: ""
 	});
+	const [successMessage, setSuccessMessage] = useState(null);
+	const [errors, setErrors] = useState({});
 
 	const { token } = useParams();
 
     const { loading, resetPassword } = useAuthStore();
-    const [errors, setErrors] = useState({});
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -37,15 +41,18 @@ const ResetPasswordPage = () => {
     const handleSubmit = async (e) => {
 		e.preventDefault();
 
+	    setErrors({});
+	    setSuccessMessage(null);
+
         if (!validate()) return;
 
         try {
             await resetPassword({ token, ...formData });
-            setErrors({ form: "Password reset successfully" });
+	        setSuccessMessage("Password reset successfully");
         }
         catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Reset failed";
-            setErrors((prev) => ({ ...prev, form: msg }));
+	        const msg = getErrorMessage(err, "Password reset failed. Please check the link or try again.");
+	        setErrors((prev) => ({ ...prev, form: msg }));
         }
 	}
 
@@ -54,20 +61,35 @@ const ResetPasswordPage = () => {
             <SectionHeader title="Reset Password" />
             <Card className="py-8 px-4 sm:px-10">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                {errors.form && (
-                    <div className={`p-3 rounded ${errors.form === 'Password reset successfully' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>{errors.form}</div>
-                )}
-                    <FormField label="Password" error={errors.password}>
-                        <Input leftIcon={Lock} id="password" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" />
-                    </FormField>
-                    <FormField label="Confirm Password" error={errors.confirmPassword}>
-                        <Input leftIcon={Lock} id="confirmPassword" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} placeholder="••••••••" />
-                    </FormField>
-                {(errors.password || errors.confirmPassword) && (
-                    <p className="text-sm text-red-400">{errors.password || errors.confirmPassword}</p>
-                )}
+	                {/* 1. Display Success Message (Green Box) */}
+	                {successMessage && (
+		                <div className="p-3 rounded bg-green-600 text-white">
+			                <div className='flex items-center space-x-2'>
+				                <Lock className="h-4 w-4 flex-shrink-0" />
+				                <span className='font-medium'>{successMessage}</span>
+			                </div>
+		                </div>
+	                )}
 
-                    <Button disabled={loading} className="w-full justify-center">Set New Password</Button>
+	                {/* 2. Display Error Message (Red Box) */}
+	                <ErrorMessage message={errors.form} />
+
+
+	                {/* Hide inputs after success */}
+	                {!successMessage && (
+		                <>
+			                <FormField label="Password" error={errors.password}>
+				                <Input leftIcon={Lock} id="password" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" />
+			                </FormField>
+			                <FormField label="Confirm Password" error={errors.confirmPassword}>
+				                <Input leftIcon={Lock} id="confirmPassword" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} placeholder="••••••••" />
+			                </FormField>
+		                </>
+	                )}
+
+	                {!successMessage && (
+		                <Button disabled={loading} className="w-full justify-center">Set New Password</Button>
+	                )}
                 </form>
             </Card>
         </Container>

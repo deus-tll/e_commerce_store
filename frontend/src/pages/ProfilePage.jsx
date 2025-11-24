@@ -1,13 +1,16 @@
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, XCircle, MailCheck } from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
+import toast from "react-hot-toast";
+import {CheckCircle2, XCircle, MailCheck} from 'lucide-react';
+
+import {useAuthStore} from '../stores/useAuthStore.js';
+import {formatDate} from '../utils/format.js';
+
+import ChangePasswordForm from "../components/auth/ChangePasswordForm.jsx";
+
 import Badge from '../components/ui/Badge.jsx';
 import Container from '../components/ui/Container.jsx';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
-
-import { useAuthStore } from '../stores/useAuthStore.js';
-
-import { formatDate } from '../utils/format.js';
 
 const ProfilePage = () => {
 	const navigate = useNavigate();
@@ -16,8 +19,13 @@ const ProfilePage = () => {
 	if (!user) return null;
 
 	const handleResend = async () => {
-		await resendVerification();
-		navigate('/verify-email');
+		try {
+			await resendVerification();
+			toast.success("Verification code sent! Please check your email.");
+			navigate('/verify-email');
+		}
+		// eslint-disable-next-line no-unused-vars
+		catch (error) { /* empty */ }
 	}
 
 return (
@@ -67,6 +75,10 @@ return (
                 </div>
             </div>
         </Card>
+
+	    <Card className="p-6 mt-6">
+		    <ChangePasswordForm />
+	    </Card>
     </Container>
 );
 }

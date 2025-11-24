@@ -3,13 +3,15 @@ import {Link} from "react-router-dom";
 import {ArrowLeft, Mail} from "lucide-react";
 
 import {useAuthStore} from "../../stores/useAuthStore.js";
+import {getErrorMessage} from "../../utils/errorParser.js";
 
 import Container from "../../components/ui/Container.jsx";
 import Card from "../../components/ui/Card.jsx";
 import SectionHeader from "../../components/ui/SectionHeader.jsx";
 import FormField from "../../components/ui/FormField.jsx";
-import { Input } from "../../components/ui/Input.jsx";
+import {Input} from "../../components/ui/Input.jsx";
 import Button from "../../components/ui/Button.jsx";
+import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState("");
@@ -20,14 +22,15 @@ const ForgotPasswordPage = () => {
 
     const handleSubmit = async (e) => {
 		e.preventDefault();
+	    setError("");
 
 		try {
 			await forgotPassword(email);
 			setIsSubmitted(true);
 		}
         catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Request failed";
-            setError(msg);
+	        const msg = getErrorMessage(err, "Could not send reset link. Please try again.");
+	        setError(msg);
 		}
 	}
 
@@ -37,7 +40,8 @@ const ForgotPasswordPage = () => {
 			{!isSubmitted ? (
                 <Card className="py-8 px-4 sm:px-10">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && <div className="bg-red-600 text-white p-3 rounded">{error}</div>}
+	                    <ErrorMessage message={error} />
+
                         <p className='text-center text-gray-300 mb-6'>
                             Enter your email address and we'll send you a link to reset your password.
                         </p>

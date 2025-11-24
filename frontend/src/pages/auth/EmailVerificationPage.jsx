@@ -1,16 +1,19 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {Link, useNavigate} from "react-router-dom";
 import {ArrowRight, Verified} from "lucide-react";
-import {toast} from "react-hot-toast";
+
+import {useAuthStore} from "../../stores/useAuthStore.js";
+import {getErrorMessage} from "../../utils/errorParser.js";
 
 import Container from "../../components/ui/Container.jsx";
 import Card from "../../components/ui/Card.jsx";
 import SectionHeader from "../../components/ui/SectionHeader.jsx";
 import Button from "../../components/ui/Button.jsx";
-import {useAuthStore} from "../../stores/useAuthStore.js";
+import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 
 const EmailVerificationPage = () => {
 	const [code, setCode] = useState(["", "", "", "", "", ""]);
+	const [formError, setFormError] = useState(null);
 	const inputRefs = useRef([]);
 	const navigate = useNavigate();
 
@@ -50,21 +53,31 @@ const EmailVerificationPage = () => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+		setFormError(null);
 
 		const verificationCode = code.join("");
+		if (verificationCode.length !== 6) {
+			setFormError("Please enter the full 6-digit code.");
+			return;
+		}
 
-		await verifyEmail(verificationCode);
-
-		navigate("/");
-
-		toast.success("Email verified successfully");
+		try {
+			await verifyEmail(verificationCode);
+			navigate("/");
+		}
+		catch (err) {
+			const msg = getErrorMessage(err, "Verification failed. Please check the code.");
+			setFormError(msg);
+		}
 	}
+
+	const stableHandleSubmit = React.useCallback(handleSubmit, [code, navigate, verifyEmail]);
 
 	useEffect(() => {
 		if (code.every((digit) => digit !== "")) {
-			handleSubmit(new Event("submit"));
+			stableHandleSubmit(new Event("submit"));
 		}
-	}, [code]);
+	}, [code, stableHandleSubmit]);
 
     return (
         <Container size="sm">
@@ -72,13 +85,15 @@ const EmailVerificationPage = () => {
             <Card className="py-8 px-4 sm:px-10">
                 <p className='text-center text-gray-300 mb-6'>Enter the 6-digit code sent to your email address.</p>
                 <form onSubmit={handleSubmit} className='space-y-6'>
+	                <ErrorMessage message={formError} />
+
                     <div className="flex justify-between">
                         {code.map((digit, index) => (
                             <input
                                 key={index}
                                 ref={(el) => (inputRefs.current[index] = el)}
                                 type="text"
-                                maxLength="6"
+                                maxLength="1"
                                 value={digit}
                                 onChange={(e) => handleChange(index, e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(index, e)}
