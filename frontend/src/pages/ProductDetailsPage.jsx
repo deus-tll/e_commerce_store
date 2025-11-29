@@ -23,12 +23,14 @@ import noImageIcon from "../assets/no-image-icon.png";
 const ProductDetailsPage = () => {
     const { id } = useParams();
     const { user } = useAuthStore();
-    const { addToCart } = useCartStore();
-    const { fetchProductById, currentProduct, clearCurrentProduct, loading } = useProductStore();
+    const { itemLoadingId, addToCart } = useCartStore();
+    const { currentProduct, loading, fetchProductById, clearCurrentProduct } = useProductStore();
     const { clearReviews, getAverageRating, getTotalReviews } = useReviewStore();
 
     const averageRating = getAverageRating();
     const totalReviews = getTotalReviews();
+
+    const isLoading = itemLoadingId === currentProduct?.id;
 
     const defaultImages = {
         mainImage: noImageIcon,
@@ -81,8 +83,7 @@ const ProductDetailsPage = () => {
     const currentDisplayImage = productImages.allImages[selectedImageIndex] || productImages.allImages[0];
 
     const handleAddToCart = async () => {
-        if (!user) return;
-        if (!currentProduct) return;
+        if (!user || !currentProduct) return;
         await addToCart(currentProduct);
     };
 
@@ -182,10 +183,16 @@ const ProductDetailsPage = () => {
                             <Button
                                 className="flex-1 flex items-center justify-center gap-2 py-3 text-lg"
                                 onClick={handleAddToCart}
-                                disabled={!user}
+                                disabled={!user || isLoading}
                             >
-                                <ShoppingCart className="h-5 w-5" />
-                                Add to Cart
+                                {isLoading ? (
+                                    "Adding..."
+                                ) : (
+                                    <>
+                                        <ShoppingCart className="h-5 w-5" />
+                                        Add to Cart
+                                    </>
+                                )}
                             </Button>
                         </div>
 
@@ -260,5 +267,3 @@ const ProductDetailsPage = () => {
 };
 
 export default ProductDetailsPage;
-
-

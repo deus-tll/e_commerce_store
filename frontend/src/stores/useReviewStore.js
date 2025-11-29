@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import axios from "../config/axios.js";
-import { handleRequestError } from "../utils/errorHandler.js";
+import { handleError } from "../utils/errorHandler.js";
 
 export const REVIEWS_API_PATH = "/reviews";
 
@@ -30,7 +30,7 @@ export const useReviewStore = create((set, get) => ({
 			return res.data;
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to submit review");
+			handleError(error, "Failed to submit review");
 			throw error;
 		}
 		finally {
@@ -55,7 +55,7 @@ export const useReviewStore = create((set, get) => ({
 			});
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to load reviews", false);
+			handleError(error, "Failed to load reviews", false);
 		}
 		finally {
 			set({ loading: false });
@@ -80,7 +80,7 @@ export const useReviewStore = create((set, get) => ({
 			return res.data;
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to update review");
+			handleError(error, "Failed to update review");
 			throw error;
 		}
 		finally {
@@ -102,7 +102,7 @@ export const useReviewStore = create((set, get) => ({
 			}));
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to delete review");
+			handleError(error, "Failed to delete review");
 		}
 		finally {
 			set({ loading: false });

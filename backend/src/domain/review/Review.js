@@ -18,7 +18,7 @@ export class ReviewEntity {
 	 */
 	constructor(data) {
 		this.id = data.id.toString();
-		this.productId = data.productId.toString();
+		this.productId = data.id.toString();
 		this.userId = data.userId.toString();
 		this.rating = data.rating;
 		this.comment = data.comment;
@@ -40,7 +40,7 @@ export class CreateReviewDTO {
 	 * @param {object} data - Raw data for creation.
 	 */
 	constructor(data) {
-		this.productId = data.productId;
+		this.productId = data.id;
 		this.userId = data.userId;
 		this.rating = data.rating;
 		this.comment = data.comment;

@@ -67,8 +67,8 @@ export class StripeService extends IStripeService {
 				price_data: {
 					currency: Currencies.USD,
 					product_data: {
-						name: product.productName,
-						images: product.productMainImage ? [product.productMainImage] : []
+						name: product.name,
+						images: product.image ? [product.image] : []
 					},
 					unit_amount: unitAmount
 				},

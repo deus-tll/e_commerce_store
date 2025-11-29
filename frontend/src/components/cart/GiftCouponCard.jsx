@@ -9,7 +9,7 @@ import { Input } from "../ui/Input.jsx";
 
 const GiftCouponCard = () => {
 	const [userInputCode, setUserInputCode] = useState("");
-	const { coupon, isCouponApplied, applyCoupon, getMyCoupon, removeCoupon } = useCartStore();
+	const { coupon, isCouponApplied, couponLoading, getMyCoupon, applyCoupon, removeCoupon } = useCartStore();
 
 	useEffect(() => {
 		getMyCoupon();
@@ -25,7 +25,7 @@ const GiftCouponCard = () => {
 	};
 
 	const handleRemoveCoupon = async () => {
-		await removeCoupon(userInputCode);
+		removeCoupon();
 		setUserInputCode("");
 	};
 
@@ -36,7 +36,14 @@ const GiftCouponCard = () => {
 					<Input id="voucher" name="voucher" type="text" value={userInputCode} onChange={(e) => setUserInputCode(e.target.value)} placeholder="Enter code here" />
 				</FormField>
 
-				<Button type="button" onClick={handleApplyCoupon} className="w-full justify-center">Apply Code</Button>
+				<Button
+					type="button"
+					onClick={handleApplyCoupon}
+					className="w-full justify-center"
+					disabled={!userInputCode || isCouponApplied || couponLoading}
+				>
+					{couponLoading ? "Applying..." : "Apply Code"}
+				</Button>
 			</div>
 
 			{coupon && (

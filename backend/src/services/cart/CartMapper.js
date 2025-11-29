@@ -53,6 +53,7 @@ export class CartMapper extends ICartMapper {
 
 	async toItemDTOs(entity) {
 		const cartDTO = await this.#convertToFullDTO(entity);
+
 		return cartDTO.items;
 	}
 }

@@ -63,8 +63,8 @@ export class ProductImageManager extends IProductImageManager {
 		const urlsToDelete = [];
 
 		// --- 1. Main Image Update ---
-		if (newImagesData.mainImage !== undefined) {
-			const newMainImage = newImagesData.mainImage;
+		if (newImagesData.image !== undefined) {
+			const newMainImage = newImagesData.image;
 
 			if (newMainImage !== oldImages.mainImage) {
 				// Upload new image
@@ -123,7 +123,7 @@ export class ProductImageManager extends IProductImageManager {
 
 	async deleteProductImages(images) {
 		const urlsToDelete = [
-			images?.mainImage,
+			images?.image,
 			...(images?.additionalImages || [])
 		].filter(url => url);
 

@@ -17,7 +17,7 @@ const getInitialFormData = (product) => ({
     category: typeof product.category === "object" && product.category
         ? product.category.slug
         : product.category || "",
-    currentMainImage: product.images?.mainImage || "",
+    currentMainImage: product.images?.image || "",
     existingAdditionalImages: product.images?.additionalImages || [],
     newMainImage: "",
     newAdditionalImages: [],

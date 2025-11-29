@@ -33,11 +33,11 @@ export class StripePaymentService extends IPaymentService {
 	#getProductsMetadataSnapshot(products) {
 		const snapshot = products.map((product) => {
 			return {
-				productId: product.productId,
+				id: product.id,
 				quantity: product.quantity,
 				price: product.price,
-				productName: product.productName,
-				productMainImage: product.productMainImage
+				name: product.name,
+				image: product.image
 			};
 		});
 

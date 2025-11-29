@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "../config/axios.js";
-import { handleRequestError } from "../utils/errorHandler.js";
+import { handleError } from "../utils/errorHandler.js";
 
 export const CATEGORIES_API_PATH = "/categories";
 export const DEFAULT_LIMIT = 12;
@@ -26,7 +26,7 @@ export const useCategoryStore = create((set) => ({
 			}));
 		}
 		catch (error) {
-			handleRequestError(error, "Error fetching categories");
+			handleError(error, "Error fetching categories");
 		}
 		finally {
 			set({ loading: false });
@@ -40,7 +40,7 @@ export const useCategoryStore = create((set) => ({
 			set((prev) => ({ categories: [ ...prev.categories, res.data ] }));
 		}
 		catch (error) {
-			handleRequestError(error, "Error creating category");
+			handleError(error, "Error creating category");
 		}
 		finally {
 			set({ loading: false });
@@ -56,7 +56,7 @@ export const useCategoryStore = create((set) => ({
 			}));
 		}
 		catch (error) {
-			handleRequestError(error, "Error updating category");
+			handleError(error, "Error updating category");
 		}
 		finally {
 			set({ loading: false });
@@ -70,7 +70,7 @@ export const useCategoryStore = create((set) => ({
 			set((prev) => ({ categories: prev.categories.filter((category) => category._id !== id) }));
 		}
 		catch (error) {
-			handleRequestError(error, "Error deleting category");
+			handleError(error, "Error deleting category");
 		}
 		finally {
 			set({ loading: false });

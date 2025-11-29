@@ -182,7 +182,7 @@ export class ShortProductDTO {
 	/** @type {string} */ id;
 	/** @type {string} */ name;
 	/** @type {number} */ price;
-	/** @type {string} */ mainImage;
+	/** @type {string} */ image;
 
 	/**
 	 * @param {ProductEntity} entity
@@ -191,7 +191,7 @@ export class ShortProductDTO {
 		this.id = entity.id;
 		this.name = entity.name;
 		this.price = entity.price;
-		this.mainImage = entity.images?.mainImage || "";
+		this.image = entity.images?.mainImage || "";
 	}
 }
 

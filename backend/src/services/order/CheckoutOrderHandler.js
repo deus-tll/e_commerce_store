@@ -1,6 +1,7 @@
 import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandler.js";
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
+import {ICartService} from "../../interfaces/cart/ICartService.js";
 import {CheckoutSuccessDTO, CreateOrderDTO} from "../../domain/index.js";
 
 import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
@@ -16,15 +17,18 @@ import {Currency} from "../../utils/currency.js";
 export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 	/** @type {IOrderService} */ #orderService;
 	/** @type {ICouponService} */ #couponService;
+	/** @type {ICartService} */ #cartService;
 
 	/**
 	 * @param {IOrderService} orderService
 	 * @param {ICouponService} couponService
+	 * @param {ICartService} cartService
 	 */
-	constructor(orderService, couponService) {
+	constructor(orderService, couponService, cartService) {
 		super();
 		this.#orderService = orderService;
 		this.#couponService = couponService;
+		this.#cartService = cartService;
 	}
 
 	async checkExistingOrder(sessionId) {
@@ -34,7 +38,8 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 			return new CheckoutSuccessDTO({
 				success: true,
 				message: "Payment already processed",
-				orderId: existingOrder.id
+				orderId: existingOrder.id,
+				orderNumber: existingOrder.orderNumber
 			});
 		}
 
@@ -71,22 +76,25 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 		try {
 			const newOrder = await this.#orderService.create(orderData);
 
+			await this.#cartService.clear(userId);
+
 			return new CheckoutSuccessDTO({
 				success: true,
-				message: "Payment successful, order created, and coupon deactivated if used",
-				orderId: newOrder.id
+				message: "Payment successful, order created, coupon deactivated(if used), and cart cleared.",
+				orderId: newOrder.id,
+				orderNumber: newOrder.orderNumber
 			});
 		} catch (error) {
 			// Handle database ConflictError (race condition during order creation)
 			if (error instanceof ConflictError) {
-				const existingOrder = await this.#orderService.getByPaymentSessionId(sessionId);
+				const existingOrderResult = await this.checkExistingOrder(sessionId);
 
-				if (existingOrder) {
-					// Return success if the order already exists due to concurrency
+				if (existingOrderResult) {
 					return new CheckoutSuccessDTO({
-						success: true,
+						success: existingOrderResult.success,
 						message: "Order already processed concurrently",
-						orderId: existingOrder.id
+						orderId: existingOrderResult.orderId,
+						orderNumber: existingOrderResult.orderNumber,
 					});
 				}
 			}

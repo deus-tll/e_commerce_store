@@ -14,6 +14,7 @@ export class CartItemEntity {
 	 * @param {number} data.quantity
 	 */
 	constructor({ productId, quantity }) {
+
 		this.productId = productId.toString();
 		this.quantity = quantity;
 	}
@@ -33,7 +34,9 @@ export class CartEntity {
 	 * @param {object} data
 	 * @param {string} data.id
 	 * @param {string} data.userId - The agnostic field name.
-	 * @param {Array<object>} data.items
+	 * @param {CartItemEntity[]} data.items
+	 * @param {Date} data.createdAt
+	 * @param {Date} data.updatedAt
 	 */
 	constructor({ id, userId, items, createdAt, updatedAt }) {
 		if (!id) {
@@ -41,10 +44,7 @@ export class CartEntity {
 		}
 		this.id = id.toString();
 		this.userId = userId.toString();
-		this.items = items.map(item => new CartItemEntity({
-			productId: item.productId,
-			quantity: item.quantity
-		}));
+		this.items = items;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}

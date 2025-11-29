@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import axios from "../config/axios.js";
-import {handleRequestError} from "../utils/errorHandler.js";
+import {handleError} from "../utils/errorHandler.js";
 
 const USERS_API_PATH = "/users";
 
@@ -30,7 +30,7 @@ export const useUserStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ error: error.message });
-			handleRequestError(error);
+			handleError(error);
 			throw error;
 		}
 		finally {
@@ -44,7 +44,7 @@ export const useUserStore = create((set, get) => ({
 			set({ stats: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+			handleError(error);
 			throw error;
 		}
 	},
@@ -61,7 +61,7 @@ export const useUserStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ error: error.message });
-			handleRequestError(error);
+			handleError(error);
 			throw error;
 		}
 		finally {
@@ -81,7 +81,7 @@ export const useUserStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ error: error.message });
-			handleRequestError(error);
+			handleError(error);
 			throw error;
 		}
 		finally {
@@ -99,7 +99,7 @@ export const useUserStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ error: error.message });
-			handleRequestError(error);
+			handleError(error);
 			throw error;
 		}
 		finally {

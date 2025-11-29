@@ -1,13 +1,14 @@
-import { Link } from "react-router-dom";
-import { MoveRight } from "lucide-react";
+import {Link} from "react-router-dom";
+import {MoveRight} from "lucide-react";
+
+import {useCartStore} from "../../stores/useCartStore.js";
+import {formatCurrency} from "../../utils/format.js";
+
 import Card from "../ui/Card.jsx";
 import Button from "../ui/Button.jsx";
 
-import {useCartStore} from "../../stores/useCartStore.js";
-import { formatCurrency } from "../../utils/format.js";
-
 const OrderSummary = () => {
-	const { total, subtotal, coupon, isCouponApplied, createCheckoutSession } = useCartStore();
+	const { total, subtotal, coupon, isCouponApplied, paymentLoading, createCheckoutSession } = useCartStore();
 
     const savings = subtotal - total;
 
@@ -51,7 +52,13 @@ const OrderSummary = () => {
 					</dl>
 				</div>
 
-				<Button onClick={handlePayment} className="w-full justify-center">Proceed to Checkout</Button>
+				<Button
+					onClick={handlePayment}
+					className="w-full justify-center"
+					disabled={paymentLoading}
+				>
+					{paymentLoading ? "Redirecting..." : "Proceed to Checkout"}
+				</Button>
 
 				<div className="flex items-center justify-center gap-2">
 					<span className="text-sm font-normal text-gray-400">

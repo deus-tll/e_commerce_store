@@ -103,11 +103,11 @@ export class MongooseAdapter {
 		if (!plainObject) return null;
 
 		const products = plainObject.products.map(item => new OrderProductItem({
-			productId: item.product.toString(),
+			id: item.product.toString(),
 			quantity: item.quantity,
 			price: item.price,
-			productName: item.productName,
-			productMainImage: item.productMainImage
+			name: item.name,
+			image: item.image
 		}));
 
 		return new OrderEntity({
@@ -116,6 +116,7 @@ export class MongooseAdapter {
 			products: products,
 			totalAmount: plainObject.totalAmount,
 			paymentSessionId: plainObject.paymentSessionId,
+			orderNumber: plainObject.orderNumber,
 			createdAt: plainObject.createdAt,
 			updatedAt: plainObject.updatedAt,
 		});

@@ -46,11 +46,11 @@ export class PaymentController {
 				const quantity = clientProduct.quantity;
 
 				return new OrderProductItem({
-					productId: p.id,
-					productName: p.name,
-					productMainImage: p.mainImage,
-					price: p.price,
+					id: p.id,
 					quantity,
+					price: p.price,
+					name: p.name,
+					image: p.image
 				});
 			});
 

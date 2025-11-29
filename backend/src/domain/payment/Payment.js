@@ -25,16 +25,19 @@ export class CheckoutSuccessDTO {
 	/** @type {boolean} */ success;
 	/** @type {string} */ message;
 	/** @type {string} */ orderId;
+	/** @type {string} */ orderNumber;
 
 	/**
 	 * @param {object} data
 	 * @param {boolean} data.success - Indicates if the payment process was successful.
 	 * @param {string} data.message - Human-readable message describing the result.
 	 * @param {string} data.orderId - The ID of the associated order.
+	 * @param {string} data.orderNumber - The number of the order.
 	 */
-	constructor({ success, message, orderId }) {
+	constructor({ success, message, orderId, orderNumber }) {
 		this.success = success;
 		this.message = message;
 		this.orderId = orderId;
+		this.orderNumber = orderNumber;
 	}
 }

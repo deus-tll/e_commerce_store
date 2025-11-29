@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { toast } from "react-hot-toast";
 
 import axios from "../config/axios.js";
-import {handleRequestError} from "../utils/errorHandler.js";
+import {handleError} from "../utils/errorHandler.js";
 
 const ANALYTICS_API_PATH = "/analytics";
 
@@ -31,7 +31,7 @@ export const useAnalyticsStore = create((set, get) => ({
 		}
 		catch (error) {
 			set({ error: "Failed to fetch analytics data. Please try again." });
-			handleRequestError(error, "Failed to fetch analytics data.");
+			handleError(error, "Failed to fetch analytics data.");
 		}
 		finally {
 			set({ loading: false });

@@ -1,7 +1,7 @@
 import {create} from "zustand";
 
 import axios from "../config/axios.js";
-import {handleRequestError} from "../utils/errorHandler.js";
+import {handleError} from "../utils/errorHandler.js";
 
 const AUTH_API_PATH = "/auth";
 
@@ -35,7 +35,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error, "Signup failed", {
+			handleError(error, "Signup failed", {
 				isGlobal: false, showToast: false
 			});
 			throw error;
@@ -53,7 +53,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error, "Login failed", {
+			handleError(error, "Login failed", {
 				isGlobal: false, showToast: false
 			});
 			throw error;
@@ -69,7 +69,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: null });
 		}
 		catch (error) {
-			handleRequestError(error, "Logout attempt failed, proceeding with local logout.", {
+			handleError(error, "Logout attempt failed, proceeding with local logout.", {
 				isGlobal: false, showToast: false
 			});
 		}
@@ -99,7 +99,7 @@ export const useAuthStore = create((set) => ({
 			await axios.post(`${AUTH_API_PATH}/refresh-token`);
 		}
 		catch (error) {
-			handleRequestError(error, "Session expired or invalid. Please log in again.", {
+			handleError(error, "Session expired or invalid. Please log in again.", {
 				isGlobal: true, showToast: false
 			});
 
@@ -116,7 +116,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error, "Verification failed", {
+			handleError(error, "Verification failed", {
 				isGlobal: false, showToast: false
 			});
 			throw error;
@@ -133,7 +133,7 @@ export const useAuthStore = create((set) => ({
 			await axios.post(`${AUTH_API_PATH}/resend-verification`);
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to resend verification code.", {
+			handleError(error, "Failed to resend verification code.", {
 				isGlobal: false, showToast: true
 			});
 			throw error;
@@ -150,7 +150,7 @@ export const useAuthStore = create((set) => ({
 			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to send reset link", {
+			handleError(error, "Failed to send reset link", {
 				isGlobal: false, showToast: false
 			});
 			throw error;
@@ -173,7 +173,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: res.data });
 		}
 		catch (error) {
-			handleRequestError(error, "Password reset failed", {
+			handleError(error, "Password reset failed", {
 				isGlobal: false, showToast: false
 			});
 			throw error;
@@ -200,7 +200,7 @@ export const useAuthStore = create((set) => ({
 			set({ user: null });
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to change password.", {
+			handleError(error, "Failed to change password.", {
 				isGlobal: false, showToast: false
 			});
 			throw error;

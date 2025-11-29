@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import axios from "../config/axios.js";
-import {handleRequestError} from "../utils/errorHandler.js";
+import {handleError} from "../utils/errorHandler.js";
 
 export const PRODUCTS_API_PATH = "/products";
 
@@ -22,7 +22,7 @@ export const useProductStore = create((set, get) => ({
 			}));
 		}
         catch (error) {
-            handleRequestError(error, "An error occurred", false);
+            handleError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -40,7 +40,7 @@ export const useProductStore = create((set, get) => ({
 			return res.data;
 		}
 		catch (error) {
-			handleRequestError(error, "An error occurred", false);
+			handleError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -65,7 +65,7 @@ export const useProductStore = create((set, get) => ({
 			return res.data;
 		}
 		catch (error) {
-			handleRequestError(error, "An error occurred", false);
+			handleError(error, "An error occurred", false);
 			throw error;
 		}
 		finally {
@@ -89,7 +89,7 @@ export const useProductStore = create((set, get) => ({
 			set({ products: newProducts, pagination: newPagination });
 		}
 		catch (error) {
-			handleRequestError(error, "An error occurred while fetching products", false);
+			handleError(error, "An error occurred while fetching products", false);
 			set({ products: [], pagination: null });
 		}
 		finally {
@@ -107,7 +107,7 @@ export const useProductStore = create((set, get) => ({
 			}));
 		}
         catch (error) {
-            handleRequestError(error, "An error occurred", false);
+            handleError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -141,7 +141,7 @@ export const useProductStore = create((set, get) => ({
 			});
 		}
         catch (error) {
-            handleRequestError(error, "An error occurred", false);
+            handleError(error, "An error occurred", false);
 		}
 		finally {
 			set({ loading: false });
@@ -156,7 +156,7 @@ export const useProductStore = create((set, get) => ({
 			set({ featuredProducts: res.data });
 		}
 		catch (error) {
-			handleRequestError(error);
+			handleError(error);
 		}
 		finally {
 			set({ loading: false });

@@ -6,26 +6,26 @@ import {ShortUserDTO, PaginationMetadata} from "../index.js";
  * Includes snapshot data for order immutability.
  */
 export class OrderProductItem {
-	/** @type {string} */ productId;
+	/** @type {string} */ id;
 	/** @type {number} */ quantity;
 	/** @type {number} */ price;
-	/** @type {string} */ productName;
-	/** @type {string} */ productMainImage;
+	/** @type {string} */ name;
+	/** @type {string} */ image;
 
 	/**
 	 * @param {object} data
-	 * @param {string} data.productId
+	 * @param {string} data.id
 	 * @param {number} data.quantity
 	 * @param {number} data.price
-	 * @param {string} data.productName
-	 * @param {string} data.productMainImage
+	 * @param {string} data.name
+	 * @param {string} data.image
 	 */
-	constructor({ productId, quantity, price, productName, productMainImage }) {
-		this.productId = productId;
+	constructor({ id, quantity, price, name, image }) {
+		this.id = id;
 		this.quantity = quantity;
 		this.price = price;
-		this.productName = productName;
-		this.productMainImage = productMainImage;
+		this.name = name;
+		this.image = image;
 	}
 }
 
@@ -39,24 +39,20 @@ export class OrderEntity {
 	/** @type {OrderProductItem[]} */ products;
 	/** @type {number} */ totalAmount;
 	/** @type {string | undefined} */ paymentSessionId;
+	/** @type {string} */ orderNumber;
 	/** @type {Date} */ createdAt;
 	/** @type {Date} */ updatedAt;
 
 	/**
 	 * @param {object} data
 	 */
-	constructor({ id, userId, products, totalAmount, paymentSessionId, createdAt, updatedAt }) {
+	constructor({ id, userId, products, totalAmount, paymentSessionId, orderNumber, createdAt, updatedAt }) {
 		this.id = id;
 		this.userId = userId;
-		this.products = products.map(item => new OrderProductItem({
-			productId: item.productId,
-			quantity: item.quantity,
-			price: item.price,
-			productName: item.productName,
-			productMainImage: item.productMainImage
-		}));
+		this.products = products.map(item => new OrderProductItem(item));
 		this.totalAmount = totalAmount;
 		this.paymentSessionId = paymentSessionId;
+		this.orderNumber = orderNumber;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
@@ -113,41 +109,16 @@ export class UpdateOrderDTO {
 }
 
 /**
- * Agnostic class for the product item *within* the Order DTO.
- * Uses the snapshot data stored in the Entity.
- */
-export class OrderProductDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {number} */ quantity;
-	/** @type {number} */ price;
-	/** @type {string} */ mainImage;
-	/** @type {string} */ productId; // Alias for id, useful for consistency
-
-	/**
-	 * Creates a DTO instance from the necessary parts (e.g., OrderProductItem fields).
-	 * @param {object} data
-	 */
-	constructor(data) {
-		this.id = data.productId;
-		this.productId = data.productId;
-		this.name = data.productName;
-		this.quantity = data.quantity;
-		this.price = data.price;
-		this.mainImage = data.productMainImage;
-	}
-}
-
-/**
  * Agnostic class for Order Data Transfer Object (DTO).
- * Replaces string IDs with populated DTO objects/variants (ShortUserDTO, OrderProductDTO).
+ * Replaces string IDs with populated DTO objects/variants (ShortUserDTO, OrderProductItem).
  */
 export class OrderDTO {
 	/** @type {string} */ id;
 	/** @type {ShortUserDTO | null} */ user;
-	/** @type {OrderProductDTO[]} */ products;
+	/** @type {OrderProductItem[]} */ products;
 	/** @type {number} */ totalAmount;
 	/** @type {string | undefined} */ paymentSessionId;
+	/** @type {string} */ orderNumber;
 	/** @type {Date} */ createdAt;
 	/** @type {Date} */ updatedAt;
 
@@ -158,15 +129,10 @@ export class OrderDTO {
 	constructor(entity, userShortDTO) {
 		this.id = entity.id;
 		this.user = userShortDTO;
-		this.products = entity.products.map(item => new OrderProductDTO({
-			productId: item.productId,
-			productName: item.productName,
-			quantity: item.quantity,
-			price: item.price,
-			productMainImage: item.productMainImage
-		}));
+		this.products = entity.products;
 		this.totalAmount = entity.totalAmount;
 		this.paymentSessionId = entity.paymentSessionId;
+		this.orderNumber = entity.orderNumber;
 		this.createdAt = entity.createdAt;
 		this.updatedAt = entity.updatedAt;
 	}

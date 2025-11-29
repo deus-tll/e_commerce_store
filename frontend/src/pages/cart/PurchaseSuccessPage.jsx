@@ -1,30 +1,56 @@
 import {useEffect, useState} from 'react';
-import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
+import {Link} from "react-router-dom";
+import {AlertCircle, ArrowRight, CheckCircle, HandHeart} from "lucide-react";
 import Confetti from "react-confetti";
-import Container from "../../components/ui/Container.jsx";
-import Card from "../../components/ui/Card.jsx";
-import Button from "../../components/ui/Button.jsx";
 
 import {useCartStore} from "../../stores/useCartStore.js";
 
 import LoadingSpinner from "../../components/LoadingSpinner.jsx";
 
+import Container from "../../components/ui/Container.jsx";
+import Card from "../../components/ui/Card.jsx";
+import Button from "../../components/ui/Button.jsx";
+
 const PurchaseSuccessPage = () => {
-	const { finalizeCheckout, processingCheckout, checkoutError } = useCartStore();
-	const orderNumber = "12345";
+	const { lastOrderNumber, processingCheckout, checkoutError, finalizeCheckout } = useCartStore();
+	const displayedOrderNumber = lastOrderNumber || "";
 
 	const [confettiKey, setConfettiKey] = useState(0);
 
 	useEffect(() => {
 		const sessionId = new URLSearchParams(window.location.search).get("session_id");
-
 		finalizeCheckout(sessionId);
 	}, [finalizeCheckout]);
 
 	if (processingCheckout) return <LoadingSpinner /> ;
 
-	if (checkoutError) return `Error: ${checkoutError}`;
+	if (checkoutError) {
+		return (
+			<Container size="sm">
+				<Card className="p-6 sm:p-8 text-center space-y-4">
+					<AlertCircle className="text-red-500 w-16 h-16 mx-auto mb-4" />
+					<h1 className="text-2xl font-bold text-red-500">Order Finalization Failed</h1>
+					<p className="text-gray-300">{checkoutError}</p>
+					<p className="text-sm text-gray-400">
+						Please check the persistent notification above for more details, or try contacting support.
+					</p>
+					<Link to="/">
+						<Button className="w-full justify-center mt-4" variant="secondary">
+							Go to Homepage
+						</Button>
+					</Link>
+				</Card>
+			</Container>
+		);
+	}
+
+	if (!lastOrderNumber) {
+		return (
+			<Container size="sm">
+				<p className="text-center text-red-500">Error: Order confirmation data missing. Please check your email.</p>
+			</Container>
+		);
+	}
 
 	const handleThanksClick = () => {
 		setConfettiKey(prevKey => prevKey + 1);
@@ -66,7 +92,7 @@ const PurchaseSuccessPage = () => {
 							</span>
 
 							<span className="text-sm font-semibold text-emerald-400">
-								#{orderNumber}
+								#{displayedOrderNumber}
 							</span>
 						</div>
 

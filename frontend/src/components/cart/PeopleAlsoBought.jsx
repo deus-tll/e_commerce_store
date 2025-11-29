@@ -6,7 +6,7 @@ import {PRODUCTS_API_PATH} from "../../stores/useProductStore.js";
 import LoadingSpinner from "../LoadingSpinner.jsx";
 import ProductGrid from "../ProductGrid.jsx";
 import SectionHeader from "../ui/SectionHeader.jsx";
-import {handleRequestError} from "../../utils/errorHandler.js";
+import {handleError} from "../../utils/errorHandler.js";
 
 const PeopleAlsoBought = () => {
 	const [recommendedProducts, setRecommendedProducts] = useState([]);
@@ -19,7 +19,7 @@ const PeopleAlsoBought = () => {
 				setRecommendedProducts(res.data);
 			}
 			catch (error) {
-				handleRequestError(error, "An error occurred while fetching recommended products");
+				handleError(error, "An error occurred while fetching recommended products");
 			}
 			finally {
 				setIsLoading(false);
