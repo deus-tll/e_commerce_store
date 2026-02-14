@@ -8,28 +8,7 @@ import {OrderDTO} from "../../domain/index.js";
  * @augments IOrderMapper
  */
 export class OrderMapper extends IOrderMapper {
-	/** @type {IUserService} */ #userService;
-	/** @type {IUserMapper} */ #userMapper;
-
-	/**
-	 * @param {IUserService} userService - The user service dependency.
-	 * @param {IUserMapper} userMapper - The user mapper dependency.
-	 */
-	constructor(userService, userMapper) {
-		super();
-		this.#userService = userService;
-		this.#userMapper = userMapper;
-	}
-
-	async toDTO(entity) {
-		const userEntity = await this.#userService.getEntityById(entity.userId);
-
-		let shortUserDTO = null;
-
-		if (userEntity) {
-			shortUserDTO = this.#userMapper.toShortDTO(userEntity);
-		}
-
+	toDTO(entity, shortUserDTO) {
 		return new OrderDTO(entity, shortUserDTO);
 	}
 }

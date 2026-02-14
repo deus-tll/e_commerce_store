@@ -49,6 +49,7 @@ const orderSchema = new mongoose.Schema({
 		type: String,
 		unique: true,
 		index: true,
+		sparse: true
 	},
 	orderNumber: {
 		type: String,

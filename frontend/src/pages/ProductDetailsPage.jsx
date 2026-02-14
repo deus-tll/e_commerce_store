@@ -1,20 +1,23 @@
-import React, {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {useParams, Link} from "react-router-dom";
-import {AlertCircle, Check, ShoppingCart, Truck, RotateCcw, Shield} from "lucide-react";
+import {AlertCircle, ShoppingCart} from "lucide-react";
+import toast from "react-hot-toast";
+
+import {formatCurrency} from "../utils/format.js";
 
 import {useProductStore} from "../stores/useProductStore.js";
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
 import {useReviewStore} from "../stores/useReviewStore.js";
 
-import {formatCurrency} from "../utils/format.js";
+import StockStatus from "../components/product/StockStatus.jsx";
+import ReviewsList from "../components/review/ReviewsList.jsx";
+import ReviewForm from "../components/review/ReviewForm.jsx";
 
 import Container from "../components/ui/Container.jsx";
 import SectionHeader from "../components/ui/SectionHeader.jsx";
 import Button from "../components/ui/Button.jsx";
-import LoadingSpinner from "../components/LoadingSpinner.jsx";
-import CreateReviewForm from "../components/review/CreateReviewForm.jsx";
-import ReviewsList from "../components/review/ReviewsList.jsx";
+import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import ImageGallery from "../components/ui/ImageGallery.jsx";
 import PartialStars from "../components/ui/PartialStars.jsx";
 
@@ -22,40 +25,18 @@ import noImageIcon from "../assets/no-image-icon.png";
 
 const ProductDetailsPage = () => {
     const { id } = useParams();
+
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
     const { user } = useAuthStore();
     const { itemLoadingId, addToCart } = useCartStore();
-    const { currentProduct, loading, fetchProductById, clearCurrentProduct } = useProductStore();
-    const { clearReviews, getAverageRating, getTotalReviews } = useReviewStore();
-
-    const averageRating = getAverageRating();
-    const totalReviews = getTotalReviews();
-
-    const isLoading = itemLoadingId === currentProduct?.id;
-
-    const defaultImages = {
-        mainImage: noImageIcon,
-        additionalImages: [],
-        allImages: [noImageIcon]
-    };
-
-    const features = [
-        "High quality materials",
-        "Durable construction",
-        "Easy to use",
-        "Satisfaction guaranteed"
-    ];
-
-    const specifications = [
-        { label: "Brand", value: "Premium Brand" },
-        { label: "Model", value: currentProduct?.name || "N/A" },
-        { label: "Weight", value: "1.2 kg" },
-        { label: "Size", value: "S" },
-        { label: "Material", value: "Premium Quality" },
-        { label: "Warranty", value: "1 year" }
-    ];
+    const { currentProduct, loading, error, fetchProductById, clearCurrentProduct } = useProductStore();
+    const { clearReviews } = useReviewStore();
 
     useEffect(() => {
-        fetchProductById(id);
+        setSelectedImageIndex(0);
+        void fetchProductById(id);
+
         return () => {
             clearCurrentProduct();
             clearReviews();
@@ -63,38 +44,45 @@ const ProductDetailsPage = () => {
     }, [id, fetchProductById, clearCurrentProduct, clearReviews]);
 
     const productImages = useMemo(() => {
-        if (!currentProduct || !currentProduct.images) {
-            return defaultImages;
-        }
-
-        const { mainImage, additionalImages } = currentProduct.images;
-
-        const finalMainImage = mainImage || noImageIcon;
-        const finalAdditionalImages = additionalImages || [];
-
-        return {
-            mainImage: finalMainImage,
-            additionalImages: finalAdditionalImages,
-            allImages: [finalMainImage, ...finalAdditionalImages]
-        };
+        const images = currentProduct?.images;
+        const main = images?.mainImage || noImageIcon;
+        const additional = images?.additionalImages || [];
+        return [main, ...additional];
     }, [currentProduct]);
 
-    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const currentDisplayImage = productImages.allImages[selectedImageIndex] || productImages.allImages[0];
+    const currentDisplayImage = productImages[selectedImageIndex] || productImages[0];
 
     const handleAddToCart = async () => {
         if (!user || !currentProduct) return;
         await addToCart(currentProduct);
     };
 
-    const handleReviewSuccess = () => {
-        // Optional: show success message or trigger additional actions
-        console.log("Review submitted successfully!");
+    const handleReviewSuccess = async () => {
+        toast.success("Review submitted successfully!");
+        await fetchProductById(id);
     };
 
-    if (loading || !currentProduct) {
-        return <LoadingSpinner />;
+    if (loading) return <LoadingSpinner />;
+
+    if (error || (!loading && !currentProduct)) {
+        return (
+            <Container size="lg" className="py-20 text-center">
+                <div className="flex flex-col items-center gap-4">
+                    <AlertCircle className="h-12 w-12 text-red-500" />
+                    <h2 className="text-2xl font-bold text-white">Product Not Found</h2>
+                    <p className="text-gray-400">The item you are looking for doesn't exist or has been removed.</p>
+                    <Link to="/" className="text-emerald-400 hover:underline">Back to Shop</Link>
+                </div>
+            </Container>
+        );
     }
+
+    if (currentProduct?.id !== id) return <LoadingSpinner />;
+
+    const isAddingToCart = itemLoadingId === currentProduct.id;
+
+    const productStock = currentProduct.stock ?? 0;
+    const isAvailable = productStock > 0;
 
     return (
         <Container size="lg">
@@ -113,7 +101,7 @@ const ProductDetailsPage = () => {
 
                     {/* Image Gallery */}
                     <ImageGallery
-                        allImages={productImages.allImages}
+                        allImages={productImages}
                         selectedImageIndex={selectedImageIndex}
                         onSelectImage={setSelectedImageIndex}
                     />
@@ -124,57 +112,30 @@ const ProductDetailsPage = () => {
                     {/* Header */}
                     <div>
                         <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                            <Link to={`/category/${currentProduct.category?.slug}`}>
+                            <Link to={`/category/${currentProduct.category?.slug}`} className="hover:underline">
                                 <span>{currentProduct.category?.name}</span>
                             </Link>
                             <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-3">{currentProduct.name}</h1>
 
-                        {/* Dummy Rating */}
                         <div className="flex items-center gap-3 mb-4">
-                            <PartialStars rating={averageRating} />
-                            <span className="text-gray-300 text-sm">{averageRating} ({totalReviews} reviews)</span>
+                            <PartialStars rating={currentProduct.ratingStats.averageRating} />
+                            <span className="text-gray-300 text-sm">{currentProduct.ratingStats.averageRating} ({currentProduct.ratingStats.totalReviews} reviews)</span>
                         </div>
                     </div>
 
                     {/* Description */}
                     <p className="text-gray-300 text-lg leading-relaxed">{currentProduct.description}</p>
 
-                    {/* Key Features */}
-                    {features && features.length > 0 && (
-                        <div className="bg-gray-800 rounded-lg p-4">
-                            <h3 className="font-semibold text-white mb-3">Key Features</h3>
-                            <ul className="space-y-2">
-                                {features.map((feature, index) => (
-                                    <li key={index} className="flex items-center text-gray-300">
-                                        <Check className="h-4 w-4 text-emerald-400 mr-3 flex-shrink-0" />
-                                        {feature}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
                     {/* Price & Stock */}
                     <div className="space-y-4">
-                        <div className="flex items-baseline gap-3">
-                            <div className="text-4xl font-bold text-emerald-400">
-                                {formatCurrency(currentProduct.price)}
-                            </div>
-                            <div className="text-lg text-gray-400 line-through">
-                                {formatCurrency(currentProduct.price * 1.2)}
-                            </div>
-                            <div className="bg-red-500 text-white text-sm px-2 py-1 rounded">
-                                Save 20%
-                            </div>
+                        <div className="text-4xl font-bold text-emerald-400">
+                            {formatCurrency(currentProduct.price)}
                         </div>
 
                         {/* Stock Status */}
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                            <span className="text-green-400 text-sm font-medium">In Stock - Ready to ship</span>
-                        </div>
+                        <StockStatus stock={productStock}/>
                     </div>
 
                     {/* Action Buttons */}
@@ -183,9 +144,11 @@ const ProductDetailsPage = () => {
                             <Button
                                 className="flex-1 flex items-center justify-center gap-2 py-3 text-lg"
                                 onClick={handleAddToCart}
-                                disabled={!user || isLoading}
+                                disabled={!user || isAddingToCart || !isAvailable}
                             >
-                                {isLoading ? (
+                                {!isAvailable ? (
+                                    "Out of Stock"
+                                ) : isAddingToCart ? (
                                     "Adding..."
                                 ) : (
                                     <>
@@ -203,49 +166,24 @@ const ProductDetailsPage = () => {
                             </div>
                         )}
                     </div>
-
-                    {/* Shipping & Returns */}
-                    <div className="border-t border-gray-700 pt-6 space-y-3">
-                        <div className="flex items-center gap-3 text-gray-300">
-                            <Truck className="h-5 w-5 text-emerald-400" />
-                            <span>Free shipping on orders over $50</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300">
-                            <RotateCcw className="h-5 w-5 text-emerald-400" />
-                            <span>30-day return policy</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300">
-                            <Shield className="h-5 w-5 text-emerald-400" />
-                            <span>2-year manufacturer warranty</span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            {/* Specifications Section */}
-            <div className="mb-16">
-                <SectionHeader title="Specifications" subtitle="Technical details" />
-                <div className="mt-6 bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                        {specifications.map((spec, index) => (
-                            <div
-                                key={index}
-                                className={`p-4 border-b border-gray-700 ${index % 2 === 0 ? 'md:border-r' : ''} ${index >= specifications.length - 2 ? 'border-b-0' : ''}`}
-                            >
-                                <div className="flex">
-                                    <span className="text-gray-400 w-1/3 min-w-[80px] flex-shrink-0 mr-4">
-                                        {spec.label}
-                                    </span>
+            {/* Attributes Section */}
+            {currentProduct.attributes?.length > 0 && (
+                <div className="mb-16">
+                    <SectionHeader title="Attributes" subtitle="Technical details" />
 
-                                    <span className="text-white font-medium text-right flex-grow break-words">
-                                        {spec.value}
-                                    </span>
-                                </div>
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-700 rounded-lg overflow-hidden border border-gray-700">
+                        {currentProduct.attributes.map((attr, index) => (
+                            <div key={index} className="bg-gray-800 p-4 flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">{attr.name}</span>
+                                <span className="text-white font-medium">{attr.value}</span>
                             </div>
                         ))}
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Reviews Section */}
             <div className="mt-12">
@@ -253,7 +191,7 @@ const ProductDetailsPage = () => {
 
                 <div className="mt-6 space-y-8">
                     {/* Review Form */}
-                    <CreateReviewForm
+                    <ReviewForm
                         productId={id}
                         onSuccess={handleReviewSuccess}
                     />

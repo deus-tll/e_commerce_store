@@ -3,17 +3,19 @@
  * Used by the Service layer to return structured and vendor-agnostic payment data.
  */
 export class CheckoutSessionDTO {
-	/** @type {string} */ id;
-	/** @type {number} */ totalAmount;
+	/** @type {string} @readonly */ id;
+	/** @type {number} @readonly */ totalAmount;
 
 	/**
 	 * @param {object} data
 	 * @param {string} data.id - The ID of the created checkout session.
 	 * @param {number} data.totalAmount - The total amount for the session (in major currency units).
 	 */
-	constructor({ id, totalAmount }) {
-		this.id = id;
-		this.totalAmount = totalAmount;
+	constructor(data) {
+		this.id = data.id;
+		this.totalAmount = data.totalAmount;
+
+		Object.freeze(this);
 	}
 }
 
@@ -22,10 +24,10 @@ export class CheckoutSessionDTO {
  * Returned after successful payment confirmation and order creation.
  */
 export class CheckoutSuccessDTO {
-	/** @type {boolean} */ success;
-	/** @type {string} */ message;
-	/** @type {string} */ orderId;
-	/** @type {string} */ orderNumber;
+	/** @type {boolean} @readonly */ success;
+	/** @type {string} @readonly */ message;
+	/** @type {string} @readonly */ orderId;
+	/** @type {string} @readonly */ orderNumber;
 
 	/**
 	 * @param {object} data
@@ -34,10 +36,12 @@ export class CheckoutSuccessDTO {
 	 * @param {string} data.orderId - The ID of the associated order.
 	 * @param {string} data.orderNumber - The number of the order.
 	 */
-	constructor({ success, message, orderId, orderNumber }) {
-		this.success = success;
-		this.message = message;
-		this.orderId = orderId;
-		this.orderNumber = orderNumber;
+	constructor(data) {
+		this.success = data.success;
+		this.message = data.message;
+		this.orderId = data.orderId;
+		this.orderNumber = data.orderNumber;
+
+		Object.freeze(this);
 	}
 }

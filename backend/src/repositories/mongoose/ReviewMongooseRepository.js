@@ -8,13 +8,12 @@ import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 import {BadRequestError} from "../../errors/apiErrors.js";
 
 export class ReviewMongooseRepository extends IReviewRepository {
-	async create(data) {
+	async create(productId, userId, data) {
 		try {
 			const createdDoc = await Review.create({
-				product: data.productId,
-				user: data.userId,
-				rating: data.rating,
-				comment: data.comment,
+				data,
+				product: productId,
+				user: userId
 			});
 
 			return MongooseAdapter.toReviewEntity(createdDoc);
@@ -29,19 +28,11 @@ export class ReviewMongooseRepository extends IReviewRepository {
 		}
 	}
 
-	async updateByIdAndUserId(data) {
-		const $set = data.toUpdateObject();
-
-		if (Object.keys($set).length === 0) {
-			throw new BadRequestError("Nothing to update");
-		}
-
-		const updateOptions = { new: true, runValidators: true };
-
+	async updateByIdAndUserId(reviewId, userId, data) {
 		const updatedDoc = await Review.findOneAndUpdate(
-			{ _id: data.reviewId, user: data.userId },
-			{ $set },
-			updateOptions
+			{ _id: reviewId, user: userId },
+			{ $set: data },
+			{ new: true, runValidators: true }
 		).lean();
 
 		return MongooseAdapter.toReviewEntity(updatedDoc);
@@ -49,7 +40,6 @@ export class ReviewMongooseRepository extends IReviewRepository {
 
 	async deleteByIdAndUserId(reviewId, userId) {
 		const deletedDoc = await Review.findOneAndDelete({ _id: reviewId, user: userId }).lean();
-
 		return MongooseAdapter.toReviewEntity(deletedDoc);
 	}
 

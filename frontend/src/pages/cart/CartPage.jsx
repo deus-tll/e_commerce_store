@@ -18,6 +18,7 @@ const CartPage = () => {
     return (
         <Container size="lg">
             <SectionHeader title="Your Cart" />
+
 	        {cart.length > 0 && (
 		        <div className="flex justify-end mb-4">
 			        <Button

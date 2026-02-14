@@ -1,4 +1,9 @@
-import { UserEntity, CreateUserDTO, UpdateUserDTO, RepositoryPaginationResult } from "../../domain/index.js";
+import { UserEntity, RepositoryPaginationResult } from "../../domain/index.js";
+
+/**
+ * @typedef {import("../../domain/index.js").UserEntity} UserEntity
+ * @typedef {import("../../domain/index.js").RepositoryPaginationResult<UserEntity>} UserPaginationResult
+ */
 
 /**
  * @interface IUserRepository
@@ -7,7 +12,7 @@ import { UserEntity, CreateUserDTO, UpdateUserDTO, RepositoryPaginationResult } 
 export class IUserRepository {
 	/**
 	 * Creates and saves a new user entity.
-	 * @param {CreateUserDTO} data - The data for the new user.
+	 * @param {object} data - The data for the new user.
 	 * @returns {Promise<UserEntity>} - The newly created user record.
 	 */
 	async create(data) {
@@ -17,11 +22,10 @@ export class IUserRepository {
 	/**
 	 * Updates a user entity by its ID.
 	 * @param {string} id - The user ID.
-	 * @param {UpdateUserDTO} data - The data for the update user.
-	 * @param {object} [options] - Optional settings for the operation.
+	 * @param {object} data - The data for the update user.
 	 * @returns {Promise<UserEntity | null>} - The updated user record.
 	 */
-	async updateById(id, data, options) {
+	async updateById(id, data) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -76,6 +80,15 @@ export class IUserRepository {
 	}
 
 	/**
+	 * Finds users by an array of IDs.
+	 * @param {string[]} ids - Array of user IDs.
+	 * @returns {Promise<UserEntity[]>} - A list of found user records.
+	 */
+	async findByIds(ids) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Finds a user by a valid verification token.
 	 * @param {string} token - The verification token.
 	 * @returns {Promise<UserEntity|null>} - The found user record.
@@ -90,6 +103,20 @@ export class IUserRepository {
 	 * @returns {Promise<UserEntity|null>} - The found user record.
 	 */
 	async findByValidResetToken(token) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Retrieves global aggregated statistics for users.
+	 * @returns {Promise<{
+	 * total: number,
+	 * verified: number,
+	 * unverified: number,
+	 * admins: number,
+	 * customers: number
+	 * }>} - The aggregated user statistics.
+	 */
+	async getGlobalStats() {
 		throw new Error("Method not implemented.");
 	}
 }

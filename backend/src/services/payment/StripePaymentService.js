@@ -59,9 +59,6 @@ export class StripePaymentService extends IPaymentService {
 			userId
 		);
 
-		// 3. Optionally grant new coupon
-		this.#couponHandler.grantNewCouponIfEligible(userId, initialTotalAmount);
-
 		// 4. Prepare Stripe discounts (if coupon applied)
 		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);
 

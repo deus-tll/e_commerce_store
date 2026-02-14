@@ -1,15 +1,28 @@
-import React, {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
+import {Edit, MoreVertical, Trash} from "lucide-react";
+
 import {useAuthStore} from "../../stores/useAuthStore.js";
-import {MoreVertical, Pencil, Trash} from "lucide-react";
+
 import IconButton from "../ui/IconButton.jsx";
 import FullStars from "../ui/FullStars.jsx";
 
 const ReviewItem = ({ review, onEdit, onDelete }) => {
 	const [showActions, setShowActions] = useState(false);
+	const menuRef = useRef(null);
 
 	const { user } = useAuthStore();
 
-	const isOwner = user && user._id === review.user?._id;
+	const isOwner = user && user.id === review.user?.id;
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (menuRef.current && !menuRef.current.contains(event.target)) {
+				setShowActions(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	const handleEdit = () => {
 		onEdit(review);
@@ -18,7 +31,7 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
 
 	const handleDelete = () => {
 		if (window.confirm("Are you sure you want to delete this review?")) {
-			onDelete(review._id);
+			onDelete(review.id);
 		}
 		setShowActions(false);
 	};
@@ -39,10 +52,11 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
 
 						{/* Actions menu for owner */}
 						{isOwner && (
-							<div className="relative">
+							<div className="relative" ref={menuRef}>
 								<IconButton
 									size="sm"
 									onClick={() => setShowActions(!showActions)}
+									className={showActions ? "bg-gray-700 text-white" : "text-gray-400"}
 								>
 									<MoreVertical className="h-4 w-4" />
 								</IconButton>
@@ -53,7 +67,7 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
 											onClick={handleEdit}
 											className="text-emerald-400 hover:text-emerald-300"
 										>
-											<Pencil className="h-4 w-4" />
+											<Edit className="h-4 w-4" />
 											<span>Edit</span>
 										</IconButton>
 
@@ -77,7 +91,7 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
 
 					{/* Date */}
 					<div className="text-xs text-gray-500">
-						{new Date(review.createdAt).toLocaleDateString('en-US', {
+						{new Date(review.createdAt).toLocaleString('en-US', {
 							year: 'numeric',
 							month: 'long',
 							day: 'numeric',

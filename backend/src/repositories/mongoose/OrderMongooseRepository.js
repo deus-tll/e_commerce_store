@@ -8,7 +8,7 @@ import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
-	async create(data) {
+	async create(userId, data) {
 		let newOrderNumber;
 
 		try {
@@ -25,7 +25,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 		}
 
 		const docData = {
-			user: data.userId,
+			user: userId,
 			totalAmount: data.totalAmount,
 			paymentSessionId: data.paymentSessionId,
 			orderNumber: newOrderNumber,
@@ -46,40 +46,22 @@ export class OrderMongooseRepository extends IOrderRepository {
 		catch (error) {
 			const keyPattern = error['keyPattern'];
 
-			if (error.code === 11000 && keyPattern.paymentSessionId)
+			if (error.code === 11000 && keyPattern)
 			{
-				throw new ConflictError("An order with this payment session ID already exists.");
-			}
-			if (keyPattern.orderNumber) {
-				throw new InternalServerError("Order number conflict during save.");
+				if (keyPattern.paymentSessionId) {
+					throw new ConflictError("An order with this payment session ID already exists.");
+				}
+				if (keyPattern.orderNumber) {
+					throw new InternalServerError("Order number conflict during save.");
+				}
 			}
 
 			throw error;
 		}
 	}
 
-	async updateById(id, data) {
-		const $set = data.toUpdateObject();
-
-		if (Object.keys($set).length === 0) {
-			return this.findById(id);
-		}
-
-		const updateOptions = { new: true, runValidators: true };
-
-		const updatedDoc = await Order.findByIdAndUpdate(id, { $set }, updateOptions).lean();
-
-		return MongooseAdapter.toOrderEntity(updatedDoc);
-	}
-
-	async findById(id, options = {}) {
-		let query = Order.findById(id);
-
-		if (options.populate) {
-			query = query.populate(options.populate);
-		}
-
-		const foundDoc = await query.lean();
+	async findById(id) {
+		const foundDoc = await Order.findById(id).lean();
 		return MongooseAdapter.toOrderEntity(foundDoc);
 	}
 

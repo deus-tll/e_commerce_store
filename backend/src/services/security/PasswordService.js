@@ -12,7 +12,7 @@ export class PasswordService {
 	 * @returns {Promise<string>} The hashed password.
 	 */
 	async hashPassword(password) {
-		return bcrypt.hash(password, SALT_ROUNDS);
+		return await bcrypt.hash(password, SALT_ROUNDS);
 	}
 
 	/**
@@ -26,6 +26,6 @@ export class PasswordService {
 		if (!hashedPassword) {
 			throw new Error("Cannot compare password: hashed password string is missing.");
 		}
-		return bcrypt.compare(plaintextPassword, hashedPassword);
+		return await bcrypt.compare(plaintextPassword, hashedPassword);
 	}
 }

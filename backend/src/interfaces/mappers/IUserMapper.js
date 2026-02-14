@@ -26,4 +26,11 @@ export class IUserMapper {
 	 * @returns {ShortUserDTO}  - The mapped ShortUserDTO.
 	 */
 	toShortDTO(entity) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Converts an array of User entities to an array of summarized ShortUserDTOs.
+	 * @param {UserEntity[]} entities - Array of User entity records received from the repository.
+	 * @returns {ShortUserDTO[]}  - Array of mapped ShortUserDTOs.
+	 */
+	toShortDTOs(entities) { throw new Error("Method not implemented."); }
 }

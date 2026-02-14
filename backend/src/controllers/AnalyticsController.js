@@ -19,16 +19,10 @@ export class AnalyticsController {
 	 * This endpoint requires an administrative role.
 	 * @param {object} req - Express request object.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and a FullAnalyticsResponseDTO.
 	 */
-	getAnalytics = async (req, res, next) => {
-		try {
-			const analyticsData = await this.#analyticsService.getFullAnalytics();
-
-			return res.status(200).json(analyticsData);
-		} catch (error) {
-			next(error);
-		}
+	getAnalytics = async (req, res) => {
+		const analyticsData = await this.#analyticsService.getFullAnalytics();
+		return res.status(200).json(analyticsData);
 	};
 }

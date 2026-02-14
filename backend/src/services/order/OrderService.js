@@ -28,20 +28,30 @@ export class OrderService extends IOrderService {
 		this.#orderMapper = orderMapper;
 	}
 
-	async create(data) {
-		await this.#userService.getByIdOrFail(data.userId);
-
-		const createdOrder = await this.#orderRepository.create(data);
-
-		return await this.#orderMapper.toDTO(createdOrder);
+	async #formOrderDTO(entity) {
+		const shortUserDTO = await this.#userService.getShortDTOById(entity.userId);
+		return this.#orderMapper.toDTO(entity, shortUserDTO);
 	}
 
-	async update(id, data) {
-		const updatedOrder = await this.#orderRepository.updateById(id, data);
+	async #formOrderDTOs(entities) {
+		const uniqueUserIds = [
+			...new Set(entities.map(entity => entity.userId).filter(Boolean)),
+		];
+		const shortUserDTOs = await this.#userService.getShortDTOsByIds(uniqueUserIds);
+		const userMap = new Map(shortUserDTOs.map(dto => [dto.id, dto]));
 
-		if (!updatedOrder) throw new NotFoundError("Order not found or no updates were applied");
+		return entities.map(entity => {
+			const shortUserDTO = userMap.get(entity.userId);
+			return this.#orderMapper.toDTO(entity, shortUserDTO);
+		});
+	}
 
-		return await this.#orderMapper.toDTO(updatedOrder);
+	async create(userId, data) {
+		await this.#userService.getByIdOrFail(userId);
+
+		const createdOrder = await this.#orderRepository.create(userId, data.toPersistence());
+
+		return await this.#formOrderDTO(createdOrder);
 	}
 
 	async getById(id) {
@@ -49,7 +59,7 @@ export class OrderService extends IOrderService {
 
 		if (!orderEntity) return null;
 
-		return await this.#orderMapper.toDTO(orderEntity);
+		return await this.#formOrderDTO(orderEntity);
 	}
 
 	async getByIdOrFail(id) {
@@ -65,7 +75,7 @@ export class OrderService extends IOrderService {
 
 		if (!orderEntity) return null;
 
-		return await this.#orderMapper.toDTO(orderEntity);
+		return await this.#formOrderDTO(orderEntity);
 	}
 
 	async getByPaymentSessionIdOrFail(sessionId) {
@@ -81,17 +91,14 @@ export class OrderService extends IOrderService {
 
 		const skip = (page - 1) * limit;
 
-		const repositoryPaginationResult = await this.#orderRepository.findAndCountByUser(userId, skip, limit);
+		const { results, total } = await this.#orderRepository.findAndCountByUser(userId, skip, limit);
 
-		const total = repositoryPaginationResult.total;
 		const pages = Math.ceil(total / limit);
+		const orderDTOs = await this.#formOrderDTOs(results);
 
-		const orderDTOs = await Promise.all(
-			repositoryPaginationResult.results.map(entity => this.#orderMapper.toDTO(entity))
+		return new OrderPaginationResultDTO(
+			orderDTOs,
+			new PaginationMetadata(page, limit, total, pages)
 		);
-
-		const paginationMetadata = new PaginationMetadata(page, limit, total, pages);
-
-		return new OrderPaginationResultDTO(orderDTOs, paginationMetadata);
 	}
 }

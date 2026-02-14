@@ -13,45 +13,50 @@ const CartItem = ({ item }) => {
 
 	const isLoading = itemLoadingId === item.id;
 	const isDecrementDisabled = item.quantity === 1 || isLoading;
+	const isIncrementDisabled = item.quantity === item.stock || isLoading;
 
 	return (
 		<Card className="p-4 md:p-6">
 			<div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
 				<div className="shrink-0 md:order-1">
-					<img src={item.image} alt="Cart item" className="h-20 md:h-32 rounded object-cover"/>
+					<img
+						src={item.image}
+						alt={item.name}
+						className="h-20 md:h-32 rounded object-cover"
+					/>
 				</div>
 
 				<label className="sr-only">Choose quantity:</label>
 
 				<div className="flex items-center justify-between md:order-3 md:justify-end">
-                <div className="flex items-center gap-2">
-                    <IconButton
-                        variant="secondary"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="p-2 rounded"
-                        aria-label="Decrease quantity"
-                        disabled={isDecrementDisabled}
-                    >
-                        <Minus className="h-4 w-4" />
-                    </IconButton>
+	                <div className="flex items-center gap-2">
+	                    <IconButton
+	                        variant="secondary"
+	                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+	                        className="p-2 rounded"
+	                        aria-label="Decrease quantity"
+	                        disabled={isDecrementDisabled}
+	                    >
+	                        <Minus className="h-4 w-4" />
+	                    </IconButton>
 
-					<p>{item.quantity}</p>
+						<p>{item.quantity}</p>
 
-                    <IconButton
-                        variant="secondary"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="p-2 rounded"
-                        aria-label="Increase quantity"
-                        disabled={isLoading}
-                    >
-                        <Plus className="h-4 w-4" />
-                    </IconButton>
+	                    <IconButton
+	                        variant="secondary"
+	                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+	                        className="p-2 rounded"
+	                        aria-label="Increase quantity"
+	                        disabled={isIncrementDisabled}
+	                    >
+	                        <Plus className="h-4 w-4" />
+	                    </IconButton>
 					</div>
 
 					<div className="text-end md:order-4 md:w-32">
-                    <p className="text-base font-bold text-emerald-400">
-                        {formatCurrency(item.price)}
-                    </p>
+	                    <p className="text-base font-bold text-emerald-400">
+	                        {formatCurrency(item.price)}
+	                    </p>
 					</div>
 				</div>
 
@@ -60,10 +65,6 @@ const CartItem = ({ item }) => {
 						{item.name}
 					</Link>
 
-					<p className="text-sm text-gray-400">
-						{item.description}
-					</p>
-
 					<div className="flex items-center gap-4">
 						<Button
 							variant="danger"
@@ -71,14 +72,8 @@ const CartItem = ({ item }) => {
 							className="inline-flex items-center gap-2 text-sm"
 							disabled={isLoading}
 						>
-							{isLoading ? (
-								"Removing..."
-							) : (
-								<>
-									<Trash />
-									Remove
-								</>
-							)}
+							<Trash />
+							Remove
 						</Button>
 					</div>
 				</div>

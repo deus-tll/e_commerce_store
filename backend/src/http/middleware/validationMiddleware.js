@@ -11,9 +11,9 @@ import { BadRequestError } from "../../errors/apiErrors.js";
  */
 export const validationMiddleware = (schema) => (req, res, next) => {
 	const validationTarget = {
-		body: req.body,
-		params: req.params,
-		query: req.query,
+		params: req.params || {},
+		body: req.body || {},
+		query: req.query || {},
 	};
 
 	const { error, value } = schema.validate(validationTarget, {
@@ -23,21 +23,36 @@ export const validationMiddleware = (schema) => (req, res, next) => {
 	});
 
 	if (error) {
+		console.log('DEBUG: Validation Target:', JSON.stringify(validationTarget, null, 2));
+		console.log('DEBUG: Joi Error Details:', error.details);
+
 		const messages = error.details.map(detail => detail.message);
 		throw new BadRequestError(`Validation Failed: ${messages.join("; ")}`);
 	}
 
 	if (value.body) {
-		Object.keys(req.body).forEach(key => delete req.body[key]);
-		Object.assign(req.body, value.body);
-	}
-	if (value.params) {
-		Object.keys(req.params).forEach(key => delete req.params[key]);
-		Object.assign(req.params, value.params);
+		Object.defineProperty(req, 'body', {
+			value: value.body,
+			writable: true,
+			enumerable: true,
+			configurable: true
+		});
 	}
 	if (value.query) {
-		Object.keys(req.query).forEach(key => delete req.query[key]);
-		Object.assign(req.query, value.query);
+		Object.defineProperty(req, 'query', {
+			value: value.query,
+			writable: true,
+			enumerable: true,
+			configurable: true
+		});
+	}
+	if (value.params) {
+		Object.defineProperty(req, 'params', {
+			value: value.params,
+			writable: true,
+			enumerable: true,
+			configurable: true
+		});
 	}
 
 	next();

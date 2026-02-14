@@ -10,5 +10,3 @@ export const formatCurrency = (value, currency = "USD", locale = undefined) => {
     if (Number.isNaN(amount)) return "";
     return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 };
-
-

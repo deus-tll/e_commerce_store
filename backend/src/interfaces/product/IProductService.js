@@ -80,6 +80,13 @@ export class IProductService {
 	async getFeatured() { throw new Error("Method not implemented."); }
 
 	/**
+	 * Retrieves attribute facets (unique keys and values) for a specific category.
+	 * @param {string} categoryId - The ID of the category.
+	 * @returns {Promise<AttributeFacetDTO[]>} - List of attribute facets.
+	 */
+	async getCategoryFacets(categoryId) { throw new Error("Method not implemented."); }
+
+	/**
 	 * Gets a random sample of recommended products.
 	 * @returns {Promise<ProductDTO[]>} - A list of recommended product DTOs.
 	 */

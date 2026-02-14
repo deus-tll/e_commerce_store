@@ -1,11 +1,14 @@
 import {
 	OrderEntity,
-	CreateOrderDTO,
-	UpdateOrderDTO,
 	SalesSummaryDTO,
 	DailySalesSummaryDTO,
 	RepositoryPaginationResult
 } from "../../domain/index.js";
+
+/**
+ * @typedef {import("../../domain/index.js").OrderEntity} OrderEntity
+ * @typedef {import("../../domain/index.js").RepositoryPaginationResult<OrderEntity>} OrderPaginationResult
+ */
 
 /**
  * @interface IOrderRepository
@@ -14,30 +17,20 @@ import {
 export class IOrderRepository {
 	/**
 	 * Creates and saves a new order record.
-	 * @param {CreateOrderDTO} data - The data for the new order.
+	 * @param {string} userId - The user ID.
+	 * @param {Object} data - The data for the new order.
 	 * @returns {Promise<OrderEntity>} - The newly created order record.
 	 */
-	async create(data) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
-	 * Updates an order record by its ID.
-	 * @param {string} id - The order ID.
-	 * @param {UpdateOrderDTO} data - The data for the update order.
-	 * @returns {Promise<OrderEntity | null>} - The updated order record.
-	 */
-	async updateById(id, data) {
+	async create(userId, data) {
 		throw new Error("Method not implemented.");
 	}
 
 	/**
 	 * Finds an order record by its ID.
 	 * @param {string} id - The order ID.
-	 * @param {object} [options] - Options like population paths.
 	 * @returns {Promise<OrderEntity | null>} - The found order record.
 	 */
-	async findById(id, options) {
+	async findById(id) {
 		throw new Error("Method not implemented.");
 	}
 

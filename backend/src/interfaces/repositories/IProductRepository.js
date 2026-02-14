@@ -1,4 +1,9 @@
-import { ProductEntity, CreateProductDTO, UpdateProductDTO, RepositoryPaginationResult } from "../../domain/index.js";
+import { ProductEntity, RepositoryPaginationResult } from "../../domain/index.js";
+
+/**
+ * @typedef {import("../../domain/index.js").ProductEntity} ProductEntity
+ * @typedef {import("../../domain/index.js").RepositoryPaginationResult<ProductEntity>} ProductPaginationResult
+ */
 
 /**
  * @interface IProductRepository
@@ -7,7 +12,7 @@ import { ProductEntity, CreateProductDTO, UpdateProductDTO, RepositoryPagination
 export class IProductRepository {
 	/**
 	 * Creates and saves a new product record.
-	 * @param {CreateProductDTO} data - The data for the new product.
+	 * @param {Object} data - The data for the new product.
 	 * @returns {Promise<ProductEntity>} - The newly created product record.
 	 */
 	async create(data) {
@@ -17,7 +22,7 @@ export class IProductRepository {
 	/**
 	 * Updates a product entity by its ID.
 	 * @param {string} id - The product ID.
-	 * @param {UpdateProductDTO} data - The data for the update product.
+	 * @param {Object} data - The data for the update product.
 	 * @returns {Promise<ProductEntity | null>} - The updated product record.
 	 */
 	async updateById(id, data) {
@@ -68,10 +73,10 @@ export class IProductRepository {
 	 * @param {object} query - The filtering query.
 	 * @param {number} skip - The number of documents to skip.
 	 * @param {number} limit - The maximum number of documents to return.
-	 * @param {object} [sort] - The sorting parameters.
+	 * @param {object} [options={}] - Options(such as sortBy and order).
 	 * @returns {Promise<RepositoryPaginationResult<ProductEntity>>} - The paginated results.
 	 */
-	async findAndCount(query, skip, limit, sort = { createdAt: -1 }) {
+	async findAndCount(query, skip, limit, options = {}) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -99,6 +104,15 @@ export class IProductRepository {
 	 * @returns {Promise<ProductEntity[]>} - A list of products matching the status.
 	 */
 	async findByFeaturedStatus(isFeatured) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Discovers unique attribute names and values within a specific category.
+	 * @param {string} categoryId - The ID of the category to analyze.
+	 * @returns {Promise<AttributeFacetDTO[]>} - List of facets.
+	 */
+	async getAttributeFacets(categoryId) {
 		throw new Error("Method not implemented.");
 	}
 

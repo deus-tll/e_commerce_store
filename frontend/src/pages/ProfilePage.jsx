@@ -2,8 +2,9 @@ import {useNavigate} from 'react-router-dom';
 import toast from "react-hot-toast";
 import {CheckCircle2, XCircle, MailCheck} from 'lucide-react';
 
-import {useAuthStore} from '../stores/useAuthStore.js';
 import {formatDate} from '../utils/format.js';
+
+import {useAuthStore} from '../stores/useAuthStore.js';
 
 import ChangePasswordForm from "../components/auth/ChangePasswordForm.jsx";
 

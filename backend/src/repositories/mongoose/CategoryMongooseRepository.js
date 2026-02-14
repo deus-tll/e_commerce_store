@@ -4,9 +4,23 @@ import {ICategoryRepository} from "../../interfaces/repositories/ICategoryReposi
 import {RepositoryPaginationResult} from "../../domain/index.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {BadRequestError, ConflictError} from "../../errors/apiErrors.js";
+import {ConflictError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/domainErrors.js";
+
+import {sanitizeSearchTerm} from "../../utils/sanitize.js";
 
 export class CategoryMongooseRepository extends ICategoryRepository {
+	#buildMongooseQuery(query) {
+		const mongooseQuery = {};
+
+		if (query.search) {
+			const sanitizedTerm = sanitizeSearchTerm(query.search);
+			mongooseQuery.name = new RegExp(sanitizedTerm, "i");
+		}
+
+		return mongooseQuery;
+	}
+
 	async create(data) {
 		try {
 			const createdDoc = await Category.create(data);
@@ -24,24 +38,22 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 	}
 
 	async updateById(id, data) {
-		const $set = data.toUpdateObject();
-
-		if (Object.keys($set).length === 0) {
-			throw new BadRequestError("Nothing to update");
-		}
-
-		const updateOptions = { new: true, runValidators: true };
 		const updatedDoc = await Category.findByIdAndUpdate(
 			id,
-			{ $set },
-			updateOptions
+			{ $set: data },
+			{ new: true, runValidators: true }
 		).lean();
+
+		if (!updatedDoc) throw new EntityNotFoundError("Category", { id });
 
 		return MongooseAdapter.toCategoryEntity(updatedDoc);
 	}
 
 	async deleteById(id) {
 		const deletedDoc = await Category.findByIdAndDelete(id).lean();
+
+		if (!deletedDoc) throw new EntityNotFoundError("Category", { id });
+
 		return MongooseAdapter.toCategoryEntity(deletedDoc);
 	}
 
@@ -55,27 +67,26 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 		return MongooseAdapter.toCategoryEntity(foundDoc);
 	}
 
-	async findAll() {
-		const foundDocs = await Category.find({}).sort({ name: 1 }).lean();
-		return foundDocs.map(doc => MongooseAdapter.toCategoryEntity(doc));
-	}
+	async findAndCount(query, skip, limit) {
+		const mongooseQuery = this.#buildMongooseQuery(query);
+		const sort = { name: 1 };
 
-	async findAndCount(skip, limit) {
 		const [foundDocs, total] = await Promise.all([
-			Category.find({})
-				.sort({ name: 1 })
+			Category.find(mongooseQuery)
+				.sort(sort)
 				.skip(skip)
 				.limit(limit)
 				.lean(),
-			Category.countDocuments({}),
+			Category.countDocuments(mongooseQuery),
 		]);
 
+		// /** @type {CategoryEntity[]} */
 		const categoryEntities = foundDocs.map(doc => MongooseAdapter.toCategoryEntity(doc));
 		return new RepositoryPaginationResult(categoryEntities, total);
 	}
 
-	async existsBySlug(slug) {
-		const exists = await Category.existsById({ slug });
-		return !!exists;
+	async findByIds(ids) {
+		const foundDocs = await Category.find({ _id: { $in: ids } }).lean();
+		return foundDocs.map(doc => MongooseAdapter.toCategoryEntity(doc));
 	}
 }

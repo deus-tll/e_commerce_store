@@ -35,13 +35,9 @@ export const ImageManagerTypes = Object.freeze({
 	CATEGORY: "ICategoryImageManager"
 });
 
-export const CacheManagerTypes = Object.freeze({
-	PRODUCT: "IProductCacheManager"
-});
-
-export const QueryBuilderTypes = Object.freeze({
-	PRODUCT: "IProductQueryBuilder",
-	USER: "IUserQueryBuilder"
+export const QueryTranslatorTypes = Object.freeze({
+	PRODUCT: "IProductQueryTranslator",
+	USER: "IUserQueryTranslator"
 });
 
 export const ValidatorTypes = Object.freeze({

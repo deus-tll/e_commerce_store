@@ -4,23 +4,27 @@ import {PaginationMetadata} from "../index.js";
  * Agnostic class representing the core Category Entity, used by the Repository layer.
  */
 export class CategoryEntity {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {string} */ slug;
-	/** @type {string} [image] */ image;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ slug;
+	/** @type {string} @readonly */ image;
+	/** @type {string[]} @readonly */ allowedAttributes;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
-	 * @param {object} data - Plain data object with standardized 'id' field.
+	 * @param {object} data
 	 */
 	constructor(data) {
-		this.id = data.id.toString();
+		this.id = data.id;
 		this.name = data.name;
 		this.slug = data.slug;
-		this.image = data.image || "";
+		this.image = data.image;
+		this.allowedAttributes = Object.freeze([...data.allowedAttributes]);
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
+
+		Object.freeze(this);
 	}
 }
 
@@ -28,17 +32,30 @@ export class CategoryEntity {
  * Agnostic class for input data when creating a Category.
  */
 export class CreateCategoryDTO {
-	/** @type {string} */ name;
-	/** @type {string} [slug] */ slug;
-	/** @type {string} */ image;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ image;
+	/** @type {string[]} @readonly */ allowedAttributes;
 
 	/**
-	 * @param {object} data - Raw data for creation.
+	 * @param {object} data
 	 */
 	constructor(data) {
 		this.name = data.name;
-		this.slug = data.slug;
-		this.image = data.image || "";
+		this.image = data.image;
+		this.allowedAttributes = Object.freeze([...data.allowedAttributes]);
+
+		Object.freeze(this);
+	}
+
+	/**
+	 * Transforms the DTO into a clean object for the Repository.
+	 * @returns {Object}
+	 */
+	toPersistence() {
+		return Object.freeze({
+			name: this.name,
+			allowedAttributes: this.allowedAttributes
+		});
 	}
 }
 
@@ -46,42 +63,36 @@ export class CreateCategoryDTO {
  * Agnostic class for input data when updating a category.
  */
 export class UpdateCategoryDTO {
-	/** @type {string} */ categoryId;
-	/** @type {string} [name] */ name;
-	/** @type {string} [slug] */ slug;
-	/** @type {string} [image] */ image;
+	/** @type {string} [name] @readonly */ name;
+	/** @type {string} [slug] @readonly */ slug;
+	/** @type {string} [image] @readonly */ image;
+	/** @type {string[]} [allowedAttributes] @readonly */ allowedAttributes;
 
 	/**
-	 * @param {object} data
+	 * @param {Object} data
 	 */
 	constructor(data) {
-		this.categoryId = data.categoryId;
 		if (data.name !== undefined) this.name = data.name;
 		if (data.slug !== undefined) this.slug = data.slug;
 		if (data.image !== undefined) this.image = data.image;
+		if (data.allowedAttributes !== undefined) this.allowedAttributes = Object.freeze([...data.allowedAttributes]);
+
+		Object.freeze(this);
 	}
 
 	/**
-	 * Returns an object containing only the fields that were explicitly
-	 * provided by the caller for update.
-	 * @returns {object} An object with only the fields to be updated.
+	 * Creates a plain object containing only the fields that were provided for the update.
+	 * @returns {Object}
 	 */
-	toUpdateObject() {
-		const update = {};
+	toPersistence() {
+		const data = {};
 
-		if (this.name !== undefined) {
-			update.name = this.name;
-		}
+		if (this.name !== undefined) data.name = this.name;
+		if (this.slug !== undefined) data.slug = this.slug;
+		if (this.image !== undefined) data.image = this.image;
+		if (this.allowedAttributes !== undefined) data.allowedAttributes = this.allowedAttributes;
 
-		if (this.slug !== undefined) {
-			update.slug = this.slug;
-		}
-
-		if (this.image !== undefined) {
-			update.image = this.image;
-		}
-
-		return update;
+		return Object.freeze(data);
 	}
 }
 
@@ -90,10 +101,11 @@ export class UpdateCategoryDTO {
  * This is the object returned by the Service layer.
  */
 export class CategoryDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {string} */ slug;
-	/** @type {string} */ image;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ slug;
+	/** @type {string} @readonly */ image;
+	/** @type {string[]} @readonly */ allowedAttributes;
 
 	/**
 	 * @param {CategoryEntity} entity
@@ -103,6 +115,9 @@ export class CategoryDTO {
 		this.name = entity.name;
 		this.slug = entity.slug;
 		this.image = entity.image;
+		this.allowedAttributes = Object.freeze([...entity.allowedAttributes]);
+
+		Object.freeze(this);
 	}
 }
 
@@ -110,8 +125,8 @@ export class CategoryDTO {
  * Service-level pagination result DTO for categories.
  */
 export class CategoryPaginationResultDTO {
-	/** @type {CategoryDTO[]} */ categories;
-	/** @type {PaginationMetadata} */ pagination;
+	/** @type {CategoryDTO[]} @readonly */ categories;
+	/** @type {PaginationMetadata} @readonly */ pagination;
 
 	/**
 	 * @param {CategoryDTO[]} categories
@@ -120,5 +135,7 @@ export class CategoryPaginationResultDTO {
 	constructor(categories, pagination) {
 		this.categories = categories;
 		this.pagination = pagination;
+
+		Object.freeze(this);
 	}
 }

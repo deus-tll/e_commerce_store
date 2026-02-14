@@ -6,8 +6,7 @@ import {UserRoles} from "../../constants/app.js";
 
 // Reusable schema for a single image URL
 export const imageSchema = Joi.string().trim().uri().messages({
-	'string.uri': 'Image must be a valid URL.',
-	'string.empty': 'Image URL cannot be empty.'
+	'string.uri': 'Image must be a valid URL.'
 });
 
 // 1. User ID (for params)
@@ -24,7 +23,6 @@ export const userIdParam = Joi.string()
 export const userRole = Joi.string()
 	.trim()
 	.valid(UserRoles.CUSTOMER, UserRoles.ADMIN)
-	.default(UserRoles.CUSTOMER)
 	.messages({
 		'any.only': `Role must be one of: ${UserRoles.CUSTOMER}, ${UserRoles.ADMIN}.`,
 		'string.base': 'Role must be a string.'
@@ -151,8 +149,8 @@ export const descriptionSchema = Joi.string()
 		'string.base': 'Product description must be a string.'
 	});
 
-// 15. Images Object (Includes mainImage and additionalImages array)
-export const imagesSchema = Joi.object({
+// 15. Images Object
+export const createProductImagesSchema = Joi.object({
 	mainImage: imageSchema.required().messages({
 		'any.required': 'Main image URL is required.'
 	}),
@@ -161,6 +159,13 @@ export const imagesSchema = Joi.object({
 		.messages({
 			'array.base': 'Additional images must be an array of URLs.'
 		}),
+}).messages({
+	'object.base': 'Images must be a valid object.',
+});
+
+export const updateProductImagesSchema = Joi.object({
+	mainImage: imageSchema.optional(),
+	additionalImages: Joi.array().items(imageSchema).optional(),
 }).messages({
 	'object.base': 'Images must be a valid object.',
 });
@@ -203,4 +208,49 @@ export const categoryNameSchema = Joi.string()
 	.messages({
 		'string.empty': 'Category name cannot be empty.',
 		'string.base': 'Category name must be a string.'
+	});
+
+// 18. Empty params and body validator
+export const emptyParamAndBody = {
+	params: Joi.object({}).optional(),
+	body: Joi.object({}).optional(),
+};
+
+// 19. Stock (non-negative integer)
+export const stockSchema = Joi.number()
+	.integer()
+	.min(0)
+	.messages({
+		'number.base': 'Stock must be a number.',
+		'number.integer': 'Stock must be an integer.',
+		'number.min': 'Stock cannot be negative.'
+	});
+
+// 20. Attribute Schema (for the Product's attributes array)
+export const attributeItemSchema = Joi.object({
+	name: Joi.string().trim().min(1).required().messages({
+		'any.required': 'Attribute name is required.',
+		'string.empty': 'Attribute name cannot be empty.'
+	}),
+	value: Joi.string().trim().min(1).required().messages({
+		'any.required': 'Attribute value is required.',
+		'string.empty': 'Attribute value cannot be empty.'
+	})
+});
+
+// 21. Allowed Attribute Names (for Category create and update)
+export const allowedAttributesSchema = Joi.array()
+	.items(Joi.string().trim().min(1))
+	.messages({
+		'array.base': 'Allowed attributes must be an array of strings.'
+	});
+
+// 22. Category Slug (for params)
+export const categorySlugParam = Joi.string()
+	.trim()
+	.required()
+	.messages({
+		'any.required': 'Category Slug is required in URL parameters.',
+		'string.empty': 'Category Slug cannot be empty.',
+		'string.base': 'Category Slug must be a string.'
 	});

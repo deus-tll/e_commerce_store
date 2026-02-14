@@ -3,27 +3,29 @@
  * This is the object returned by the Repository layer.
  */
 export class CouponEntity {
-	/** @type {string} */ id;
-	/** @type {string} */ code;
-	/** @type {number} */ discountPercentage;
-	/** @type {Date} */ expirationDate;
-	/** @type {boolean} */ isActive;
-	/** @type {string} */ userId;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ code;
+	/** @type {number} @readonly */ discountPercentage;
+	/** @type {Date} @readonly */ expirationDate;
+	/** @type {boolean} @readonly */ isActive;
+	/** @type {string} @readonly */ userId;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
 	 * @param {object} data
 	 */
 	constructor(data) {
-		this.id = data.id.toString();
+		this.id = data.id;
 		this.code = data.code;
 		this.discountPercentage = data.discountPercentage;
-		this.expirationDate = data.expirationDate instanceof Date ? data.expirationDate : new Date(data.expirationDate);
+		this.expirationDate = data.expirationDate;
 		this.isActive = !!data.isActive;
-		this.userId = data.userId.toString();
+		this.userId = data.userId;
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
+
+		Object.freeze(this);
 	}
 
 	/**
@@ -39,54 +41,37 @@ export class CouponEntity {
  * Agnostic class for input data when creating a Coupon.
  */
 export class CreateCouponDTO {
-	/** @type {string} */ code;
-	/** @type {number} */ discountPercentage;
-	/** @type {Date} */ expirationDate;
-	/** @type {boolean} */ isActive;
-	/** @type {string} */ userId;
-
-	/**
-	 * @param {object} data
-	 */
-	constructor(data) {
-		this.code = data.code.trim();
-		this.discountPercentage = Number(data.discountPercentage);
-		this.expirationDate = data.expirationDate instanceof Date ? data.expirationDate : new Date(data.expirationDate);
-		this.isActive = data.isActive !== undefined ? data.isActive : true;
-		this.userId = data.userId.toString();
-	}
-}
-
-/**
- * Agnostic class for input data when updating a coupon.
- */
-export class UpdateCouponDTO {
-	/** @type {string} */ code;
-	/** @type {string} */ userId;
-	/** @type {boolean} [isActive] */ isActive;
+	/** @type {string} @readonly */ code;
+	/** @type {number} @readonly */ discountPercentage;
+	/** @type {Date} @readonly */ expirationDate;
+	/** @type {boolean} @readonly */ isActive;
+	/** @type {string} @readonly */ userId;
 
 	/**
 	 * @param {object} data
 	 */
 	constructor(data) {
 		this.code = data.code;
+		this.discountPercentage = data.discountPercentage;
+		this.expirationDate = data.expirationDate;
+		this.isActive = !!data.isActive;
 		this.userId = data.userId;
-		if (data.isActive !== undefined) this.isActive = data.isActive;
+
+		Object.freeze(this);
 	}
 
 	/**
-	 * Returns an object containing only the fields that were explicitly
-	 * provided by the caller for update.
-	 * @returns {object} An object with only the fields to be updated.
+	 * Transforms the DTO into a clean object for the Repository.
+	 * @returns {Object}
 	 */
-	toUpdateObject() {
-		const update = {};
-
-		if (this.isActive !== undefined) {
-			update.isActive = this.isActive;
-		}
-
-		return update;
+	toPersistence() {
+		return Object.freeze({
+			code: this.code,
+			discountPercentage: this.discountPercentage,
+			expirationDate: this.expirationDate,
+			isActive: this.isActive,
+			userId: this.userId
+		});
 	}
 }
 
@@ -95,12 +80,12 @@ export class UpdateCouponDTO {
  * This is the object returned by the Service layer to the Controller.
  */
 export class CouponDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ code;
-	/** @type {number} */ discountPercentage;
-	/** @type {Date} */ expirationDate;
-	/** @type {boolean} */ isActive;
-	/** @type {string} */ userId;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ code;
+	/** @type {number} @readonly */ discountPercentage;
+	/** @type {Date} @readonly */ expirationDate;
+	/** @type {boolean} @readonly */ isActive;
+	/** @type {string} @readonly */ userId;
 
 	/**
 	 * @param {CouponEntity} entity
@@ -112,6 +97,8 @@ export class CouponDTO {
 		this.expirationDate = entity.expirationDate;
 		this.isActive = entity.isActive;
 		this.userId = entity.userId;
+
+		Object.freeze(this);
 	}
 }
 
@@ -119,9 +106,9 @@ export class CouponDTO {
  * Output data class for coupon validation results.
  */
 export class CouponValidationDTO {
-	/** @type {string} */ message;
-	/** @type {string} */ code;
-	/** @type {number} */ discountPercentage;
+	/** @type {string} @readonly */ message;
+	/** @type {string} @readonly */ code;
+	/** @type {number} @readonly */ discountPercentage;
 
 	/**
 	 * @param {object} data
@@ -130,5 +117,7 @@ export class CouponValidationDTO {
 		this.message = data.message;
 		this.code = data.code;
 		this.discountPercentage = data.discountPercentage;
+
+		Object.freeze(this);
 	}
 }

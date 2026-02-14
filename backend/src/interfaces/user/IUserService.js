@@ -3,8 +3,7 @@ import {
 	UserDTO,
 	CreateUserDTO,
 	UpdateUserDTO,
-	UserPaginationResultDTO,
-	UserStatsDTO
+	UserPaginationResultDTO
 } from "../../domain/index.js";
 
 /**
@@ -23,9 +22,10 @@ export class IUserService {
 	 * Updates an existing user's public fields.
 	 * @param {string} id - The user ID.
 	 * @param {UpdateUserDTO} data - The data for the update user.
+	 * @param {object} requester - User that is requesting update.
 	 * @returns {Promise<UserDTO>} - The updated user DTO.
 	 */
-	async update(id, data) { throw new Error("Method not implemented."); }
+	async update(id, data, requester) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Updates the user's last login timestamp.
@@ -33,39 +33,6 @@ export class IUserService {
 	 * @returns {Promise<UserDTO | null>} - The updated user DTO.
 	 */
 	async updateLastLogin(id) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Sets the email verification token for the user.
-	 * @param {string} id - The user ID.
-	 * @param {string} token - The verification token.
-	 * @param {Date} expiresAt - The expiration date.
-	 * @returns {Promise<UserDTO | null>} - The updated user DTO.
-	 */
-	async setVerificationToken(id, token, expiresAt) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Verifies the user's email using the provided token.
-	 * @param {string} token - The verification token.
-	 * @returns {Promise<UserDTO>} - The verified user DTO.
-	 */
-	async verify(token) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Sets the password reset token for the user.
-	 * @param {string} id - The user ID.
-	 * @param {string} token - The reset token.
-	 * @param {Date} expiresAt - The expiration date.
-	 * @returns {Promise<UserDTO | null>} - The updated user DTO.
-	 */
-	async setResetPasswordToken(id, token, expiresAt) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Resets the user's password using the reset token.
-	 * @param {string} token - The reset token.
-	 * @param {string} newPassword - The new password.
-	 * @returns {Promise<UserDTO>} - The updated user DTO.
-	 */
-	async resetPassword(token, newPassword) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Allows a logged-in user to change their password.
@@ -116,6 +83,13 @@ export class IUserService {
 	async getById(id, options) { throw new Error("Method not implemented."); }
 
 	/**
+	 * Finds a user by ID and returns short version.
+	 * @param {string} id - The user ID.
+	 * @returns {Promise<ShortUserDTO | null>} - The found short user DTO.
+	 */
+	async getShortDTOById(id) { throw new Error("Method not implemented."); }
+
+	/**
 	 * Finds a user by ID, throws if not found.
 	 * @param {string} id - The user ID.
 	 * @param {object} [options] - Query options.
@@ -156,23 +130,16 @@ export class IUserService {
 	async getByEmailOrFail(email, options) { throw new Error("Method not implemented."); }
 
 	/**
+	 * Finds a minimal set of user details for an array of IDs.
+	 * @param {string[]} ids - Array of user IDs.
+	 * @returns {Promise<ShortUserDTO[]>} - A list of short user DTOs.
+	 */
+	async getShortDTOsByIds(ids) { throw new Error("Method not implemented."); }
+
+	/**
 	 * Checks if a user exists by email.
 	 * @param {string} email - The user email.
 	 * @returns {Promise<boolean>}
 	 */
 	async existsByEmail(email) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Compares a plaintext password with a stored password hash.
-	 * @param {string} hashedPassword - The stored password hash.
-	 * @param {string} plaintextPassword - The plaintext password.
-	 * @returns {Promise<boolean>} - True if passwords match.
-	 */
-	async comparePassword(hashedPassword, plaintextPassword) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Retrieves aggregated user statistics.
-	 * @returns {Promise<UserStatsDTO>} - The aggregated user statistics DTO.
-	 */
-	async getStats() { throw new Error("Method not implemented."); }
 }

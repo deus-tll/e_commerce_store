@@ -1,4 +1,4 @@
-import { redis } from "../config/redis.js";
+import { redis } from "../infrastructure/redis.js";
 
 /**
  * @abstract
@@ -28,23 +28,27 @@ export class BaseCacheService {
 	 * @protected
 	 */
 	_getKey(identifier) {
-		return `${this._cacheContextPrefix}:${identifier}`;
+		return identifier
+			? `${this._cacheContextPrefix}:${identifier}`
+			: this._cacheContextPrefix;
 	}
 
 	/**
 	 * Stores a value in Redis with an optional expiration time.
 	 * @param {string} identifier
-	 * @param {string} value
+	 * @param {*} value
 	 * @param {number} [ttl] - Time to live in seconds.
 	 * @returns {Promise<void>}
 	 * @protected
 	 */
 	async _set(identifier, value, ttl) {
 		const key = this._getKey(identifier);
+		const data = typeof value === "string" ? value : JSON.stringify(value);
+
 		if (ttl) {
-			await this.redis.set(key, value, "EX", ttl);
+			await this.redis.set(key, data, "EX", ttl);
 		} else {
-			await this.redis.set(key, value);
+			await this.redis.set(key, data);
 		}
 	}
 
@@ -56,7 +60,15 @@ export class BaseCacheService {
 	 */
 	async _get(identifier) {
 		const key = this._getKey(identifier);
-		return this.redis.get(key);
+		const data = await this.redis.get(key);
+
+		if (!data) return null;
+
+		try {
+			return JSON.parse(data);
+		} catch {
+			return data;
+		}
 	}
 
 	/**

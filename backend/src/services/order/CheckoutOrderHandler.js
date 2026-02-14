@@ -2,7 +2,7 @@ import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandle
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
 import {ICartService} from "../../interfaces/cart/ICartService.js";
-import {CheckoutSuccessDTO, CreateOrderDTO} from "../../domain/index.js";
+import {CheckoutSuccessDTO, CreateOrderDTO, OrderProductItem} from "../../domain/index.js";
 
 import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
 
@@ -18,17 +18,20 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 	/** @type {IOrderService} */ #orderService;
 	/** @type {ICouponService} */ #couponService;
 	/** @type {ICartService} */ #cartService;
+	/** @type {ICouponHandler} */ #couponHandler;
 
 	/**
 	 * @param {IOrderService} orderService
 	 * @param {ICouponService} couponService
 	 * @param {ICartService} cartService
+	 * @param {ICouponHandler} couponHandler
 	 */
-	constructor(orderService, couponService, cartService) {
+	constructor(orderService, couponService, cartService, couponHandler) {
 		super();
 		this.#orderService = orderService;
 		this.#couponService = couponService;
 		this.#cartService = cartService;
+		this.#couponHandler = couponHandler;
 	}
 
 	async checkExistingOrder(sessionId) {
@@ -67,16 +70,27 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 
 		// 2. Create order
 		const orderData = new CreateOrderDTO({
-			userId,
-			products: parsedProducts,
+			products: parsedProducts.map(item => new OrderProductItem(item)),
 			totalAmount,
 			paymentSessionId: sessionId
 		});
 
 		try {
-			const newOrder = await this.#orderService.create(orderData);
+			const newOrder = await this.#orderService.create(userId, orderData);
 
-			await this.#cartService.clear(userId);
+			const sideEffects = [];
+
+			sideEffects.push(this.#cartService.clear(userId));
+
+			if (couponCode) {
+				sideEffects.push(this.#couponService.deactivate(couponCode, userId));
+			}
+
+			sideEffects.push(
+				this.#couponHandler.grantNewCouponIfEligible(userId, totalAmountCents)
+			);
+
+			await Promise.all(sideEffects);
 
 			return new CheckoutSuccessDTO({
 				success: true,
@@ -88,15 +102,7 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 			// Handle database ConflictError (race condition during order creation)
 			if (error instanceof ConflictError) {
 				const existingOrderResult = await this.checkExistingOrder(sessionId);
-
-				if (existingOrderResult) {
-					return new CheckoutSuccessDTO({
-						success: existingOrderResult.success,
-						message: "Order already processed concurrently",
-						orderId: existingOrderResult.orderId,
-						orderNumber: existingOrderResult.orderNumber,
-					});
-				}
+				if (existingOrderResult) return existingOrderResult;
 			}
 
 			throw error;

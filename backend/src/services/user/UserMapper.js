@@ -18,4 +18,8 @@ export class UserMapper extends IUserMapper {
 	toShortDTO(entity) {
 		return new ShortUserDTO(entity);
 	}
+
+	toShortDTOs(entities) {
+		return entities.map(entity => this.toShortDTO(entity));
+	}
 }

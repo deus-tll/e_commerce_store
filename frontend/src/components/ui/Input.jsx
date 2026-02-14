@@ -33,7 +33,9 @@ export const Select = ({ error, className = "", leftIcon: LeftIcon, children, ..
     </div>
 );
 
-export const FileInput = ({ id, name, label = "Upload", accept = "image/*", onChange, value, className = "", leftIcon: LeftIcon, ...props }) => {
+export const FileInput = ({ id, name, label = "Upload", accept = "image/*", error, onChange, value, className = "", leftIcon: LeftIcon, preview, ...props }) => {
+    const isFileSelected = !!value;
+
     return (
         <div className={`mt-1 flex items-center ${className}`}>
             <label htmlFor={id}
@@ -41,8 +43,15 @@ export const FileInput = ({ id, name, label = "Upload", accept = "image/*", onCh
                 {LeftIcon && <LeftIcon className='h-5 w-5 inline-block mr-2' />}
                 {label}
             </label>
+
             <input id={id} name={name} type="file" accept={accept} onChange={onChange} className="sr-only" {...props} />
-            {value && <span className="ml-3 text-sm text-gray-400">File selected</span>}
+
+            {preview
+                ? preview
+                : (isFileSelected && <span className="ml-3 text-sm text-gray-400">File selected</span>)
+            }
+
+            {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
         </div>
     );
 };

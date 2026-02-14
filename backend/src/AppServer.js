@@ -4,7 +4,7 @@ import cors from "cors";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import connectDB from "./config/db.js";
+import connectDB from "./infrastructure/db.js";
 import {DependencyLocator} from "./core/ioc/DependencyLocator.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
@@ -59,8 +59,9 @@ export class AppServer {
 			express.static(path.join(__dirname, ServerPaths.STATIC_FOLDER_NAME))
 		);
 
+		this.#app.set('query parser', 'extended');
 		this.#app.use(express.json({ limit: JSON_LIMIT }));
-		this.#app.use(express.urlencoded({ extended: false }));
+		this.#app.use(express.urlencoded({ limit: JSON_LIMIT, extended: true }));
 		this.#app.use(cookieParser());
 	}
 

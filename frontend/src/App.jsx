@@ -1,9 +1,9 @@
 import {Toaster} from "react-hot-toast";
 
 import AppRouter from "./config/router.jsx";
-import Navbar from "./components/Navbar.jsx";
-import GlobalErrorDisplay from "./components/GlobalErrorDisplay.jsx";
-import BackgroundGradient from "./components/BackgroundGradient.jsx";
+import Navbar from "./components/general/Navbar.jsx";
+import GlobalErrorDisplay from "./components/general/GlobalErrorDisplay.jsx";
+import BackgroundGradient from "./components/general/BackgroundGradient.jsx";
 
 function App() {
 	return (

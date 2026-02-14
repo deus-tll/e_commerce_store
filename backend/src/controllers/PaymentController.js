@@ -26,44 +26,39 @@ export class PaymentController {
 	 * Extracts validated product data and coupon code, performs product lookups, and delegates the session creation. (Authenticated).
 	 * @param {object} req - Express request object. Expects 'products' (array of {id, quantity}) and optional 'couponCode' in 'req.body', and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and a CheckoutSessionDTO.
 	 */
-	createCheckoutSession = async (req, res, next) => {
-		try {
-			const { products, couponCode } = req.body;
-			const userId = req.userId;
+	createCheckoutSession = async (req, res) => {
+		const { products, couponCode } = req.body;
+		const userId = req.userId;
 
-			const productIds = products.map(p => p.id);
-			const shortProducts = await this.#productService.getShortDTOsByIds(productIds);
+		const productIds = products.map(p => p.id);
+		const shortProductDTOs = await this.#productService.getShortDTOsByIds(productIds);
 
-			if (shortProducts.length !== productIds.length) {
-				throw new NotFoundError("One or more products not found.");
-			}
-
-			const orderItems = shortProducts.map((p) => {
-				const clientProduct = products.find((cp) => cp.id === p.id);
-				const quantity = clientProduct.quantity;
-
-				return new OrderProductItem({
-					id: p.id,
-					quantity,
-					price: p.price,
-					name: p.name,
-					image: p.image
-				});
-			});
-
-			const sessionData = await this.#paymentService.createCheckoutSession(
-				orderItems,
-				couponCode,
-				userId
-			);
-
-			return res.status(200).json(sessionData);
-		} catch (error) {
-			next(error);
+		if (shortProductDTOs.length !== productIds.length) {
+			throw new NotFoundError("One or more products not found.");
 		}
+
+		const orderItems = shortProductDTOs.map((p) => {
+			const clientProduct = products.find((cp) => cp.id === p.id);
+			const quantity = clientProduct.quantity;
+
+			return new OrderProductItem({
+				id: p.id,
+				quantity,
+				price: p.price,
+				name: p.name,
+				image: p.image
+			});
+		});
+
+		const sessionData = await this.#paymentService.createCheckoutSession(
+			orderItems,
+			couponCode,
+			userId
+		);
+
+		return res.status(200).json(sessionData);
 	}
 
 	/**
@@ -71,18 +66,12 @@ export class PaymentController {
 	 * and creating the final order. Extracts the session ID and delegates the success logic.
 	 * @param {object} req - Express request object. Expects 'sessionId' in req.body.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and a CheckoutSuccessDTO.
 	 */
-	checkoutSuccess = async (req, res, next) => {
-		try {
-			const { sessionId } = req.body;
+	checkoutSuccess = async (req, res) => {
+		const { sessionId } = req.body;
+		const result = await this.#paymentService.checkoutSuccess(sessionId);
 
-			const result = await this.#paymentService.checkoutSuccess(sessionId);
-
-			return res.status(200).json(result);
-		} catch (error) {
-			next(error);
-		}
+		return res.status(200).json(result);
 	}
 }

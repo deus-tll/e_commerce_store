@@ -1,4 +1,4 @@
-import container from "../../config/dependencyContainer.js";
+import container from "../../infrastructure/dependencyContainer.js";
 import {BaseSeeder} from "../../seeders/BaseSeeder.js";
 
 /**

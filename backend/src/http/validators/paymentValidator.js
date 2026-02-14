@@ -16,7 +16,7 @@ export const createCheckoutSessionSchema = Joi.object({
 				'any.required': 'Product list is required.',
 			}),
 
-		couponCode: Joi.string().trim().min(1).optional().allow(null, ''),
+		couponCode: Joi.string().trim().min(1).optional().allow(null, ""),
 	}).required().unknown(false),
 
 	params: Joi.object({}).optional(),

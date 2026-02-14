@@ -1,54 +1,49 @@
-import React, {useState} from 'react';
+import {useEffect} from 'react';
 import {Link} from "react-router-dom";
 import {Mail, Lock, LogIn} from "lucide-react";
 
+import useFormData from "../../hooks/useFormData.js";
+import {validateEmail, validateRequired} from "../../utils/validators.js";
+
 import {useAuthStore} from "../../stores/useAuthStore.js";
-import {getErrorMessage} from "../../utils/errorParser.js";
 
 import FormField from "../ui/FormField.jsx";
 import {Input} from "../ui/Input.jsx";
 import Button from "../ui/Button.jsx";
 import ErrorMessage from "../ui/ErrorMessage.jsx";
 
+const getInitialState = () => ({
+	email: "",
+	password: ""
+});
+
+const validationRules = {
+	email: validateEmail,
+	password: (val) => validateRequired(val, "Password")
+};
+
 const LoginForm = () => {
-	const [formData, setFormData] = useState({
-		email: "",
-		password: ""
-	});
-	const [errors, setErrors] = useState({});
+	const { formData, errors, handleInputChange, validate } = useFormData(getInitialState());
 
-	const { loading, login } = useAuthStore();
+	const { loading, error: loginApiError, login, clearError } = useAuthStore();
 
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setFormData({ ...formData, [name]: value });
-	}
-
-	const validate = () => {
-		const next = {};
-		if (!formData.email.trim()) next.email = "Email is required";
-		if (!formData.password.trim()) next.password = "Password is required";
-		setErrors(next);
-		return Object.keys(next).length === 0;
-	};
+	useEffect(() => {
+		return () => clearError();
+	}, [clearError]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setErrors({});
 
-		if (!validate()) return;
+		clearError();
 
-		try {
-			await login(formData);
-		} catch (err) {
-			const msg = getErrorMessage(err, "Login failed. Please check your credentials.");
-			setErrors((prev) => ({ ...prev, form: msg }));
-		}
+		if (!validate(validationRules)) return;
+
+		await login(formData);
 	};
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
-			<ErrorMessage message={errors.form} />
+			<ErrorMessage message={loginApiError} />
 
 			<FormField label="Email address" error={errors.email}>
 				<Input leftIcon={Mail} id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="you@example.com" />
@@ -63,9 +58,9 @@ const LoginForm = () => {
 				</Link>
 			</div>
 
-			<Button disabled={loading} className="w-full justify-center">
+			<Button type="submit" disabled={loading} className="w-full justify-center">
 				<LogIn className="h-4 w-4" />
-				Login
+				{loading ? "Logging in..." : "Login"}
 			</Button>
 		</form>
 	);

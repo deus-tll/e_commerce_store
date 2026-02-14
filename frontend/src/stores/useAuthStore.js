@@ -21,24 +21,24 @@ export const useAuthStore = create((set) => ({
 	user: null,
 	loading: false,
 	checkingAuth: true,
+	error: null,
 
-	signup: async ({ name, email, password, confirmPassword }) => {
-		set({ loading: true });
+	signup: async ({ name, email, password }) => {
+		set({ loading: true, error: null });
 
 		try {
-			if (password !== confirmPassword) {
-				set({ loading: false });
-				throw new Error("Passwords don't match");
-			}
-
 			const res = await axios.post(`${AUTH_API_PATH}/signup`, { name, email, password });
 			set({ user: res.data });
+
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Signup failed", {
+			const msg = handleError(error, "Signup failed", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -46,17 +46,21 @@ export const useAuthStore = create((set) => ({
 	},
 
 	login: async ({ email, password }) => {
-		set({ loading: true });
+		set({ loading: true, error: null });
 
 		try {
 			const res = await axios.post(`${AUTH_API_PATH}/login`, { email, password });
 			set({ user: res.data });
+
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Login failed", {
+			const msg = handleError(error, "Login failed", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -67,11 +71,15 @@ export const useAuthStore = create((set) => ({
 		try {
 			await axios.post(`${AUTH_API_PATH}/logout`);
 			set({ user: null });
+
+			return true;
 		}
 		catch (error) {
 			handleError(error, "Logout attempt failed, proceeding with local logout.", {
 				isGlobal: false, showToast: false
 			});
+
+			return false;
 		}
 		finally {
 			set({ user: null });
@@ -84,10 +92,13 @@ export const useAuthStore = create((set) => ({
 		try {
 			const res = await axios.get(`${AUTH_API_PATH}/profile`);
 			set({ user: res.data });
+
+			return true;
 		}
 		// eslint-disable-next-line no-unused-vars
 		catch (error) {
 			set({ user: null });
+			return false;
 		}
 		finally {
 			set({ checkingAuth: false });
@@ -97,29 +108,34 @@ export const useAuthStore = create((set) => ({
 	refreshToken: async () => {
 		try {
 			await axios.post(`${AUTH_API_PATH}/refresh-token`);
+			return true;
 		}
 		catch (error) {
 			handleError(error, "Session expired or invalid. Please log in again.", {
 				isGlobal: true, showToast: false
 			});
-
 			set({ user: null });
-			throw error;
+
+			return false;
 		}
 	},
 
 	verifyEmail: async (code) => {
-		set({ loading: true });
+		set({ loading: true, error: null });
 
 		try {
 			const res = await axios.post(`${AUTH_API_PATH}/verify-email`, { code });
 			set({ user: res.data });
+
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Verification failed", {
+			const msg = handleError(error, "Verification failed", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -127,16 +143,19 @@ export const useAuthStore = create((set) => ({
 	},
 
 	resendVerification: async () => {
-		set({ loading: true });
+		set({ loading: true, error: null });
 
 		try {
 			await axios.post(`${AUTH_API_PATH}/resend-verification`);
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Failed to resend verification code.", {
-				isGlobal: false, showToast: true
+			const msg = handleError(error, "Failed to resend verification code.", {
+				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -144,71 +163,74 @@ export const useAuthStore = create((set) => ({
 	},
 
 	forgotPassword: async (email) => {
-		set({ loading: true });
+		set({ loading: true, error: null });
 
 		try {
 			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Failed to send reset link", {
+			const msg = handleError(error, "Failed to send reset link", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
 	},
 
-	resetPassword: async ({token, password, confirmPassword}) => {
-		set({ loading: true });
+	resetPassword: async ({token, password}) => {
+		set({ loading: true, error: null });
 
 		try {
-			if (password !== confirmPassword) {
-				set({ loading: false });
-				throw new Error("Passwords don't match");
-			}
-
 			const res = await axios.post(`${AUTH_API_PATH}/reset-password/${token}`, { password });
 			set({ user: res.data });
+
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Password reset failed", {
+			const msg = handleError(error, "Password reset failed", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
 	},
 
-	changePassword: async ({ currentPassword, newPassword, confirmPassword }) => {
-		set({ loading: true });
+	changePassword: async ({ currentPassword, newPassword }) => {
+		set({ loading: true, error: null });
 
 		try {
-			if (newPassword !== confirmPassword) {
-				set({ loading: false });
-				throw new Error("New passwords don't match");
-			}
-
 			await axios.post(`${AUTH_API_PATH}/change-password`, {
 				currentPassword,
 				newPassword
 			});
 
 			set({ user: null });
+
+			return true;
 		}
 		catch (error) {
-			handleError(error, "Failed to change password.", {
+			const msg = handleError(error, "Failed to change password.", {
 				isGlobal: false, showToast: false
 			});
-			throw error;
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
-	}
+	},
+
+	clearError: () => set({ error: null })
 }));
 
 // --- GLOBAL INTERCEPTOR STATE ---
@@ -220,7 +242,7 @@ let failedQueue = [];
 /**
  * 1. Checks if the error indicates a recoverable token failure.
  * @param {object} error - The Axios error object.
- * @param {object} originalRequest - The Axios config object for the failed request.
+ * @param {object} originalRequest - The Axios infrastructure object for the failed request.
  * @returns {boolean} True if a token refresh should be attempted.
  */
 function canRetryRequest(error, originalRequest) {
@@ -247,7 +269,7 @@ const processQueue = (error) => {
 
 /**
  * 3. Queues the request to wait for the ongoing refresh operation to complete.
- * @param {object} originalRequest - The Axios config object for the failed request.
+ * @param {object} originalRequest - The Axios infrastructure object for the failed request.
  * @returns {Promise<object>} A promise that resolves with the successful response of the retried request.
  */
 function queueFailedRequest(originalRequest) {
@@ -266,7 +288,7 @@ function queueFailedRequest(originalRequest) {
 
 /**
  * 4. Executes the token refresh, retries the initiating request, and handles cleanup.
- * @param {object} originalRequest - The Axios config object for the failed request.
+ * @param {object} originalRequest - The Axios infrastructure object for the failed request.
  * @returns {Promise<object>} A promise that resolves with the successful response of the retried request.
  */
 async function handleTokenRefresh(originalRequest) {
@@ -274,7 +296,8 @@ async function handleTokenRefresh(originalRequest) {
 
 	try {
 		// Call the refresh logic from the store
-		await useAuthStore.getState().refreshToken();
+		const success = await useAuthStore.getState().refreshToken();
+		if (!success) throw new Error("Refresh failed");
 
 		// Refresh succeeded. Resolve all queued requests
 		processQueue(null);

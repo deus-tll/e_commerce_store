@@ -1,5 +1,5 @@
 import {IProductService} from "../interfaces/product/IProductService.js";
-import {CreateProductDTO, UpdateProductDTO} from "../domain/index.js";
+import {CreateProductDTO, ProductAttribute, ProductImage, UpdateProductDTO} from "../domain/index.js";
 
 /**
  * Handles incoming HTTP requests related to products, extracting request data,
@@ -20,29 +20,19 @@ export class ProductController {
 	 * the request body, maps it to a `CreateProductDTO`, and delegates to the service layer. (Admin protected).
 	 * @param {object} req - Express request object. Expects product creation data in req.body.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 201 and the created ProductDTO.
 	 */
-	create = async (req, res, next) => {
-		try {
-			const { name, description, price, images, categoryId, isFeatured } = req.body;
+	create = async (req, res) => {
+		const { images, attributes, ...rest } = req.body;
 
-			const createProductDTO = new CreateProductDTO({
-				name,
-				description,
-				price,
-				images,
-				categoryId,
-				isFeatured,
-			});
+		const createProductDTO = new CreateProductDTO({
+			...rest,
+			images: new ProductImage(images),
+			attributes: attributes.map(attr => new ProductAttribute(attr))
+		});
+		const productDTO = await this.#productService.create(createProductDTO);
 
-			const result = await this.#productService.create(createProductDTO);
-
-			return res.status(201).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(201).json(productDTO);
 	}
 
 	/**
@@ -50,23 +40,21 @@ export class ProductController {
 	 * from the request, maps it to an `UpdateProductDTO`, and delegates the operation to the service layer. (Admin protected).
 	 * @param {object} req - Express request object. Expects 'id' in req.params and update data in req.body.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the updated ProductDTO.
 	 */
-	update = async (req, res, next) => {
-		try {
-			const { id } = req.params;
-			const updateFields = req.body;
+	update = async (req, res) => {
+		const { id } = req.params;
+		const { images, attributes, ...rest } = req.body;
 
-			const updateProductDTO = new UpdateProductDTO(updateFields);
+		const updatePayload = { ...rest };
 
-			const updated = await this.#productService.update(id, updateProductDTO);
+		if (images) updatePayload.images = new ProductImage(images);
+		if (attributes) updatePayload.attributes = attributes.map(attr => new ProductAttribute(attr));
 
-			return res.status(200).json(updated);
-		}
-		catch (error) {
-			next(error);
-		}
+		const updateProductDTO = new UpdateProductDTO(updatePayload);
+		const productDTO = await this.#productService.update(id, updateProductDTO);
+
+		return res.status(200).json(productDTO);
 	}
 
 	/**
@@ -74,38 +62,26 @@ export class ProductController {
 	 * It delegates the status change to the service layer. (Admin protected).
 	 * @param {object} req - Express request object. Expects 'id' in req.params.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the updated ProductDTO.
 	 */
-	toggleFeatured = async (req, res, next) => {
-		try {
-			const { id } = req.params;
-			const updated = await this.#productService.toggleFeatured(id);
+	toggleFeatured = async (req, res) => {
+		const { id } = req.params;
+		const productDTO = await this.#productService.toggleFeatured(id);
 
-			return res.status(200).json(updated);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(productDTO);
 	}
 
 	/**
 	 * Handles the request to delete a product by ID. It delegates the deletion operation to the service layer. (Admin protected).
 	 * @param {object} req - Express request object. Expects 'id' in req.params.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 204 (No Content).
 	 */
-	delete = async (req, res, next) => {
-		try {
-			const { id } = req.params;
-			await this.#productService.delete(id);
+	delete = async (req, res) => {
+		const { id } = req.params;
+		await this.#productService.delete(id);
 
-			return res.status(204).end();
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(204).end();
 	}
 
 	/**
@@ -113,78 +89,61 @@ export class ProductController {
 	 * and filter parameters from the query and delegates the query to the service layer. (Public endpoint).
 	 * @param {object} req - Express request object. Expects 'page', 'limit', 'categorySlug', and 'search' in req.query.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and a ProductPaginationResultDTO.
 	 */
-	getAll = async (req, res, next) => {
-		try {
-			const { page, limit, categorySlug, search } = req.query;
+	getAll = async (req, res) => {
+		const { page, limit, ...rest } = req.query;
+		const paginationResult = await this.#productService.getAll(page, limit, {...rest});
 
-			// Build the agnostic filters object for the service layer
-			const filters = {};
-			if (categorySlug) filters.categorySlug = categorySlug;
-			if (search) filters.search = search;
-
-			const result = await this.#productService.getAll(page, limit, filters);
-
-			return res.status(200).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(paginationResult);
 	}
 
 	/**
 	 * Retrieves a single product's full details by its ID, delegating the fetch operation to the service layer. (Public endpoint).
 	 * @param {object} req - Express request object. Expects 'id' in req.params.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the requested ProductDTO.
 	 */
-	getById = async (req, res, next) => {
-		try {
-			const { id } = req.params;
+	getById = async (req, res) => {
+		const { id } = req.params;
+		const productDTO = await this.#productService.getByIdOrFail(id);
 
-			const result = await this.#productService.getByIdOrFail(id);
-
-			return res.status(200).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(productDTO);
 	}
 
 	/**
 	 * Retrieves a list of featured products, delegating the fetch operation to the service layer. (Public endpoint).
 	 * @param {object} req - Express request object.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and an array of ProductDTOs.
 	 */
-	getFeatured = async (req, res, next) => {
-		try {
-			const result = await this.#productService.getFeatured();
-			return res.status(200).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+	getFeatured = async (req, res) => {
+		const productDTOs = await this.#productService.getFeatured();
+		return res.status(200).json(productDTOs);
+	}
+
+	/**
+	 * Retrieves unique attribute names and values for a specific category.
+	 * Used for building dynamic filter sidebars. (Public endpoint).
+	 * @param {object} req - Express request object. Expects 'id' (category ID) in req.params.
+	 * @param {object} res - Express response object.
+	 * @returns {Promise<void>} - Responds with status 200 and an array of AttributeFacetDTOs.
+	 */
+	getFacets = async (req, res) => {
+		const { id } = req.params;
+		const attributeFacetDTOs = await this.#productService.getCategoryFacets(id);
+
+		return res.status(200).json(attributeFacetDTOs);
 	}
 
 	/**
 	 * Retrieves a list of recommended products, delegating the fetch operation to the service layer. (Public endpoint).
 	 * @param {object} req - Express request object.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and an array of ProductDTOs.
 	 */
-	getRecommended = async (req, res, next) => {
-		try {
-			const result = await this.#productService.getRecommended();
-			return res.status(200).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+	getRecommended = async (req, res) => {
+		const productDTOs = await this.#productService.getRecommended();
+		return res.status(200).json(productDTOs);
 	}
 }

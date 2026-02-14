@@ -1,12 +1,12 @@
 import {useEffect} from 'react';
 
-import {useCategoryStore, DEFAULT_LIMIT} from "../stores/useCategoryStore.js";
+import {useCategoryStore} from "../stores/useCategoryStore.js";
 import {useProductStore} from "../stores/useProductStore.js";
 
 import Container from "../components/ui/Container.jsx";
 import SectionHeader from "../components/ui/SectionHeader.jsx";
-import CategoryItem from "../components/CategoryItem.jsx";
-import FeaturedProducts from "../components/FeaturedProducts.jsx";
+import CategoryItem from "../components/category/CategoryItem.jsx";
+import FeaturedProducts from "../components/product/FeaturedProducts.jsx";
 import Button from "../components/ui/Button.jsx";
 
 const HomePage = () => {
@@ -14,16 +14,16 @@ const HomePage = () => {
 	const { categories, pagination, loading: categoriesLoading, fetchCategories } = useCategoryStore();
 
 	useEffect(() => {
-		fetchFeaturedProducts();
-		fetchCategories();
-	}, []);
+		void fetchFeaturedProducts();
+		void fetchCategories({ append: true });
+	}, [fetchFeaturedProducts, fetchCategories]);
 
 	const hasMore = pagination && pagination.page < pagination.pages;
 
 	const loadNextPage = () => {
 		if (hasMore && !categoriesLoading) {
 			const nextPage = pagination.page + 1;
-			fetchCategories(nextPage, DEFAULT_LIMIT);
+			void fetchCategories({ page: nextPage, append: true });
 		}
 	};
 

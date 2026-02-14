@@ -6,13 +6,16 @@ import {useCartStore} from "../../stores/useCartStore.js";
 
 import FormField from "../ui/FormField.jsx";
 import { Input } from "../ui/Input.jsx";
+import ErrorMessage from "../ui/ErrorMessage.jsx";
 
 const GiftCouponCard = () => {
 	const [userInputCode, setUserInputCode] = useState("");
-	const { coupon, isCouponApplied, couponLoading, getMyCoupon, applyCoupon, removeCoupon } = useCartStore();
+	const [localError, setLocalError] = useState(null);
+
+	const { coupon, isCouponApplied, couponLoading, getMyCoupon, applyCoupon, unapplyCoupon } = useCartStore();
 
 	useEffect(() => {
-		getMyCoupon();
+		void getMyCoupon();
 	}, [getMyCoupon]);
 
 	useEffect(() => {
@@ -20,21 +23,47 @@ const GiftCouponCard = () => {
 	}, [coupon]);
 
 	const handleApplyCoupon = async () => {
-		if (!userInputCode) return;
-		await applyCoupon(userInputCode);
+		setLocalError(null);
+
+		if (!userInputCode) {
+			setLocalError("Please enter a coupon code.");
+			return;
+		}
+
+		try {
+			await applyCoupon(userInputCode);
+		}
+		catch (err) {
+			setLocalError(err.message || "Failed to apply coupon.");
+		}
 	};
 
 	const handleRemoveCoupon = async () => {
-		removeCoupon();
+		unapplyCoupon();
 		setUserInputCode("");
+		setLocalError(null);
 	};
+
+	const handleInputChange = (e) => {
+		setUserInputCode(e.target.value);
+		if (localError) setLocalError(null);
+	}
 
 	return (
 		<Card className="space-y-4 p-4 sm:p-6">
 			<div className="space-y-4">
 				<FormField label="Do you have a voucher or gift card?">
-					<Input id="voucher" name="voucher" type="text" value={userInputCode} onChange={(e) => setUserInputCode(e.target.value)} placeholder="Enter code here" />
+					<Input
+						id="voucher"
+						name="voucher"
+						type="text"
+						value={userInputCode}
+						onChange={handleInputChange}
+						placeholder="Enter code here"
+					/>
 				</FormField>
+
+				<ErrorMessage message={localError} />
 
 				<Button
 					type="button"
@@ -57,7 +86,7 @@ const GiftCouponCard = () => {
 					</p>
 
 					{isCouponApplied && (
-						<Button type="button" variant="danger" className="mt-2" onClick={handleRemoveCoupon}>Remove Coupon</Button>
+						<Button type="button" variant="danger" className="mt-2" onClick={handleRemoveCoupon}>Unapply Coupon</Button>
 					)}
 				</div>
 			)}

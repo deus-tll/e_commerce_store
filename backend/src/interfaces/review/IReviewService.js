@@ -1,8 +1,4 @@
-import {
-	ReviewDTO,
-	CreateReviewDTO,
-	ReviewPaginationResultDTO
-} from "../../domain/index.js";
+import { ReviewDTO, CreateReviewDTO, ReviewPaginationResultDTO } from "../../domain/index.js";
 
 /**
  * @interface IReviewService
@@ -11,17 +7,21 @@ import {
 export class IReviewService {
 	/**
 	 * Creates a new review, checking for existence and product validity.
+	 * @param {string} productId - The product ID.
+	 * @param {string} userId - The user ID.
 	 * @param {CreateReviewDTO} data - The data for the new review.
 	 * @returns {Promise<ReviewDTO>} - The newly created review DTO.
 	 */
-	async create(data) { throw new Error("Method not implemented."); }
+	async create(productId, userId, data) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Updates an existing review, ensuring the user is the owner.
+	 * @param {string} reviewId - The review ID.
+	 * @param {string} userId - The user ID.
 	 * @param {UpdateReviewDTO} data - The data for the update review.
 	 * @returns {Promise<ReviewDTO>} - The updated review DTO.
 	 */
-	async update(data) { throw new Error("Method not implemented."); }
+	async update(reviewId, userId, data) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Deletes an existing review, ensuring the user is the owner.

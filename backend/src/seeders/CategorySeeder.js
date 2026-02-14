@@ -44,7 +44,8 @@ export class CategorySeeder extends BaseSeeder {
 			for (const category of defaultCategories) {
 				const createCategoryDTO = new CreateCategoryDTO({
 					name: category.name,
-					image: `${APP_URL}${category.image}`
+					image: `${APP_URL}${category.image}`,
+					allowedAttributes: []
 				});
 
 				await this.#categoryService.create(createCategoryDTO);

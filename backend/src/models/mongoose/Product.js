@@ -1,5 +1,18 @@
 import mongoose from "mongoose";
 
+const attributeSchema = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true,
+		trim: true
+	},
+	value: {
+		type: String,
+		required: true,
+		trim: true
+	}
+}, { _id: false });
+
 const imageSchema = new mongoose.Schema({
 	mainImage: {
 		type: String,
@@ -44,6 +57,12 @@ const productSchema = new mongoose.Schema({
 		min: 0,
 		required: true
 	},
+	stock: {
+		type: Number,
+		required: true,
+		min: 0,
+		default: 0
+	},
 	images: {
 		type: imageSchema,
 		required: [true, "Product must have images data."]
@@ -54,15 +73,21 @@ const productSchema = new mongoose.Schema({
 		required: true,
 		index: true
 	},
+	attributes: {
+		type: [attributeSchema],
+		default: []
+	},
 	isFeatured: {
 		type: Boolean,
 		default: false
 	},
 	ratingStats: {
 		type: ratingStatsSchema,
-		default: () => ({})
+		default: {}
 	}
 }, { timestamps: true });
+
+productSchema.index({ "attributes.name": 1, "attributes.value": 1 });
 
 /**
  * @type {import('mongoose').Model & import('mongoose').Document}

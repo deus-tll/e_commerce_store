@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { toast } from "react-hot-toast";
 
 import axios from "../config/axios.js";
+
 import {handleError} from "../utils/errorHandler.js";
 
 const ANALYTICS_API_PATH = "/analytics";
 
-export const useAnalyticsStore = create((set, get) => ({
+export const useAnalyticsStore = create((set) => ({
 	analyticsData: {
 		users: 0,
 		products: 0,
@@ -15,10 +15,9 @@ export const useAnalyticsStore = create((set, get) => ({
 	},
 	dailySalesData: [],
 	loading: true,
-	error: null,
 
 	fetchAnalytics: async () => {
-		set({ loading: true, error: null });
+		set({ loading: true });
 
 		try {
 			const res = await axios.get(ANALYTICS_API_PATH);
@@ -27,14 +26,20 @@ export const useAnalyticsStore = create((set, get) => ({
 				analyticsData: res.data.analyticsData,
 				dailySalesData: res.data.dailySalesData
 			});
-			toast.success("Analytics data fetched successfully!");
+
+			return true;
 		}
 		catch (error) {
-			set({ error: "Failed to fetch analytics data. Please try again." });
-			handleError(error, "Failed to fetch analytics data.");
+			handleError(error, "Failed to fetch analytics data.", {
+				isGlobal: true,
+				showToast: false,
+				forceUserMessage: true
+			});
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
-	}
+	},
 }));

@@ -5,7 +5,7 @@ import {
 	CouponEntity,
 	OrderEntity, OrderProductItem,
 	ProductEntity,
-	ReviewEntity
+	ReviewEntity, ProductImage, ProductAttribute, ProductRatingStats
 } from "../../domain/index.js";
 
 /**
@@ -50,17 +50,17 @@ export class MongooseAdapter {
 
 		if (!plainObject) return null;
 
-		const items = plainObject.items.map(item => new CartItemEntity({
-			productId: item.product.toString(),
+		const { user, items, ...rest } = plainObject;
+
+		const processedItems = items.map(item => new CartItemEntity({
+			productId: item.product?.toString(),
 			quantity: item.quantity
 		}));
 
 		return new CartEntity({
-			id: plainObject.id,
-			userId: plainObject.user.toString(),
-			items: items,
-			createdAt: plainObject.createdAt,
-			updatedAt: plainObject.updatedAt,
+			...rest,
+			userId: user?.toString(),
+			items: processedItems
 		});
 	}
 
@@ -70,8 +70,16 @@ export class MongooseAdapter {
 	 * @returns {CategoryEntity | null}
 	 */
 	static toCategoryEntity(doc) {
-		const data = MongooseAdapter.#toPlainObject(doc);
-		return data ? new CategoryEntity(data) : null;
+		const plainObject = MongooseAdapter.#toPlainObject(doc);
+
+		if (!plainObject) return null;
+
+		const { allowedAttributes, ...rest } = plainObject;
+
+		return new CategoryEntity({
+			...rest,
+			allowedAttributes: allowedAttributes || [],
+		});
 	}
 
 	/**
@@ -87,7 +95,8 @@ export class MongooseAdapter {
 
 		return new CouponEntity({
 			...plainObject,
-			userId: plainObject.userId.toString()
+			expirationDate: plainObject.expirationDate instanceof Date ? plainObject.expirationDate : new Date(plainObject.expirationDate),
+			userId: plainObject.userId?.toString()
 		});
 	}
 
@@ -103,22 +112,19 @@ export class MongooseAdapter {
 		if (!plainObject) return null;
 
 		const products = plainObject.products.map(item => new OrderProductItem({
-			id: item.product.toString(),
+			id: item.product?.toString(),
 			quantity: item.quantity,
 			price: item.price,
 			name: item.name,
 			image: item.image
 		}));
 
+		const { user, ...rest } = plainObject;
+
 		return new OrderEntity({
-			id: plainObject.id,
-			userId: plainObject.user.toString(),
-			products: products,
-			totalAmount: plainObject.totalAmount,
-			paymentSessionId: plainObject.paymentSessionId,
-			orderNumber: plainObject.orderNumber,
-			createdAt: plainObject.createdAt,
-			updatedAt: plainObject.updatedAt,
+			...rest,
+			userId: user ? user.toString() : null,
+			products: products
 		});
 	}
 
@@ -134,17 +140,14 @@ export class MongooseAdapter {
 
 		if (!plainObject) return null;
 
+		const { category, images, attributes, ratingStats, ...rest } = plainObject;
+
 		return new ProductEntity({
-			id: plainObject.id,
-			name: plainObject.name,
-			description: plainObject.description,
-			price: plainObject.price,
-			images: plainObject.images,
-			isFeatured: plainObject.isFeatured,
-			categoryId: plainObject.category.toString(),
-			ratingStats: plainObject.ratingStats,
-			createdAt: plainObject.createdAt,
-			updatedAt: plainObject.updatedAt,
+			...rest,
+			images: new ProductImage(images),
+			categoryId: category?.toString(),
+			attributes: (attributes || []).map(attr => new ProductAttribute(attr)),
+			ratingStats: new ProductRatingStats(ratingStats)
 		});
 	}
 
@@ -159,14 +162,12 @@ export class MongooseAdapter {
 
 		if (!plainObject) return null;
 
+		const { product, user, ...rest } = plainObject;
+
 		return new ReviewEntity({
-			id: plainObject.id,
-			productId: plainObject.product.toString(),
-			userId: plainObject.user.toString(),
-			rating: plainObject.rating,
-			comment: plainObject.comment,
-			createdAt: plainObject.createdAt,
-			updatedAt: plainObject.updatedAt,
+			...rest,
+			productId: product?.toString(),
+			userId: user?.toString()
 		});
 	}
 

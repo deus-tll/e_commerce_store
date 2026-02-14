@@ -24,6 +24,10 @@ export function createProductsRouter(productController, authService) {
 	const protectRoute = createProtectRoute(authService);
 
 	// GET
+	router.get("/categories/:id/facets",
+		validationMiddleware(productIdSchema),
+		productController.getFacets
+	);
 	router.get("/featured", productController.getFeatured);
 	router.get("/recommended", productController.getRecommended);
 	router.get("/",

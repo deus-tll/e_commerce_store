@@ -1,6 +1,6 @@
 import {Route} from "react-router-dom";
 
-import {ProtectedRoute} from "../components/RouteWrappers.jsx";
+import {ProtectedRoute} from "../components/general/RouteWrappers.jsx";
 
 import ProfilePage from "../pages/ProfilePage.jsx";
 import CartPage from "../pages/cart/CartPage.jsx";

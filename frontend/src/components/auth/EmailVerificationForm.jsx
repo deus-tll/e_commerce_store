@@ -1,20 +1,23 @@
-import React, {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, useCallback} from 'react';
 import {Link, useNavigate} from "react-router-dom";
 import {ArrowRight, Verified} from "lucide-react";
 
 import {useAuthStore} from "../../stores/useAuthStore.js";
-import {getErrorMessage} from "../../utils/errorParser.js";
 
 import Button from "../ui/Button.jsx";
 import ErrorMessage from "../ui/ErrorMessage.jsx";
 
 const EmailVerificationForm = () => {
 	const [code, setCode] = useState(["", "", "", "", "", ""]);
-	const [formError, setFormError] = useState(null);
+	const [localError, setLocalError] = useState(null);
 	const inputRefs = useRef([]);
 	const navigate = useNavigate();
 
-	const { loading, verifyEmail } = useAuthStore();
+	const { loading, error: verifyApiError, verifyEmail, clearError } = useAuthStore();
+
+	useEffect(() => {
+		return () => clearError();
+	}, [clearError]);
 
 	const handleChange = (index, value) => {
 		const newCode = [...code];
@@ -50,39 +53,37 @@ const EmailVerificationForm = () => {
 		}
 	}
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setFormError(null);
+	const submitCode = useCallback(async (verificationCode) => {
+		clearError();
+		setLocalError(null);
 
-		const verificationCode = code.join("");
 		if (verificationCode.length !== 6) {
-			setFormError("Please enter the full 6-digit code.");
+			setLocalError("Please enter the full 6-digit code.");
 			return;
 		}
 
-		try {
-			await verifyEmail(verificationCode);
+		const success = await verifyEmail(verificationCode);
+		if (success) {
 			navigate("/");
 		}
-		catch (err) {
-			const msg = getErrorMessage(err, "Verification failed. Please check the code.");
-			setFormError(msg);
-		}
-	}
+	}, [verifyEmail, navigate, clearError]);
 
-	const stableHandleSubmit = React.useCallback(handleSubmit, [code, navigate, verifyEmail]);
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		void submitCode(code.join(""));
+	};
 
 	useEffect(() => {
 		if (code.every((digit) => digit !== "")) {
-			stableHandleSubmit(new Event("submit"));
+			void submitCode(code.join(""));
 		}
-	}, [code, stableHandleSubmit]);
+	}, [code, submitCode]);
 
 	return (
 		<>
 			<p className='text-center text-gray-300 mb-6'>Enter the 6-digit code sent to your email address.</p>
 			<form onSubmit={handleSubmit} className='space-y-6'>
-				<ErrorMessage message={formError} />
+				<ErrorMessage message={localError || verifyApiError} />
 
 				<div className="flex justify-between">
 					{code.map((digit, index) => (
@@ -98,9 +99,9 @@ const EmailVerificationForm = () => {
 						/>
 					))}
 				</div>
-				<Button disabled={loading} className="w-full justify-center">
+				<Button type="submit" disabled={loading} className="w-full justify-center">
 					<Verified className="h-4 w-4" />
-					Verify
+					{loading ? "Verifying..." : "Verify"}
 				</Button>
 			</form>
 

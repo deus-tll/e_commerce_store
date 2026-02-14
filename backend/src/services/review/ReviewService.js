@@ -14,22 +14,43 @@ import {NotFoundError} from "../../errors/apiErrors.js";
  */
 export class ReviewService extends IReviewService {
 	/** @type {IReviewRepository} */ #reviewRepository;
-	/** @type {IReviewMapper} */ #reviewMapper;
+	/** @type {IUserService} */ #userService;
 	/** @type {IProductStatsService} */ #productStatsService;
 	/** @type {IReviewValidator} */ #reviewValidator;
+	/** @type {IReviewMapper} */ #reviewMapper;
 
 	/**
 	 * @param {IReviewRepository} reviewRepository
-	 * @param {IReviewMapper} reviewMapper
+	 * @param {IUserService} userService
 	 * @param {IProductStatsService} productStatsService
 	 * @param {IReviewValidator} reviewValidator
+	 * @param {IReviewMapper} reviewMapper
 	 */
-	constructor(reviewRepository, reviewMapper, productStatsService, reviewValidator) {
+	constructor(reviewRepository, userService, productStatsService, reviewValidator, reviewMapper) {
 		super();
 		this.#reviewRepository = reviewRepository;
-		this.#reviewMapper = reviewMapper;
+		this.#userService = userService;
 		this.#productStatsService = productStatsService;
 		this.#reviewValidator = reviewValidator;
+		this.#reviewMapper = reviewMapper;
+	}
+
+	async #formReviewDTO(entity) {
+		const shortUserDTO = await this.#userService.getShortDTOById(entity.userId);
+		return this.#reviewMapper.toDTO(entity, shortUserDTO);
+	}
+
+	async #formReviewDTOs(entities) {
+		const uniqueUserIds = [
+			...new Set(entities.map(entity => entity.userId).filter(Boolean))
+		];
+		const shortUserDTOs = await this.#userService.getShortDTOsByIds(uniqueUserIds);
+		const userMap = new Map(shortUserDTOs.map(dto => [dto.id, dto]));
+
+		return entities.map(entity => {
+			const shortUserDTO = userMap.get(entity.userId);
+			return this.#reviewMapper.toDTO(entity, shortUserDTO);
+		});
 	}
 
 	/**
@@ -47,36 +68,50 @@ export class ReviewService extends IReviewService {
 		return existingReview;
 	}
 
-	async create(data) {
-		await this.#reviewValidator.validateCreation(data.productId, data.userId);
+	async create(productId, userId, data) {
+		await this.#reviewValidator.validateCreation(productId, userId);
 
-		const createdReview = await this.#reviewRepository.create(data);
+		const createdReview = await this.#reviewRepository.create(productId, userId, data.toPersistence());
 
-		await this.#productStatsService.handleReviewCreation(
-			createdReview.productId,
-			createdReview.rating
-		);
+		try {
+			await this.#productStatsService.handleReviewCreation(
+				createdReview.productId,
+				createdReview.rating
+			);
+		}
+		catch (error) {
+			// Could be passed to Event Bus (RabbitMQ/Kafka) for eventual consistency
+			console.error("Failed to update product stats after review creation:", error);
+		}
 
-		return await this.#reviewMapper.toDTO(createdReview);
+		return await this.#formReviewDTO(createdReview);
 	}
 
-	async update(data) {
-		const existingReview = await this.#getReviewOrFail(data.reviewId, data.userId);
-
+	async update(reviewId, userId, data) {
+		const existingReview = await this.#getReviewOrFail(reviewId, userId);
 		const oldRating = existingReview.rating;
+		const persistenceData = data.toPersistence();
 
-		const updatedReview = await this.#reviewRepository.updateByIdAndUserId(data);
+		const updatedReview = await this.#reviewRepository.updateByIdAndUserId(reviewId, userId, persistenceData);
 		if (!updatedReview) throw new NotFoundError("Failed to update review.");
 
 		const newRating = updatedReview.rating;
 
-		await this.#productStatsService.handleReviewUpdate(
-			updatedReview.productId,
-			newRating,
-			oldRating
-		);
+		if (data.rating !== undefined && data.rating !== oldRating) {
+			try {
+				await this.#productStatsService.handleReviewUpdate(
+					updatedReview.productId,
+					newRating,
+					oldRating
+				);
+			}
+			catch (error) {
+				// Could be passed to Event Bus (RabbitMQ/Kafka) for eventual consistency
+				console.error("Failed to update product stats after review update:", error);
+			}
+		}
 
-		return await this.#reviewMapper.toDTO(updatedReview);
+		return await this.#formReviewDTO(updatedReview);
 	}
 
 	async delete(userId, reviewId) {
@@ -88,7 +123,7 @@ export class ReviewService extends IReviewService {
 			deletedReview.rating
 		);
 
-		return await this.#reviewMapper.toDTO(deletedReview);
+		return await this.#formReviewDTO(deletedReview);
 	}
 
 	async getAllByProduct(productId, page = 1, limit = 10) {
@@ -96,14 +131,14 @@ export class ReviewService extends IReviewService {
 
 		const skip = (page - 1) * limit;
 
-		const repositoryPaginationResult = await this.#reviewRepository.findAndCountByProduct(productId, skip, limit);
+		const { results, total } = await this.#reviewRepository.findAndCountByProduct(productId, skip, limit);
 
-		const total = repositoryPaginationResult.total;
 		const pages = Math.ceil(total / limit);
+		const reviewDTOs = await this.#formReviewDTOs(results);
 
-		const reviewDTOs = await this.#reviewMapper.toDTOs(repositoryPaginationResult.results);
-		const paginationMetadata = new PaginationMetadata(page, limit, total, pages);
-
-		return new ReviewPaginationResultDTO(reviewDTOs, paginationMetadata);
+		return new ReviewPaginationResultDTO(
+			reviewDTOs,
+			new PaginationMetadata(page, limit, total, pages)
+		);
 	}
 }
