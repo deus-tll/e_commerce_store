@@ -1,19 +1,10 @@
-import { CartEntity, CreateCartDTO, CartItemEntity } from "../../domain/index.js";
+import { CartEntity, CartItemEntity } from "../../domain/index.js";
 
 /**
  * @interface ICartRepository
  * @description Contract for working with cart data in the persistence layer.
  */
 export class ICartRepository {
-	/**
-	 * Creates a new cart record.
-	 * @param {CreateCartDTO} data - The data for the new cart.
-	 * @returns {Promise<CartEntity>} - The newly created cart record.
-	 */
-	async create(data) {
-		throw new Error("Method not implemented.");
-	}
-
 	/**
 	 * Adds an item to the cart or increments the quantity if the item already exists.
 	 * @param {string} userId - The user ID.

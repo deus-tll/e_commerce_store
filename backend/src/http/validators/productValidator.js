@@ -5,7 +5,11 @@ import {
 	priceSchema,
 	productNameSchema,
 	descriptionSchema,
-	imagesSchema
+	emptyParamAndBody,
+	stockSchema,
+	attributeItemSchema,
+	createProductImagesSchema,
+	updateProductImagesSchema
 } from "./common.joi.js";
 
 /**
@@ -16,9 +20,11 @@ export const createProductSchema = Joi.object({
 		name: productNameSchema.required().messages({'any.required': 'Product name is required.'}),
 		description: descriptionSchema.required().messages({'any.required': 'Product description is required.'}),
 		price: priceSchema.required().messages({'any.required': 'Price is required.'}),
-		images: imagesSchema.required().messages({'any.required': 'Images object is required.'}),
+		stock: stockSchema.required().messages({'any.required': 'Stock quantity is required.'}),
+		images: createProductImagesSchema.required().messages({'any.required': 'Images object is required.'}),
 		categoryId: categoryIdSchema.required().messages({'any.required': 'Category ID is required.'}),
-		isFeatured: Joi.boolean().default(false).optional(),
+		attributes: Joi.array().items(attributeItemSchema).optional().default([]),
+		isFeatured: Joi.boolean().default(false).optional()
 	}).required().unknown(false),
 
 	params: Joi.object({}).optional(),
@@ -37,8 +43,10 @@ export const updateProductSchema = Joi.object({
 		name: productNameSchema.optional(),
 		description: descriptionSchema.optional(),
 		price: priceSchema.optional(),
-		images: imagesSchema.optional(),
+		stock: stockSchema.optional(),
+		images: updateProductImagesSchema.optional(),
 		categoryId: categoryIdSchema.optional(),
+		attributes: Joi.array().items(attributeItemSchema).optional(),
 		isFeatured: Joi.boolean().optional(),
 	})
 		.min(1)
@@ -52,18 +60,35 @@ export const updateProductSchema = Joi.object({
 });
 
 /**
- * Joi schema for validating the GET /products request (Get All Products).
+ * Minimal base query schema (Only pagination fields).
  */
-export const getAllProductsSchema = Joi.object({
-	params: Joi.object({}).optional(),
-	body: Joi.object({}).optional(),
+const minimalBaseProductsQuerySchema = Joi.object({
+	page: Joi.number().integer().min(1).default(1).optional(),
+	limit: Joi.number().integer().min(1).max(50).default(10).optional(),
+}).unknown(false);
 
-	query: Joi.object({
-		page: Joi.number().integer().min(1).default(1).optional(),
-		limit: Joi.number().integer().min(1).max(50).default(10).optional(),
+/**
+ * Joi schema for validating the GET /products
+ * - Supports multi-select attributes (OR logic) and dynamic sorting.
+ */
+export const getAllProductsPublicSchema = Joi.object({
+	...emptyParamAndBody,
+	query: minimalBaseProductsQuerySchema.keys({
 		categorySlug: Joi.string().trim().optional(),
-		search: Joi.string().trim().optional(),
-	}).unknown(false),
+		search: Joi.string().trim().min(1).optional(),
+		attributes: Joi.object().pattern(
+			Joi.string(),
+			Joi.alternatives().try(
+				Joi.string().trim(),
+				Joi.array().items(Joi.string().trim())
+			)
+		).optional(),
+		sortBy: Joi.string()
+			.valid('price', 'createdAt', 'ratingStats.averageRating')
+			.default('createdAt')
+			.optional(),
+		order: Joi.string().valid('asc', 'desc').default('desc').optional()
+	})
 });
 
 /**

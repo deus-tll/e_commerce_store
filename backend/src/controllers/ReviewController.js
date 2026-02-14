@@ -20,29 +20,16 @@ export class ReviewController {
 	 * to a `CreateReviewDTO` using the product and user IDs, and delegates to the service. (Authenticated).
 	 * @param {object} req - Express request object. Expects 'id' (productId) in req.params, 'rating' and 'comment' in 'req.body', and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 201 and the created ReviewDTO.
 	 */
-	create = async (req, res, next) => {
-		try {
-			const { id: productId } = req.params;
-			const { rating, comment } = req.body;
-			const userId = req.userId;
+	create = async (req, res) => {
+		const { id: productId } = req.params;
+		const userId = req.userId;
 
-			const createReviewDTO = new CreateReviewDTO({
-				productId,
-				userId,
-				rating,
-				comment
-			});
+		const createReviewDTO = new CreateReviewDTO(req.body);
+		const reviewDTO = await this.#reviewService.create(productId, userId, createReviewDTO);
 
-			const reviewDTO = await this.#reviewService.create(createReviewDTO);
-
-			return res.status(201).json(reviewDTO);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(201).json(reviewDTO);
 	}
 
 	/**
@@ -50,29 +37,16 @@ export class ReviewController {
 	 * user ID, and partial update data, maps it to an `UpdateReviewDTO`, and delegates. (Authenticated).
 	 * @param {object} req - Express request object. Expects 'reviewId' in req.params, 'rating' and/or 'comment' in 'req.body', and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the updated ReviewDTO.
 	 */
-	update = async (req, res, next) => {
-		try {
-			const { reviewId } = req.params;
-			const { rating, comment } = req.body;
-			const userId = req.userId;
+	update = async (req, res) => {
+		const { reviewId } = req.params;
+		const userId = req.userId;
 
-			const updateReviewDTO = new UpdateReviewDTO({
-				reviewId,
-				userId,
-				rating,
-				comment
-			});
+		const updateReviewDTO = new UpdateReviewDTO(req.body);
+		const reviewDTO = await this.#reviewService.update(reviewId, userId, updateReviewDTO);
 
-			const reviewDTO = await this.#reviewService.update(updateReviewDTO);
-
-			return res.status(200).json(reviewDTO);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(reviewDTO);
 	}
 
 	/**
@@ -80,21 +54,13 @@ export class ReviewController {
 	 * and delegates the deletion operation. (Authenticated).
 	 * @param {object} req - Express request object. Expects 'reviewId' in req.params and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the deleted ReviewDTO.
 	 */
-	delete = async (req, res, next) => {
-		try {
-			const { reviewId } = req.params;
-			const userId = req.userId;
+	delete = async (req, res) => {
+		const { reviewId } = req.params;
+		const reviewDTO = await this.#reviewService.delete(req.userId, reviewId);
 
-			const reviewDTO = await this.#reviewService.delete(userId, reviewId);
-
-			return res.status(200).json(reviewDTO);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(reviewDTO);
 	}
 
 	/**
@@ -102,21 +68,14 @@ export class ReviewController {
 	 * pagination parameters, delegating all logic and default parameter handling to the service. (Public endpoint).
 	 * @param {object} req - Express request object. Expects 'id' (productId) in req.params, and optional 'page'/'limit' in req.query.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and a ReviewPaginationResultDTO.
 	 */
-	getByProduct = async (req, res, next) => {
-		try {
-			const { id: productId } = req.params;
-			const page = req.query.page;
-			const limit = req.query.limit;
+	getByProduct = async (req, res) => {
+		const { id: productId } = req.params;
+		const { page, limit } = req.query;
 
-			const result = await this.#reviewService.getAllByProduct(productId, page, limit);
+		const paginationResult = await this.#reviewService.getAllByProduct(productId, page, limit);
 
-			return res.status(200).json(result);
-		}
-		catch (error) {
-			next(error);
-		}
+		return res.status(200).json(paginationResult);
 	}
 }

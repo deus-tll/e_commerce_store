@@ -3,9 +3,6 @@ import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository
 import {ICouponValidator} from "../../interfaces/coupon/ICouponValidator.js";
 import {ICouponFactory} from "../../interfaces/coupon/ICouponFactory.js";
 import {ICouponMapper} from "../../interfaces/mappers/ICouponMapper.js";
-import {UpdateCouponDTO} from "../../domain/index.js";
-
-import {NotFoundError} from "../../errors/apiErrors.js";
 
 /**
  * @augments ICouponService
@@ -36,26 +33,14 @@ export class CouponService extends ICouponService {
 		await this.#couponValidator.validateUserExists(userId);
 		await this.#couponRepository.deleteByUserId(userId);
 
-		const createCouponDTO = this.#couponFactory.createDTO(userId);
-
-		const createdCoupon = await this.#couponRepository.create(createCouponDTO);
+		const createCouponDTO = this.#couponFactory.create(userId);
+		const createdCoupon = await this.#couponRepository.create(createCouponDTO.toPersistence());
 
 		return this.#couponMapper.toDTO(createdCoupon);
 	}
 
 	async deactivate(code, userId) {
-		const updateCouponDTO = new UpdateCouponDTO({
-			code,
-			userId,
-			isActive: false
-		});
-
-		const updatedCoupon = await this.#couponRepository.updateByCodeAndUserId(updateCouponDTO);
-
-		if (!updatedCoupon) {
-			throw new NotFoundError("Coupon not found");
-		}
-
+		const updatedCoupon = await this.#couponRepository.updateCouponActiveState(code, userId, false);
 		return this.#couponMapper.toDTO(updatedCoupon);
 	}
 
@@ -68,16 +53,6 @@ export class CouponService extends ICouponService {
 		return couponEntity ? this.#couponMapper.toDTO(couponEntity) : null;
 	}
 
-	async getActiveByUserIdOrFail(userId) {
-		const couponDTO = await this.getActiveByUserId(userId);
-
-		if (!couponDTO) {
-			throw new NotFoundError("Active coupon not found for this user");
-		}
-
-		return couponDTO;
-	}
-
 	async getActiveByCodeAndUserId(code, userId) {
 		const couponEntity = await this.#couponRepository.findByCodeAndUserId(code, userId);
 
@@ -86,15 +61,5 @@ export class CouponService extends ICouponService {
 		if (couponEntity.isExpired()) return null;
 
 		return this.#couponMapper.toDTO(couponEntity);
-	}
-
-	async getActiveByCodeAndUserIdOrFail(code, userId) {
-		const couponDTO = await this.getActiveByCodeAndUserId(code, userId);
-
-		if (!couponDTO) {
-			throw new NotFoundError("Active coupon not found");
-		}
-
-		return couponDTO;
 	}
 }

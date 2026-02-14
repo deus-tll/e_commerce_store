@@ -1,7 +1,8 @@
 import { create } from "zustand";
 
 import axios from "../config/axios.js";
-import { handleRequestError } from "../utils/errorHandler.js";
+import { handleError } from "../utils/errorHandler.js";
+import {PaginationLimits} from "../constants/app.js";
 
 export const REVIEWS_API_PATH = "/reviews";
 
@@ -9,41 +10,17 @@ export const useReviewStore = create((set, get) => ({
 	reviews: [],
 	pagination: null,
 	loading: false,
-	submitting: false,
+	page: 1,
 
-	createReview: async (productId, reviewData) => {
-		set({ submitting: true });
+	fetchReviewsByProduct: async (productId) => {
+		const currentPage = get().page;
+		const limit = PaginationLimits.REVIEWS;
 
-		try {
-			const res = await axios.post(`${REVIEWS_API_PATH}/product/${productId}`, {
-				rating: Number(reviewData.rating),
-				comment: reviewData.comment.trim()
-			});
-
-			set((prevState) => ({
-				reviews: [res.data, ...prevState.reviews],
-				pagination: prevState.pagination
-					? { ...prevState.pagination, total: (prevState.pagination.total || 0) + 1 }
-					: prevState.pagination
-			}));
-
-			return res.data;
-		}
-		catch (error) {
-			handleRequestError(error, "Failed to submit review");
-			throw error;
-		}
-		finally {
-			set({ submitting: false });
-		}
-	},
-
-	fetchReviewsByProduct: async (productId, page = 1, limit = 10) => {
 		set({ loading: true });
 
 		try {
 			const params = new URLSearchParams({
-				page: String(page),
+				page: String(currentPage),
 				limit: String(limit)
 			});
 
@@ -53,74 +30,109 @@ export const useReviewStore = create((set, get) => ({
 				reviews: res.data.reviews || [],
 				pagination: res.data.pagination || null
 			});
+
+			return true;
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to load reviews", false);
+			handleError(error, "Failed to load reviews. Please refresh.", {
+				isGlobal: true,
+				showToast: false
+			});
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
 	},
 
-	updateReview: async (reviewId, reviewData) => {
-		set({ submitting: true });
+	createReview: async (productId, reviewData) => {
+		set({ loading: true, error: null });
 
 		try {
-			const res = await axios.put(`${REVIEWS_API_PATH}/${reviewId}`, {
+			await axios.post(`${REVIEWS_API_PATH}/product/${productId}`, {
 				rating: Number(reviewData.rating),
 				comment: reviewData.comment.trim()
 			});
 
-			set((prevState) => ({
-				reviews: prevState.reviews.map(review =>
-					review._id === reviewId ? res.data : review
-				)
-			}));
+			if (get().page === 1) {
+				await get().fetchReviewsByProduct(productId);
+			}
 
-			return res.data;
+			return true;
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to update review");
-			throw error;
+			const msg = handleError(error, "Failed to submit review.", {
+				isGlobal: false,
+				showToast: false
+			});
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
-			set({ submitting: false });
+			set((state) => ({
+				loading: false,
+				...(state.page !== 1 && { page: 1 })
+			}));
 		}
 	},
 
-	deleteReview: async (reviewId) => {
+	updateReview: async (productId, reviewId, reviewData) => {
+		set({ loading: true, error: null });
+
+		try {
+			await axios.patch(`${REVIEWS_API_PATH}/${reviewId}`, {
+				rating: Number(reviewData.rating),
+				comment: reviewData.comment.trim()
+			});
+
+			await get().fetchReviewsByProduct(productId);
+
+			return true;
+		}
+		catch (error) {
+			const msg = handleError(error, "Failed to update review.", {
+				isGlobal: false,
+				showToast: false
+			});
+			set({ error: msg });
+
+			return false;
+		}
+		finally {
+			set({ loading: false });
+		}
+	},
+
+	deleteReview: async (productId, reviewId) => {
 		set({ loading: true });
 
 		try {
 			await axios.delete(`${REVIEWS_API_PATH}/${reviewId}`);
 
-			set((prevState) => ({
-				reviews: prevState.reviews.filter(review => review._id !== reviewId),
-				pagination: prevState.pagination
-					? { ...prevState.pagination, total: Math.max(0, (prevState.pagination.total || 0) - 1) }
-					: prevState.pagination
-			}));
+			await get().fetchReviewsByProduct(productId);
+
+			return true;
 		}
 		catch (error) {
-			handleRequestError(error, "Failed to delete review");
+			handleError(error, "Failed to delete review.", {
+				isGlobal: true,
+				showToast: false
+			});
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
 	},
 
-	clearReviews: () => set({
-		reviews: [],
-		pagination: null
-	}),
+	setPage: (page) => set({ page }),
+	clearReviews: () => set({ reviews: [], pagination: null, error: null, page: 1 }),
+	clearError: () => set({ error: null })
 
-	getAverageRating: () => {
-		return 4.8;
-	},
-	getTotalReviews: () => {
-		return get()?.pagination?.total;
-	},
-	// getReviewsByRating: (rating) => {
+	// fetchReviewsByRating: (rating) => {
 	//
 	// },
 	//

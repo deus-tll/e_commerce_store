@@ -5,8 +5,8 @@ import {ShortProductDTO} from "../index.js";
  * Used for the Repository layer (Entity) and Data Input.
  */
 export class CartItemEntity {
-	/** @type {string} */ productId;
-	/** @type {number} */ quantity;
+	/** @type {string} @readonly */ productId;
+	/** @type {number} @readonly */ quantity;
 
 	/**
 	 * @param {object} data
@@ -14,8 +14,10 @@ export class CartItemEntity {
 	 * @param {number} data.quantity
 	 */
 	constructor({ productId, quantity }) {
-		this.productId = productId.toString();
+		this.productId = productId;
 		this.quantity = quantity;
+
+		Object.freeze(this);
 	}
 }
 
@@ -23,46 +25,23 @@ export class CartItemEntity {
  * Agnostic class representing the core Cart Entity, used by the Repository layer.
  */
 export class CartEntity {
-	/** @type {string} */ id;
-	/** @type {string} */ userId;
-	/** @type {CartItemEntity[]} */ items;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ userId;
+	/** @type {CartItemEntity[]} @readonly */ items;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
 	 * @param {object} data
-	 * @param {string} data.id
-	 * @param {string} data.userId - The agnostic field name.
-	 * @param {Array<object>} data.items
 	 */
-	constructor({ id, userId, items, createdAt, updatedAt }) {
-		if (!id) {
-			throw new Error("CartEntity requires an ID.");
-		}
-		this.id = id.toString();
-		this.userId = userId.toString();
-		this.items = items.map(item => new CartItemEntity({
-			productId: item.productId,
-			quantity: item.quantity
-		}));
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
-}
+	constructor(data) {
+		this.id = data.id;
+		this.userId = data.userId;
+		this.items = Object.freeze([...data.items]);
+		this.createdAt = data.createdAt;
+		this.updatedAt = data.updatedAt;
 
-/**
- * Agnostic class for input data when creating a Cart.
- */
-export class CreateCartDTO {
-	/** @type {string} */ userId;
-	/** @type {CartItemEntity[]} */ items;
-
-	/**
-	 * @param {object} data - Raw data for creation.
-	 */
-	constructor({ userId, items = [] }) {
-		this.userId = userId;
-		this.items = items.map(item => new CartItemEntity(item));
+		Object.freeze(this);
 	}
 }
 
@@ -71,8 +50,8 @@ export class CreateCartDTO {
  * This DTO is typically enriched with product details.
  */
 export class CartItemDTO {
-	/** @type {ShortProductDTO} */ product;
-	/** @type {number} */ quantity;
+	/** @type {ShortProductDTO} @readonly */ product;
+	/** @type {number} @readonly */ quantity;
 
 	/**
 	 * @param {object} data
@@ -82,6 +61,8 @@ export class CartItemDTO {
 	constructor({ product, quantity }) {
 		this.product = product;
 		this.quantity = quantity;
+
+		Object.freeze(this);
 	}
 }
 
@@ -89,20 +70,22 @@ export class CartItemDTO {
  * Data Transfer Object for the full Cart, used by the Service layer.
  */
 export class CartDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ userId;
-	/** @type {CartItemDTO[]} */ items;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ userId;
+	/** @type {CartItemDTO[]} @readonly */ items;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
 	 * @param {object} data
 	 */
-	constructor({ id, userId, items, createdAt, updatedAt }) {
-		this.id = id;
-		this.userId = userId;
-		this.items = items;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
+	constructor(data) {
+		this.id = data.id;
+		this.userId = data.userId;
+		this.items = data.items;
+		this.createdAt = data.createdAt;
+		this.updatedAt = data.updatedAt;
+
+		Object.freeze(this);
 	}
 }

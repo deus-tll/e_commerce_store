@@ -1,7 +1,7 @@
 import {ICategoryService} from "../interfaces/category/ICategoryService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
 
-import {EnvModes} from "../utils/constants.js";
+import {EnvModes} from "../constants/app.js";
 import {CreateCategoryDTO} from "../domain/index.js";
 
 const PORT = process.env.PORT || 3001;
@@ -44,7 +44,8 @@ export class CategorySeeder extends BaseSeeder {
 			for (const category of defaultCategories) {
 				const createCategoryDTO = new CreateCategoryDTO({
 					name: category.name,
-					image: `${APP_URL}${category.image}`
+					image: `${APP_URL}${category.image}`,
+					allowedAttributes: []
 				});
 
 				await this.#categoryService.create(createCategoryDTO);

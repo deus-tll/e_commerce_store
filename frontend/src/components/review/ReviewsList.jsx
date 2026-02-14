@@ -1,49 +1,44 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
+import {MessageSquare} from "lucide-react";
 
 import {useReviewStore} from "../../stores/useReviewStore.js";
 
-import LoadingSpinner from "../LoadingSpinner.jsx";
-import EmptyState from "../ui/EmptyState.jsx";
-import Pagination from "../ui/Pagination.jsx";
+import ReviewForm from "./ReviewForm.jsx";
 import ReviewsSummary from "./ReviewsSummary.jsx";
 import ReviewItem from "./ReviewItem.jsx";
-import EditReviewForm from "./EditReviewForm.jsx";
+
+import LoadingSpinner from "../ui/LoadingSpinner.jsx";
+import EmptyState from "../ui/EmptyState.jsx";
+import Pagination from "../ui/Pagination.jsx";
+import Modal from "../ui/Modal.jsx";
 
 const ReviewsList = ({ productId }) => {
-	const [page, setPage] = useState(1);
-	const [editingReviewObject, setEditingReviewObject] = useState(null);
+	const [editingObject, setEditingObject] = useState(null);
 
 	const {
 		reviews,
 		pagination,
 		loading,
+		page,
+		setPage,
 		fetchReviewsByProduct,
 		deleteReview
 	} = useReviewStore();
 
 	useEffect(() => {
-		fetchReviewsByProduct(productId, page, 10);
+		void fetchReviewsByProduct(productId);
 	}, [productId, page, fetchReviewsByProduct]);
 
-	const handleEdit = (review) => {
-		setEditingReviewObject(review);
-	}
-
-	const handleCloseEdit = () => {
-		setEditingReviewObject(null);
-	}
+	const handleEdit = (review) => setEditingObject(review);
+	const handleCloseEdit = () => setEditingObject(null);
 
 	const handleDelete = async (reviewId) => {
-		try {
-			await deleteReview(reviewId);
-		} catch (error) {
-			console.error("Error deleting review:", error);
-		}
+		await deleteReview(productId, reviewId);
 	};
 
 	if (loading && reviews.length === 0) {
 		return (
-			<div className="flex justify-center py-8">
+			<div className="flex justify-center py-12">
 				<LoadingSpinner />
 			</div>
 		);
@@ -51,25 +46,20 @@ const ReviewsList = ({ productId }) => {
 
 	return (
 		<div className="space-y-6">
-			{/* Summary */}
-			<ReviewsSummary
-				total={pagination?.total}
-				showing={reviews.length}
-			/>
+			<ReviewsSummary total={pagination?.totalPrice} showing={reviews.length} />
 
-			{/* Reviews Content */}
 			{reviews.length === 0 ? (
 				<EmptyState
+					icon={MessageSquare}
 					title="No reviews yet"
-					description="Be the first to review this product and help other customers make informed decisions."
+					description="Be the first to share your experience with this product."
 				/>
 			) : (
 				<>
-					{/* Reviews List */}
 					<div className="space-y-4">
 						{reviews.map((review) => (
 							<ReviewItem
-								key={review._id}
+								key={review.id}
 								review={review}
 								onEdit={handleEdit}
 								onDelete={handleDelete}
@@ -77,8 +67,7 @@ const ReviewsList = ({ productId }) => {
 						))}
 					</div>
 
-					{/* Pagination */}
-					{pagination && pagination.pages > 1 && (
+					{pagination?.pages > 1 && (
 						<div className="flex justify-center pt-4">
 							<Pagination
 								page={page}
@@ -91,19 +80,11 @@ const ReviewsList = ({ productId }) => {
 				</>
 			)}
 
-			{editingReviewObject && (
-				<EditReviewForm
-					review={editingReviewObject}
-					onClose={handleCloseEdit}
-				/>
-			)}
-
-			{/* Loading overlay for pagination */}
-			{loading && reviews.length > 0 && (
-				<div className="flex justify-center py-4">
-					<div className="text-gray-400 text-sm">Loading more reviews...</div>
-				</div>
-			)}
+			<Modal title="Edit Your Review" open={!!editingObject} onClose={handleCloseEdit}>
+				{editingObject && (
+					<ReviewForm productId={productId} initialData={editingObject} onSuccess={handleCloseEdit} />
+				)}
+			</Modal>
 		</div>
 	);
 };

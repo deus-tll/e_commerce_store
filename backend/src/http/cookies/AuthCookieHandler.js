@@ -1,9 +1,12 @@
-import { IDateTimeService } from "../../interfaces/utils/IDateTimeService.js";
-import { CookieTokenTypes, EnvModes, SameSiteCookieOptions } from "../../utils/constants.js";
+import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
+
+import {EnvModes} from "../../constants/app.js";
+import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 
 const NODE_ENV = process.env.NODE_ENV;
+const IS_PROD = NODE_ENV === EnvModes.PROD;
 
-const SAME_SITE_COOKIE_SETTER = NODE_ENV === EnvModes.PROD
+const SAME_SITE_COOKIE_SETTER = IS_PROD
 	? SameSiteCookieOptions.STRICT
 	: SameSiteCookieOptions.LAX;
 
@@ -18,8 +21,14 @@ export class AuthCookieHandler {
 	constructor(dateTimeService) {
 		this.#dateTimeService = dateTimeService;
 
-		this.#ACCESS_TOKEN_COOKIE_MAX_AGE = this.#dateTimeService.ttlToMilliseconds(process.env.ACCESS_TOKEN_TTL);
-		this.#REFRESH_TOKEN_COOKIE_MAX_AGE = this.#dateTimeService.ttlToMilliseconds(process.env.REFRESH_TOKEN_TTL);
+		// Access cookie lifetime matches refresh cookie lifetime
+		// (not to confuse with jwt ttl for access and refresh, they are different).
+		// This is to prevent browser from invalidating access token and
+		// not including it in the request, when it should be
+		const tokenTTL = process.env.REFRESH_TOKEN_TTL;
+
+		this.#ACCESS_TOKEN_COOKIE_MAX_AGE = this.#dateTimeService.ttlToMilliseconds(tokenTTL);
+		this.#REFRESH_TOKEN_COOKIE_MAX_AGE = this.#dateTimeService.ttlToMilliseconds(tokenTTL);
 	}
 
 	/**
@@ -32,9 +41,10 @@ export class AuthCookieHandler {
 		// All our auth tokens must be HTTP-only and secure in production
 		return {
 			httpOnly: true,
-			secure: NODE_ENV === EnvModes.PROD,
+			secure: IS_PROD,
 			sameSite: SAME_SITE_COOKIE_SETTER,
 			maxAge: maxAge,
+			path: "/"
 		}
 	}
 
@@ -46,8 +56,9 @@ export class AuthCookieHandler {
 	#getBaseClearOptions() {
 		return {
 			httpOnly: true,
-			secure: NODE_ENV === EnvModes.PROD,
-			sameSite: SAME_SITE_COOKIE_SETTER
+			secure: IS_PROD,
+			sameSite: SAME_SITE_COOKIE_SETTER,
+			path: "/"
 		};
 	}
 

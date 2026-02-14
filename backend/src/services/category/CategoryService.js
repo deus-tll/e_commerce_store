@@ -32,64 +32,72 @@ export class CategoryService extends ICategoryService {
 	}
 
 	async create(data) {
-		data.slug = this.#slugGenerator.generateSlug(data.name);
-
-		data.image = await this.#categoryImageManager.handleImageUpdate(
+		const generatedSlug = this.#slugGenerator.generateSlug(data.name);
+		const processedImage = await this.#categoryImageManager.handleImageUpdate(
 			data.image,
 			null
 		);
 
-		const createdCategory = await this.#categoryRepository.create(data);
-		return this.#categoryMapper.toDTO(createdCategory);
+		const persistenceData = {
+			...data.toPersistence(),
+			slug: generatedSlug,
+			image: processedImage
+		}
+
+		const createdEntity = await this.#categoryRepository.create(persistenceData);
+
+		return this.#categoryMapper.toDTO(createdEntity);
 	}
 
 	async update(id, data) {
-		const existingCategory = await this.#categoryRepository.findById(id);
-		if (!existingCategory) {
+		const existingEntity = await this.#categoryRepository.findById(id);
+		if (!existingEntity) {
 			throw new NotFoundError("Category not found");
 		}
 
-		if (data.name !== undefined && data.name !== existingCategory.name) {
-			data.slug = this.#slugGenerator.generateSlug(data.name);
+		const persistenceData = { ...data.toPersistence() };
+
+		if (data.name !== undefined && data.name !== existingEntity.name) {
+			persistenceData.slug = this.#slugGenerator.generateSlug(data.name);
 		}
 
-		if (data.image !== undefined) {
-			data.image = await this.#categoryImageManager.handleImageUpdate(
+		if (data.image !== undefined && data.image !== "") {
+			persistenceData.image = await this.#categoryImageManager.handleImageUpdate(
 				data.image,
-				existingCategory.image
+				existingEntity.image
 			);
 		}
 
-		const updatedCategory = await this.#categoryRepository.updateById(id, data);
-		if (!updatedCategory) {
-			throw new NotFoundError("Category not found");
-		}
+		const updatedCategory = await this.#categoryRepository.updateById(id, persistenceData);
 
 		return this.#categoryMapper.toDTO(updatedCategory);
 	}
 
 	async delete(id) {
 		const deletedCategory = await this.#categoryRepository.deleteById(id);
-		if (!deletedCategory) {
-			throw new NotFoundError("Category not found");
-		}
 
 		await this.#categoryImageManager.deleteImage(deletedCategory.image);
 
 		return this.#categoryMapper.toDTO(deletedCategory);
 	}
 
-	async getAll(page = 1, limit = 10) {
+	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
-		const repositoryPaginationResult = await this.#categoryRepository.findAndCount(skip, limit);
 
-		const total = repositoryPaginationResult.total;
+		const { results, total } = await this.#categoryRepository.findAndCount(filters, skip, limit);
+
 		const pages = Math.ceil(total / limit);
+		const categoryDTOs = this.#categoryMapper.toDTOs(results);
 
-		const categoryDTOs = this.#categoryMapper.toDTOs(repositoryPaginationResult.results);
-		const paginationMetadata = new PaginationMetadata(page, limit, total, pages);
+		return new CategoryPaginationResultDTO(
+			categoryDTOs,
+			new PaginationMetadata(page, limit, total, pages)
+		);
+	}
 
-		return new CategoryPaginationResultDTO(categoryDTOs, paginationMetadata);
+	async getDTOsByIds(ids) {
+		const entities = await this.#categoryRepository.findByIds(ids);
+		return this.#categoryMapper.toDTOs(entities);
 	}
 
 	async getById(id) {

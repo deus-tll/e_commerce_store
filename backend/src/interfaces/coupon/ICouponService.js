@@ -36,25 +36,10 @@ export class ICouponService {
 	async getActiveByUserId(userId) { throw new Error("Method not implemented."); }
 
 	/**
-	 * Finds an active coupon owned by a specific user ID, throwing an error if not found.
-	 * @param {string} userId - The user ID.
-	 * @returns {Promise<CouponDTO>} - The found active coupon DTO.
-	 */
-	async getActiveByUserIdOrFail(userId) { throw new Error("Method not implemented."); }
-
-	/**
 	 * Finds an active coupon by its code and user ID.
 	 * @param {string} code - The coupon code.
 	 * @param {string} userId - The user ID.
 	 * @returns {Promise<CouponDTO | null>} - The found active coupon DTO.
 	 */
 	async getActiveByCodeAndUserId(code, userId) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Finds an active coupon by its code and user ID, throwing an error if not found.
-	 * @param {string} code - The coupon code.
-	 * @param {string} userId - The user ID.
-	 * @returns {Promise<CouponDTO>} - The found active coupon DTO.
-	 */
-	async getActiveByCodeAndUserIdOrFail(code, userId) { throw new Error("Method not implemented."); }
 }

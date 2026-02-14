@@ -31,9 +31,17 @@ export class ICategoryService {
 	 * Gets all categories with pagination.
 	 * @param {number} [page] - The page number.
 	 * @param {number} [limit] - The maximum number of documents per page.
+	 * @param {object} [filters] - The filtering query object.
 	 * @returns {Promise<CategoryPaginationResultDTO>} - The paginated list of categories.
 	 */
-	async getAll(page, limit) { throw new Error("Method not implemented."); }
+	async getAll(page, limit, filters) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Finds a set of category details for an array of IDs.
+	 * @param {string[]} ids - Array of category IDs.
+	 * @returns {Promise<CategoryDTO[]>} - A list of category DTOs.
+	 */
+	async getDTOsByIds(ids) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Finds a category by its ID.

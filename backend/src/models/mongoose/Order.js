@@ -20,11 +20,11 @@ const orderProductItemSchema = new mongoose.Schema({
 		required: true,
 		min: 0,
 	},
-	productName: {
+	name: {
 		type: String,
 		required: true,
 	},
-	productMainImage: {
+	image: {
 		type: String,
 		required: true,
 	},
@@ -48,6 +48,14 @@ const orderSchema = new mongoose.Schema({
 	paymentSessionId: {
 		type: String,
 		unique: true,
+		index: true,
+		sparse: true
+	},
+	orderNumber: {
+		type: String,
+		unique: true,
+		required: true,
+		index: true,
 	},
 }, { timestamps: true });
 

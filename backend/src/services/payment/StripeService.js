@@ -1,12 +1,12 @@
-import {stripe} from "../../config/stripe.js";
+import {stripe} from "../../infrastructure/stripe.js";
 import {IStripeService} from "../../interfaces/payment/IStripeService.js";
 
 import {BadRequestError} from "../../errors/apiErrors.js";
 
-import {EnvModes} from "../../utils/constants.js";
 import {Currency} from "../../utils/currency.js";
-import {StripeCouponDurations} from "../../utils/stripeConstants.js";
-import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../utils/paymentConstants.js";
+import {EnvModes} from "../../constants/app.js";
+import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../constants/payment.js";
+import {StripeCouponDurations} from "../../constants/stripe.js";
 
 const APP_URL =
 	process.env.NODE_ENV !== EnvModes.PROD
@@ -35,7 +35,7 @@ export class StripeService extends IStripeService {
 	 * @param {number} discountPercentage - The percentage off (e.g., 10 for 10%).
 	 * @returns {Promise<string>} The Stripe Coupon ID.
 	 */
-	async #createCoupon(discountPercentage) { // CHANGED TO PRIVATE METHOD
+	async #createCoupon(discountPercentage) {
 		const coupon = await stripe.coupons.create({
 			percent_off: discountPercentage,
 			duration: StripeCouponDurations.ONCE
@@ -67,8 +67,8 @@ export class StripeService extends IStripeService {
 				price_data: {
 					currency: Currencies.USD,
 					product_data: {
-						name: product.productName,
-						images: product.productMainImage ? [product.productMainImage] : []
+						name: product.name,
+						images: product.image ? [product.image] : []
 					},
 					unit_amount: unitAmount
 				},

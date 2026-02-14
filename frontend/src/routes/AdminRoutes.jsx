@@ -1,6 +1,6 @@
 import {Route} from "react-router-dom";
 
-import {ProtectedAdminRoute} from "../components/RouteWrappers.jsx";
+import {ProtectedAdminRoute} from "../components/general/RouteWrappers.jsx";
 
 import AdminPage from "../pages/AdminPage.jsx";
 

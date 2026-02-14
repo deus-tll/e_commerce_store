@@ -41,13 +41,14 @@ export class CheckoutCouponHandler extends ICouponHandler {
 		return { totalAmount, appliedCoupon: coupon };
 	}
 
-	grantNewCouponIfEligible(userId, initialTotalAmount) {
+	async grantNewCouponIfEligible(userId, amountPaidInCents) {
 		// Check if the purchase meets the minimum threshold
-		if (initialTotalAmount >= TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) {
-			// This is fire-and-forget: it shouldn't hold up the main checkout flow
-			this.#couponService.create(userId).catch(error => {
-				console.error("Failed to create new coupon:", error);
-			});
+		if (amountPaidInCents < TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) return;
+
+		const couponDTO = await this.#couponService.create(userId);
+
+		if (!couponDTO) {
+			console.error("Failed to create coupon.");
 		}
 	}
 }

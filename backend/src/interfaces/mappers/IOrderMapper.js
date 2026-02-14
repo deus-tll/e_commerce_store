@@ -1,4 +1,4 @@
-import {OrderEntity, OrderDTO} from "../../domain/index.js";
+import {OrderEntity, OrderDTO, ShortUserDTO} from "../../domain/index.js";
 
 /**
  * @interface IOrderMapper
@@ -9,7 +9,8 @@ export class IOrderMapper {
 	/**
 	 * Converts an Order entity object to the standard OrderDTO, resolving dependencies like the User.
 	 * @param {OrderEntity} entity - The Order entity record received from the repository.
-	 * @returns {Promise<OrderDTO>} - The mapped OrderDTO.
+	 * @param {ShortUserDTO} shortUserDTO - Short user DTO for enriching order.
+	 * @returns {OrderDTO} - The mapped OrderDTO.
 	 */
-	async toDTO(entity) { throw new Error("Method not implemented."); }
+	toDTO(entity, shortUserDTO) { throw new Error("Method not implemented."); }
 }

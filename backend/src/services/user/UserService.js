@@ -2,12 +2,11 @@ import {IUserService} from "../../interfaces/user/IUserService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserMapper} from "../../interfaces/mappers/IUserMapper.js";
-import {IUserQueryBuilder} from "../../interfaces/user/IUserQueryBuilder.js";
-import {IUserStatsService} from "../../interfaces/user/IUserStatsService.js";
-import {CreateUserDTO, UserPaginationResultDTO, UpdateUserDTO, PaginationMetadata} from "../../domain/index.js";
+import {IUserQueryTranslator} from "../../interfaces/user/IUserQueryTranslator.js";
+import {UserPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 import {PasswordService} from "../security/PasswordService.js";
 
-import {BadRequestError, ConflictError, InternalServerError, NotFoundError} from "../../errors/apiErrors.js";
+import {ConflictError, InternalServerError, NotFoundError} from "../../errors/apiErrors.js";
 
 /**
  * @augments IUserService
@@ -18,37 +17,22 @@ export class UserService extends IUserService {
 	/** @type {PasswordService} */ #passwordService;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
-	/** @type {IUserQueryBuilder} */ #userQueryBuilder;
-	/** @type {IUserStatsService} */ #userStatsService;
+	/** @type {IUserQueryTranslator} */ #userQueryTranslator;
 
 	/**
 	 * @param {IUserRepository} userRepository
 	 * @param {PasswordService} passwordService
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
-	 * @param {IUserQueryBuilder} userQueryBuilder
-	 * @param {IUserStatsService} userStatsService
+	 * @param {IUserQueryTranslator} userQueryTranslator
 	 */
-	constructor(userRepository, passwordService, userTokenService, userMapper, userQueryBuilder, userStatsService) {
+	constructor(userRepository, passwordService, userTokenService, userMapper, userQueryTranslator) {
 		super();
 		this.#userRepository = userRepository;
 		this.#passwordService = passwordService;
 		this.#userTokenService = userTokenService;
 		this.#userMapper = userMapper;
-		this.#userQueryBuilder = userQueryBuilder;
-		this.#userStatsService = userStatsService;
-	}
-
-	#checkRestrictedUpdateFields(data) {
-		const restrictedFields = [
-			'password', 'verificationToken', 'verificationTokenExpiresAt',
-			'resetPasswordToken', 'resetPasswordTokenExpiresAt'
-		];
-
-		const hasRestrictedField = restrictedFields.some(field => field in data);
-		if (hasRestrictedField) {
-			throw new BadRequestError("Cannot update restricted fields directly");
-		}
+		this.#userQueryTranslator = userQueryTranslator;
 	}
 
 	/**
@@ -66,21 +50,18 @@ export class UserService extends IUserService {
 
 	async create(data) {
 		const hashedPassword = await this.#passwordService.hashPassword(data.password);
-
-		const repositoryData = new CreateUserDTO({
-			...data,
+		const persistenceData = {
+			...data.toPersistence(),
 			password: hashedPassword
-		});
-
-		const createdEntity = await this.#userRepository.create(repositoryData);
+		};
+		const createdEntity = await this.#userRepository.create(persistenceData);
 
 		return this.#userMapper.toDTO(createdEntity);
 	}
 
-	async update(id, data) {
-		this.#checkRestrictedUpdateFields(data);
-
-		const updatedEntity = await this.#userRepository.updateById(id, data);
+	async update(id, data, requester) {
+		const persistenceData = data.toPersistence(requester.role);
+		const updatedEntity = await this.#userRepository.updateById(id, persistenceData);
 
 		this.#checkEntityOrFail(updatedEntity);
 
@@ -88,52 +69,20 @@ export class UserService extends IUserService {
 	}
 
 	async updateLastLogin(id) {
-		const updateData = new UpdateUserDTO({ lastLogin: new Date() });
-		const updatedEntity = await this.#userRepository.updateById(id, updateData);
+		const updatedEntity = await this.#userRepository.updateById(id, { lastLogin: new Date() });
 
 		if (!updatedEntity) return null;
-
-		return this.#userMapper.toDTO(updatedEntity);
-	}
-
-	async setVerificationToken(id, token, expiresAt) {
-		const updatedEntity = await this.#userTokenService.setVerificationToken(id, token, expiresAt);
-
-		if (!updatedEntity) return null;
-
-		return this.#userMapper.toDTO(updatedEntity);
-	}
-
-	async verify(token) {
-		const updatedEntity = await this.#userTokenService.verifyUser(token);
-
-		return this.#userMapper.toDTO(updatedEntity);
-	}
-
-	async setResetPasswordToken(id, token, expiresAt) {
-		const updatedEntity = await this.#userTokenService.setResetPasswordToken(id, token, expiresAt);
-
-		if (!updatedEntity) return null;
-
-		return this.#userMapper.toDTO(updatedEntity);
-	}
-
-	async resetPassword(token, newPassword) {
-		const updatedEntity = await this.#userTokenService.resetPassword(token, newPassword);
 
 		return this.#userMapper.toDTO(updatedEntity);
 	}
 
 	async changePassword(entity, newPassword) {
-		if (!entity.password) {
-			throw new InternalServerError("Internal error: Password hash was not loaded for comparison.");
+		if (!entity.hashedPassword) {
+			throw new InternalServerError("Password hash was not loaded for comparison.");
 		}
 
 		const hashedPassword = await this.#passwordService.hashPassword(newPassword);
-
-		const updateUserDTO = new UpdateUserDTO({ password: hashedPassword });
-
-		const updatedEntity = await this.#userRepository.updateById(entity.id, updateUserDTO);
+		const updatedEntity = await this.#userRepository.updateById(entity.id, { password: hashedPassword });
 
 		if (!updatedEntity) {
 			throw new ConflictError("Could not update user password.");
@@ -152,17 +101,17 @@ export class UserService extends IUserService {
 
 	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
-		const query = this.#userQueryBuilder.buildQuery(filters);
+		const query = this.#userQueryTranslator.translate(filters);
 
-		const repositoryPaginationResult = await this.#userRepository.findAndCount(query, skip, limit);
+		const { results, total } = await this.#userRepository.findAndCount(query, skip, limit);
 
-		const total = repositoryPaginationResult.total;
 		const pages = Math.ceil(total / limit);
+		const userDTOs = this.#userMapper.toDTOs(results);
 
-		const userDTOs = this.#userMapper.toDTOs(repositoryPaginationResult.results);
-		const paginationMetadata = new PaginationMetadata(page, limit, total, pages);
-
-		return new UserPaginationResultDTO(userDTOs, paginationMetadata);
+		return new UserPaginationResultDTO(
+			userDTOs,
+			new PaginationMetadata(page, limit, total, pages)
+		);
 	}
 
 	async getEntityById(id, options = {}) {
@@ -193,6 +142,16 @@ export class UserService extends IUserService {
 		return this.#userMapper.toDTO(entity);
 	}
 
+	async getShortDTOById(id) {
+		const entity = await this.getEntityById(id);
+
+		if (!entity) {
+			return null;
+		}
+
+		return this.#userMapper.toShortDTO(entity);
+	}
+
 	async getByIdOrFail(id, options = {}) {
 		const entity = await this.getEntityByIdOrFail(id, options);
 		return this.#userMapper.toDTO(entity);
@@ -214,16 +173,13 @@ export class UserService extends IUserService {
 		return this.#userMapper.toDTO(entity);
 	}
 
+	async getShortDTOsByIds(ids) {
+		const entities = await this.#userRepository.findByIds(ids);
+		return this.#userMapper.toShortDTOs(entities);
+	}
+
 	async existsByEmail(email) {
 		const entity = await this.#userRepository.findOne({ email });
 		return !!entity;
-	}
-
-	async comparePassword(hashedPassword, plaintextPassword) {
-		return this.#passwordService.comparePassword(plaintextPassword, hashedPassword);
-	}
-
-	async getStats() {
-		return this.#userStatsService.calculateStats();
 	}
 }

@@ -18,91 +18,62 @@ export class CartController {
 	 * Adds a single product to the authenticated user's cart.
 	 * @param {object} req - Express request object. Expects 'productId' in 'req.body' and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 201 and the updated array of CartItemDTOs.
 	 */
-	addProduct = async (req, res, next) => {
-		try {
-			const { productId } = req.body;
+	addProduct = async (req, res) => {
+		const { productId } = req.body;
+		const cartItems = await this.#cartService.addProduct(req.userId, productId);
 
-			const cartItems = await this.#cartService.addProduct(req.userId, productId);
-
-			return res.status(201).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
+		return res.status(201).json(cartItems);
 	}
 
 	/**
 	 * Removes a specific product entirely from the authenticated user's cart.
 	 * @param {object} req - Express request object. Expects 'productId' in req.params and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the updated array of CartItemDTOs.
 	 */
-	removeProduct = async (req, res, next) => {
-		try {
-			const { productId } = req.params;
+	removeProduct = async (req, res) => {
+		const { productId } = req.params;
+		const cartItems = await this.#cartService.removeProduct(req.userId, productId);
 
-			const cartItems = await this.#cartService.removeProduct(req.userId, productId);
-
-			return res.status(200).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
+		return res.status(200).json(cartItems);
 	}
 
 	/**
 	 * Clears all items from the authenticated user's cart.
 	 * @param {object} req - Express request object. Expects 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the newly cleared array of CartItemDTOs.
 	 */
-	clear = async (req, res, next) => {
-		try {
-			const cartItems = await this.#cartService.clear(req.userId);
-
-			return res.status(200).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
+	clear = async (req, res) => {
+		const cartItems = await this.#cartService.clear(req.userId);
+		return res.status(200).json(cartItems);
 	}
 
 	/**
 	 * Updates the quantity of a specific product in the authenticated user's cart.
 	 * @param {object} req - Express request object. Expects 'productId' in req.params, 'quantity' in 'req.body', and 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the updated array of CartItemDTOs.
 	 */
-	updateProductQuantity = async (req, res, next) => {
-		try {
-			const { productId } = req.params;
-			const { quantity } = req.body;
+	updateProductQuantity = async (req, res) => {
+		const { productId } = req.params;
+		const { quantity } = req.body;
 
-			const cartItems = await this.#cartService.updateProductQuantity(req.userId, productId, quantity);
+		const cartItems = await this.#cartService.updateProductQuantity(req.userId, productId, quantity);
 
-			return res.status(200).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
+		return res.status(200).json(cartItems);
 	}
 
 	/**
 	 * Retrieves the complete shopping cart details for the authenticated user, including product details.
 	 * @param {object} req - Express request object. Expects 'userId' in req.userId.
 	 * @param {object} res - Express response object.
-	 * @param {function} next - Express next middleware function.
 	 * @returns {Promise<void>} - Responds with status 200 and the array of CartItemDTOs.
 	 */
-	getCartItems = async (req, res, next) => {
-		try {
-			const cartItems = await this.#cartService.getCartItems(req.userId);
-
-			return res.status(200).json(cartItems);
-		} catch (error) {
-			next(error);
-		}
+	getCartItems = async (req, res) => {
+		const cartItems = await this.#cartService.getCartItems(req.userId);
+		return res.status(200).json(cartItems);
 	}
 }

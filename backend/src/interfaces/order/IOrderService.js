@@ -1,6 +1,5 @@
 import {
 	CreateOrderDTO,
-	UpdateOrderDTO,
 	OrderDTO,
 	OrderPaginationResultDTO
 } from "../../domain/index.js";
@@ -12,18 +11,11 @@ import {
 export class IOrderService {
 	/**
 	 * Creates a new order.
+	 * @param {string} userId - The user ID.
 	 * @param {CreateOrderDTO} data - The data for the new order.
 	 * @returns {Promise<OrderDTO>} - The newly created order DTO.
 	 */
-	async create(data) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Updates an existing order.
-	 * @param {string} id - The order ID.
-	 * @param {UpdateOrderDTO} data - The data for the update order.
-	 * @returns {Promise<OrderDTO>} - The updated order DTO.
-	 */
-	async update(id, data) { throw new Error("Method not implemented."); }
+	async create(userId, data) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Finds an order by its ID.

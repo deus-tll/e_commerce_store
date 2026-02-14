@@ -3,6 +3,7 @@ import Coupon from "../../models/mongoose/Coupon.js";
 import { ICouponRepository } from "../../interfaces/repositories/ICouponRepository.js";
 
 import { MongooseAdapter } from "../adapters/MongooseAdapter.js";
+import {EntityNotFoundError} from "../../errors/domainErrors.js";
 
 export class CouponMongooseRepository extends ICouponRepository {
 	async create(data) {
@@ -10,20 +11,14 @@ export class CouponMongooseRepository extends ICouponRepository {
 		return MongooseAdapter.toCouponEntity(createdDoc);
 	}
 
-	async updateByCodeAndUserId(data) {
-		const $set = data.toUpdateObject();
-
-		if (Object.keys($set).length === 0) {
-			throw new Error("Nothing to update");
-		}
-
-		const updateOptions = { new: true, runValidators: true };
-
+	async updateCouponActiveState(couponCode, userId, isActive) {
 		const updatedDoc = await Coupon.findOneAndUpdate(
-			{ code: data.code, userId: data.userId },
-			{ $set },
-			updateOptions
+			{ code: couponCode, userId },
+			{ $set: { isActive } },
+			{ new: true, runValidators: true }
 		).lean();
+
+		if (!updatedDoc) throw new EntityNotFoundError("Coupon", { code: couponCode, userId });
 
 		return MongooseAdapter.toCouponEntity(updatedDoc);
 	}
@@ -41,10 +36,5 @@ export class CouponMongooseRepository extends ICouponRepository {
 	async findActiveByUserId(userId) {
 		const foundDoc = await Coupon.findOne({ userId, isActive: true }).lean();
 		return MongooseAdapter.toCouponEntity(foundDoc);
-	}
-
-	async existsByCode(code) {
-		const exists = await Coupon.existsById({ code });
-		return !!exists;
 	}
 }

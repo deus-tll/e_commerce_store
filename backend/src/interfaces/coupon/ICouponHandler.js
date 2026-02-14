@@ -21,5 +21,5 @@ export class ICouponHandler {
 	 * @param {number} initialTotalAmount
 	 * @returns {void}
 	 */
-	grantNewCouponIfEligible(userId, initialTotalAmount) { throw new Error("Method not implemented."); }
+	async grantNewCouponIfEligible(userId, initialTotalAmount) { throw new Error("Method not implemented."); }
 }

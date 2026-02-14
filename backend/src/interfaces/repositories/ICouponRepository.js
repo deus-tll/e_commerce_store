@@ -1,4 +1,4 @@
-import { CouponEntity, CreateCouponDTO, UpdateCouponDTO } from "../../domain/index.js";
+import {CouponEntity} from "../../domain/index.js";
 
 /**
  * @interface ICouponRepository
@@ -7,7 +7,7 @@ import { CouponEntity, CreateCouponDTO, UpdateCouponDTO } from "../../domain/ind
 export class ICouponRepository {
 	/**
 	 * Creates and saves a new coupon record.
-	 * @param {CreateCouponDTO} data - The data for the new coupon.
+	 * @param {Object} data - The data for the new coupon.
 	 * @returns {Promise<CouponEntity>} - The newly created coupon record.
 	 */
 	async create(data) {
@@ -16,10 +16,12 @@ export class ICouponRepository {
 
 	/**
 	 * Updates a coupon by its code and owning user ID.
-	 * @param {UpdateCouponDTO} data - The data for the update coupon.
-	 * @returns {Promise<CouponEntity | null>} - The updated coupon record.
+	 * @param {string} couponCode - The coupon code.
+	 * @param {string} userId - The user ID.
+	 * @param {boolean} isActive - The value.
+	 * @returns {Promise<CouponEntity>} - The updated coupon record.
 	 */
-	async updateByCodeAndUserId(data) {
+	async updateCouponActiveState(couponCode, userId, isActive) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -48,15 +50,6 @@ export class ICouponRepository {
 	 * @returns {Promise<CouponEntity | null>} - The found active coupon record.
 	 */
 	async findActiveByUserId(userId) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
-	 * Checks if a coupon with the given code exists.
-	 * @param {string} code - The coupon code.
-	 * @returns {Promise<boolean>}
-	 */
-	async existsByCode(code) {
 		throw new Error("Method not implemented.");
 	}
 }

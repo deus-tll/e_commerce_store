@@ -1,9 +1,9 @@
 import {ICouponValidator} from "../../interfaces/coupon/ICouponValidator.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
 import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository.js";
-import {CouponValidationDTO, UpdateCouponDTO} from "../../domain/index.js";
+import {CouponValidationDTO} from "../../domain/index.js";
 
-import {BadRequestError, NotFoundError} from "../../errors/apiErrors.js";
+import {DomainValidationError, EntityNotFoundError} from "../../errors/domainErrors.js";
 
 /**
  * @augments ICouponValidator
@@ -25,14 +25,8 @@ export class CouponValidator extends ICouponValidator {
 
 	async #handleExpiredCoupon(couponEntity, userId) {
 		if (couponEntity.isExpired()) {
-			const updateDTO = new UpdateCouponDTO({
-				code: couponEntity.code,
-				userId,
-				isActive: false
-			});
-			await this.#couponRepository.updateByCodeAndUserId(updateDTO);
-
-			throw new BadRequestError("Coupon expired");
+			await this.#couponRepository.updateCouponActiveState(couponEntity.code, userId, false);
+			throw new DomainValidationError("Coupon expired", "EXPIRED");
 		}
 	}
 
@@ -43,15 +37,11 @@ export class CouponValidator extends ICouponValidator {
 	async validate(code, userId) {
 		const couponEntity = await this.#couponRepository.findByCodeAndUserId(code, userId);
 
-		if (!couponEntity) {
-			throw new NotFoundError("Coupon not found");
-		}
+		if (!couponEntity) throw new EntityNotFoundError("Coupon", { code, userId });
 
 		await this.#handleExpiredCoupon(couponEntity, userId);
 
-		if (!couponEntity.isActive) {
-			throw new BadRequestError("Coupon is not active");
-		}
+		if (!couponEntity.isActive) throw new DomainValidationError("Coupon is not active");
 
 		return new CouponValidationDTO({
 			message: "Coupon is valid",

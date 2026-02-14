@@ -1,4 +1,4 @@
-import cloudinary from "../../config/cloudinary.js";
+import cloudinary from "../../infrastructure/cloudinary.js";
 
 import {IStorageService} from "../../interfaces/storage/IStorageService.js";
 

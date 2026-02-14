@@ -33,11 +33,11 @@ export class StripePaymentService extends IPaymentService {
 	#getProductsMetadataSnapshot(products) {
 		const snapshot = products.map((product) => {
 			return {
-				productId: product.productId,
+				id: product.id,
 				quantity: product.quantity,
 				price: product.price,
-				productName: product.productName,
-				productMainImage: product.productMainImage
+				name: product.name,
+				image: product.image
 			};
 		});
 
@@ -58,9 +58,6 @@ export class StripePaymentService extends IPaymentService {
 			couponCode,
 			userId
 		);
-
-		// 3. Optionally grant new coupon
-		this.#couponHandler.grantNewCouponIfEligible(userId, initialTotalAmount);
 
 		// 4. Prepare Stripe discounts (if coupon applied)
 		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);

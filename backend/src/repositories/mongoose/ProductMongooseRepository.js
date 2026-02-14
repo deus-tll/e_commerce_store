@@ -1,11 +1,14 @@
 import Product from "../../models/mongoose/Product.js";
 
 import {IProductRepository} from "../../interfaces/repositories/IProductRepository.js";
-import {RepositoryPaginationResult} from "../../domain/index.js";
+import {AttributeFacetDTO, RepositoryPaginationResult} from "../../domain/index.js";
 
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {BadRequestError, NotFoundError} from "../../errors/apiErrors.js";
+import {NotFoundError} from "../../errors/apiErrors.js";
+
+import {sanitizeSearchTerm} from "../../utils/sanitize.js";
+import mongoose from "mongoose";
 
 export class ProductMongooseRepository extends IProductRepository {
 	#buildMongooseQuery(query) {
@@ -15,45 +18,44 @@ export class ProductMongooseRepository extends IProductRepository {
 			mongooseQuery.category = query.categoryId;
 		}
 
+		if (query.attributes && Object.keys(query.attributes).length > 0) {
+			mongooseQuery.$and = Object.entries(query.attributes).map(([name, value]) => {
+				const matchValue = Array.isArray(value) ? { $in: value } : value;
+
+				return {
+					attributes: {
+						$elemMatch: { name, value: matchValue }
+					}
+				};
+			});
+		}
+
 		return mongooseQuery;
 	}
 
 	async create(data) {
-		const docData = {
-			name: data.name,
-			description: data.description,
-			price: data.price,
-			images: data.images,
-			category: data.categoryId,
-			isFeatured: data.isFeatured,
-		};
+		const { categoryId, ...rest } = data;
 
-		const createdDoc = await Product.create(docData);
+		const createdDoc = await Product.create({
+			...rest,
+			category: categoryId
+		});
 
 		return MongooseAdapter.toProductEntity(createdDoc);
 	}
 
 	async updateById(id, data) {
-		const agnosticUpdate = data.toUpdateObject();
-		const mongooseUpdate = { $set: {} };
+		const { categoryId, ...rest } = { ...data };
+		let updateData = { ...rest };
 
-		if (agnosticUpdate.categoryId !== undefined) {
-			mongooseUpdate.$set.category = agnosticUpdate.categoryId;
-			delete agnosticUpdate.categoryId;
+		if (categoryId) {
+			updateData.category = categoryId;
 		}
-
-		Object.assign(mongooseUpdate.$set, agnosticUpdate);
-
-		if (Object.keys(mongooseUpdate.$set).length === 0) {
-			throw new BadRequestError("Nothing to update");
-		}
-
-		const updateOptions = { new: true, runValidators: true };
 
 		const updatedDoc = await Product.findByIdAndUpdate(
 			id,
-			mongooseUpdate,
-			updateOptions
+			{ $set: updateData },
+			{ new: true, runValidators: true }
 		).lean();
 
 		return MongooseAdapter.toProductEntity(updatedDoc);
@@ -82,14 +84,24 @@ export class ProductMongooseRepository extends IProductRepository {
 	async updateRatingStats(productId, ratingChange, totalReviewsChange, oldRating = 0) {
 		const ratingSumDelta = ratingChange - oldRating;
 
-		await Product.findByIdAndUpdate(
+		const updatedProduct = await Product.findByIdAndUpdate(
 			productId,
 			[
 				{
 					// Stage 1: Atomically update ratingSum and totalReviews using $add
 					$set: {
-						"ratingStats.ratingSum": { $add: ["$ratingStats.ratingSum", ratingSumDelta] },
-						"ratingStats.totalReviews": { $add: ["$ratingStats.totalReviews", totalReviewsChange] },
+						"ratingStats.ratingSum": {
+							$max: [
+								0,
+								{ $add: [{ $ifNull: ["$ratingStats.ratingSum", 0] }, ratingSumDelta] }
+							]
+						},
+						"ratingStats.totalReviews": {
+							$max: [
+								0,
+								{ $add: [{ $ifNull: ["$ratingStats.totalReviews", 0] }, totalReviewsChange] }
+							]
+						}
 					}
 				},
 				{
@@ -98,7 +110,7 @@ export class ProductMongooseRepository extends IProductRepository {
 						"ratingStats.averageRating": {
 							$cond: {
 								// Prevent division by zero if totalReviews is 0
-								if: { $eq: ["$ratingStats.totalReviews", 0] },
+								if: { $lte: ["$ratingStats.totalReviews", 0] },
 								then: 0,
 								else: { $divide: ["$ratingStats.ratingSum", "$ratingStats.totalReviews"] }
 							}
@@ -106,8 +118,14 @@ export class ProductMongooseRepository extends IProductRepository {
 					}
 				}
 			],
-			{ new: false, useFindAndModify: false },
+			{ new: true, runValidators: true },
 		);
+
+		if (!updatedProduct) {
+			throw new Error("Product not found");
+		}
+
+		return updatedProduct;
 	}
 
 	async deleteById(id) {
@@ -120,13 +138,16 @@ export class ProductMongooseRepository extends IProductRepository {
 		return MongooseAdapter.toProductEntity(foundDoc);
 	}
 
-	async findAndCount(query, skip, limit, sort = { createdAt: -1 }) {
-		const isComplexQuery = query.search;
+	async findAndCount(query, skip, limit, options = {}) {
+		const { sortBy = "createdAt", order = "desc" } = options;
 
+		const isComplexQuery = !!query.search;
 		const mongooseQuery = this.#buildMongooseQuery(query);
 
+		const sortOrder = order === "desc" ? -1 : 1;
+		const sort = { [sortBy]: sortOrder };
+
 		// --- 1. Simple Find Path (No Search Query) ---
-		// If only pagination or simple category filter, use simple find for better performance
 		if (!isComplexQuery) {
 			const [foundDocs, calculatedTotal] = await Promise.all([
 				Product.find(mongooseQuery)
@@ -143,7 +164,8 @@ export class ProductMongooseRepository extends IProductRepository {
 		}
 
 		// --- 2. Complex Search Path (Aggregation) ---
-		const searchRegex = new RegExp(query.search, 'i');
+		const sanitizedTerm = sanitizeSearchTerm(query.search);
+		const searchRegex = new RegExp(sanitizedTerm, 'i');
 		const pipeline = [];
 
 		// A. Initial Match (for category filtering, if present)
@@ -179,7 +201,7 @@ export class ProductMongooseRepository extends IProductRepository {
 			...pipeline,
 			{ $count: "total" }
 		]);
-		const calculatedTotal = totalResult ? totalResult.total : 0;
+		const calculatedTotal = totalResult ? totalResult.totalPrice : 0;
 
 		// F. Final Steps: Sort, Skip, Limit, and Project (for Entity conversion)
 		pipeline.push({ $sort: sort });
@@ -189,8 +211,8 @@ export class ProductMongooseRepository extends IProductRepository {
 		// Project only the necessary fields for #toEntity conversion (excluding categoryDetails)
 		pipeline.push({
 			$project: {
-				_id: 1, name: 1, description: 1, price: 1, images: 1, category: 1,
-				isFeatured: 1, createdAt: 1, updatedAt: 1
+				_id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1,
+				attributes: 1, isFeatured: 1, ratingStats: 1, createdAt: 1, updatedAt: 1
 			}
 		});
 
@@ -202,7 +224,6 @@ export class ProductMongooseRepository extends IProductRepository {
 
 	async count(query = {}) {
 		const baseQuery = this.#buildMongooseQuery(query);
-
 		return await Product.countDocuments(baseQuery);
 	}
 
@@ -216,10 +237,54 @@ export class ProductMongooseRepository extends IProductRepository {
 		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
 	}
 
+	async getAttributeFacets(categoryId) {
+		const pipeline = [
+			// 1. Filter products by the specific category ID
+			{ $match: { category: new mongoose.Types.ObjectId(categoryId) } },
+
+			// 2. Break down the attributes array into individual documents
+			{ $unwind: "$attributes" },
+
+			// 3. Group by attribute name and collect unique values into an array
+			{
+				$group: {
+					_id: "$attributes.name",
+					uniqueValues: { $addToSet: "$attributes.value" }
+				}
+			},
+
+			// 4. Project into a clean structure for the frontend
+			{
+				$project: {
+					_id: 0,
+					name: "$_id",
+					values: "$uniqueValues"
+				}
+			},
+
+			// 5. Sort attribute groups alphabetically
+			{ $sort: { name: 1 } }
+		];
+
+		const results = await Product.aggregate(pipeline);
+
+		return results.map(row => {
+			const sortedValues = (row.values || []).sort((a, b) =>
+				a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+			);
+
+			return new AttributeFacetDTO(row.name, sortedValues);
+		});
+	}
+
 	async findRecommended(size) {
 		const foundDocs = await Product.aggregate([
 			{$sample: {size: size}},
-			{$project: {_id: 1, name: 1, description: 1, price: 1, images: 1, category: 1}}
+			{$project:
+					{
+						_id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1, ratingStats: 1
+					}
+			}
 		]);
 
 		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));

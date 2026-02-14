@@ -1,40 +1,26 @@
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 
-import axios from "../../config/axios.js";
-import {PRODUCTS_API_PATH} from "../../stores/useProductStore.js";
+import {useProductStore} from "../../stores/useProductStore.js";
 
-import LoadingSpinner from "../LoadingSpinner.jsx";
-import ProductGrid from "../ProductGrid.jsx";
+import ProductGrid from "../product/ProductGrid.jsx";
+
+import LoadingSpinner from "../ui/LoadingSpinner.jsx";
 import SectionHeader from "../ui/SectionHeader.jsx";
-import {handleRequestError} from "../../utils/errorHandler.js";
 
 const PeopleAlsoBought = () => {
-	const [recommendedProducts, setRecommendedProducts] = useState([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const { recommendations, loading, fetchRecommendations } = useProductStore();
 
 	useEffect(() => {
-		const fetchRecommendedProducts = async () => {
-			try {
-				const res = await axios.get(`${PRODUCTS_API_PATH}/recommended`);
-				setRecommendedProducts(res.data);
-			}
-			catch (error) {
-				handleRequestError(error, "An error occurred while fetching recommended products");
-			}
-			finally {
-				setIsLoading(false);
-			}
-		};
+		void fetchRecommendations();
+	}, [fetchRecommendations]);
 
-		fetchRecommendedProducts();
-	}, []);
-
-	if (isLoading) return <LoadingSpinner />;
+	if (loading && recommendations.length === 0) return <LoadingSpinner />;
+	if (recommendations.length === 0) return null;
 
     return (
         <div className="mt-8">
             <SectionHeader title="People also bought" />
-            <ProductGrid products={recommendedProducts} />
+            <ProductGrid products={recommendations} />
         </div>
     );
 };

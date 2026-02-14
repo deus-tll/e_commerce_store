@@ -2,68 +2,47 @@ import Cart from "../../models/mongoose/Cart.js";
 
 import {ICartRepository} from "../../interfaces/repositories/ICartRepository.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
+import {DatabaseError} from "../../errors/databaseErrors.js";
 
 export class CartMongooseRepository extends ICartRepository {
-	async create(data) {
-		const docData = {
-			user: data.userId,
-			items: data.items.map(item => ({
-				product: item.productId,
-				quantity: item.quantity
-			}))
-		};
-
-		const createdDoc = await Cart.create(docData);
-
-		return MongooseAdapter.toCartEntity(createdDoc);
-	}
-
 	async addItemOrIncrement(userId, productId) {
-		const updateOptions = { new: true, runValidators: true, upsert: false, lean: true };
-
-		const updatedDoc = await Cart.findOneAndUpdate(
-			{ user: userId, "items.product": productId },
-			{ $inc: { "items.$.quantity": 1 } },
-			updateOptions
-		);
-
-		if (!updatedDoc) {
-			// Item not found, so push a new item to the array
-			const newDoc = await Cart.findOneAndUpdate(
-				{ user: userId },
-				{ $push: { items: { product: productId, quantity: 1 } } },
-				updateOptions
+		try {
+			let updatedDoc = await Cart.findOneAndUpdate(
+				{ user: userId, "items.product": productId },
+				{ $inc: { "items.$.quantity": 1 } },
+				{ new: true, lean: true }
 			);
-			return MongooseAdapter.toCartEntity(newDoc);
-		}
 
-		return MongooseAdapter.toCartEntity(updatedDoc);
+			if (!updatedDoc) {
+				updatedDoc = await Cart.findOneAndUpdate(
+					{ user: userId },
+					{ $push: { items: { product: productId, quantity: 1 } } },
+					{ new: true, upsert: true, lean: true }
+				);
+			}
+
+			return MongooseAdapter.toCartEntity(updatedDoc);
+		}
+		catch (error) {
+			throw new DatabaseError("Failed to add/increment item in database", error);
+		}
 	}
 
 	async removeItem(userId, productId) {
-		const updateOptions = { new: true, runValidators: true, lean: true };
-
 		const updatedDoc = await Cart.findOneAndUpdate(
 			{ user: userId },
 			{ $pull: { items: { product: productId } } },
-			updateOptions
+			{ new: true, lean: true }
 		);
 
 		return MongooseAdapter.toCartEntity(updatedDoc);
 	}
 
 	async updateItemQuantity(userId, productId, quantity) {
-		const updateOptions = { new: true, runValidators: true, lean: true };
-
-		if (quantity === 0) {
-			// Quantity zero means remove the item
-			return this.removeItem(userId, productId);
-		}
-
 		const updatedDoc = await Cart.findOneAndUpdate(
 			{ user: userId, "items.product": productId },
 			{ $set: { "items.$.quantity": quantity } },
-			updateOptions
+			{ new: true, runValidators: true, lean: true }
 		);
 
 		return MongooseAdapter.toCartEntity(updatedDoc);
@@ -88,12 +67,22 @@ export class CartMongooseRepository extends ICartRepository {
 	}
 
 	async findByUserId(userId) {
-		const foundDoc = await Cart.findOne({ user: userId }).lean();
-		return MongooseAdapter.toCartEntity(foundDoc);
+		try {
+			const foundDoc = await Cart.findOne({ user: userId }).lean();
+			return MongooseAdapter.toCartEntity(foundDoc);
+		}
+		catch (error) {
+			throw new DatabaseError("Failed to fetch cart from database", error);
+		}
 	}
 
 	async existsByUserId(userId) {
-		const exists = await Cart.existsById({ user: userId });
-		return !!exists;
+		try {
+			const result = await Cart.exists({ user: userId });
+			return !!result;
+		}
+		catch (error) {
+			throw new DatabaseError("Failed to check cart existence", error);
+		}
 	}
 }

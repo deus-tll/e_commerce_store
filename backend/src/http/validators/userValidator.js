@@ -7,7 +7,8 @@ import {
 	emailSchema,
 	passwordSchema
 } from "./common.joi.js";
-import {UserRoles} from "../../utils/constants.js";
+
+import {UserRoles} from "../../constants/app.js";
 
 /**
  * Joi schema for validating the POST /users request (User Creation).
@@ -15,12 +16,11 @@ import {UserRoles} from "../../utils/constants.js";
  */
 export const createUserSchema = Joi.object({
 	body: Joi.object({
-		// Use imported schemas, and make them required for creation
 		name: userNameSchema.required().messages({'any.required': 'Name is required.'}),
 		email: emailSchema.required().messages({'any.required': 'Email is required.'}),
 		password: passwordSchema.required().messages({'any.required': 'Password is required.'}),
 
-		role: userRole, // Uses default: 'CUSTOMER'
+		role: userRole.default(UserRoles.CUSTOMER),
 
 		isVerified: Joi.boolean()
 			.default(false)
@@ -53,20 +53,16 @@ export const userIdParamSchema = Joi.object({
  */
 export const updateUserSchema = Joi.object({
 	params: Joi.object({
-		userId: userIdParam, // Reusing the required userIdParam
+		userId: userIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({
-		// All fields are optional for an update
 		name: userNameSchema.optional(),
 		email: emailSchema.optional(),
-		// Only Admin/Customer roles are allowed, and it's optional
-		role: userRole.optional().messages({
-			'any.only': `Role must be one of: ${UserRoles.CUSTOMER}, ${UserRoles.ADMIN}.`
-		}),
+		role: userRole.optional(),
 		isVerified: Joi.boolean().optional(),
 	})
-		.min(1) // Ensures at least one field from body is provided for update
+		.min(1)
 		.required()
 		.unknown(false)
 		.messages({
@@ -81,7 +77,6 @@ export const updateUserSchema = Joi.object({
  * Checks query for optional page, limit, role, isVerified, and search.
  */
 export const getAllUsersSchema = Joi.object({
-	// Explicitly allow empty params and body
 	params: Joi.object({}).optional(),
 	body: Joi.object({}).optional(),
 
@@ -128,5 +123,5 @@ export const getAllUsersSchema = Joi.object({
 			.min(1)
 			.optional(),
 
-	}).unknown(false), // unknown(false) here ensures only these query params are allowed
+	}).unknown(false),
 });

@@ -20,7 +20,7 @@ export class FilesystemEmailContentService extends IEmailContentService {
 		const templatePath = path.join(templatesDir, templateName);
 
 		try {
-			return fs.readFile(templatePath, "utf-8");
+			return await fs.readFile(templatePath, "utf-8");
 		}
 		catch (error) {
 			console.error(`Error reading email template ${templateName}:`, error);

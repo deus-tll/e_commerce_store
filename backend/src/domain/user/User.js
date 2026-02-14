@@ -1,74 +1,77 @@
 import {PaginationMetadata} from "../index.js";
+import {UserRoles} from "../../constants/app.js";
 
 /**
  * Represents the clean, database-agnostic User record (Entity).
  * This is the object returned by the Repository layer.
  */
 export class UserEntity {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {string} */ email;
-	/** @type {string} */ role;
-	/** @type {boolean} */ isVerified;
-	/** @type {Date} */ lastLogin;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ email;
+	/** @type {string} @readonly */ role;
+	/** @type {boolean} @readonly */ isVerified;
+	/** @type {Date} @readonly */ lastLogin;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
-	/** @type {string | undefined} [password] - Only present if explicitly requested in repository call. */
-	password;
-	/** @type {string | undefined} */ verificationToken;
-	/** @type {Date | undefined} */ verificationTokenExpiresAt;
-	/** @type {string | undefined} */ resetPasswordToken;
-	/** @type {Date | undefined} */ resetPasswordTokenExpiresAt;
+	/** @type {string | undefined} */ #password;
 
 	/**
-	 * @param {object} data - Plain data object with standardized 'id' field.
+	 * @param {object} data
 	 */
 	constructor(data) {
-		if (!data.id) {
-			throw new Error("UserEntity requires an ID.");
-		}
-		this.id = data.id.toString();
+		this.id = data.id;
 		this.name = data.name;
 		this.email = data.email;
 		this.role = data.role;
-		this.isVerified = data.isVerified;
+		this.isVerified = !!data.isVerified;
 		this.lastLogin = data.lastLogin;
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
 
-		// Sensitive/Internal fields
-		this.password = data.password;
-		this.verificationToken = data.verificationToken;
-		this.verificationTokenExpiresAt = data.verificationTokenExpiresAt;
-		this.resetPasswordToken = data.resetPasswordToken;
-		this.resetPasswordTokenExpiresAt = data.resetPasswordTokenExpiresAt;
+		this.#password = data.password;
+
+		Object.freeze(this);
 	}
+
+	get hashedPassword() { return this.#password; }
 }
 
 /**
  * Input data class for creating a User.
  */
 export class CreateUserDTO {
-	/** @type {string} */ name;
-	/** @type {string} */ email;
-	/** @type {string} */ password;
-	/** @type {string} [role] */ role;
-	/** @type {boolean} [isVerified] */ isVerified;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ email;
+	/** @type {string} @readonly */ password;
+	/** @type {string} @readonly */ role;
+	/** @type {boolean} @readonly */ isVerified;
 
 	/**
-	 * @param {object} data - Raw data for creation.
+	 * @param {object} data
 	 */
 	constructor(data) {
-		if (!data.name || !data.email || !data.password) {
-			throw new Error("UserCreationData requires name, email, and password.");
-		}
-
-		this.name = data.name.trim();
-		this.email = data.email.trim();
+		this.name = data.name;
+		this.email = data.email;
 		this.password = data.password;
-		this.role = data.role || 'customer';
+		this.role = data.role;
 		this.isVerified = !!data.isVerified;
+
+		Object.freeze(this);
+	}
+
+	/**
+	 * Transforms the DTO into a clean object for the Repository.
+	 * @returns {Object}
+	 */
+	toPersistence() {
+		return Object.freeze({
+			name: this.name,
+			email: this.email,
+			role: this.role,
+			isVerified: this.isVerified
+		});
 	}
 }
 
@@ -77,60 +80,40 @@ export class CreateUserDTO {
  * Allows for partial updates by only including fields that are present.
  */
 export class UpdateUserDTO {
-	// Public User Fields
-	/** @type {string} [name] */ name;
-	/** @type {string} [email] */ email;
-	/** @type {string} [password] */ password;
-	/** @type {string} [role] */ role;
-	/** @type {boolean} [isVerified] */ isVerified;
-
-	// Internal/Sensitive Fields used only by Service-specific methods
-	/** @type {Date | undefined} [lastLogin] */ lastLogin;
-	/** @type {string | undefined} [verificationToken] */ verificationToken;
-	/** @type {Date | undefined} [verificationTokenExpiresAt] */ verificationTokenExpiresAt;
-	/** @type {string | undefined} [resetPasswordToken] */ resetPasswordToken;
-	/** @type {Date | undefined} [resetPasswordTokenExpiresAt] */ resetPasswordTokenExpiresAt;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ email;
+	/** @type {string} @readonly */ role;
+	/** @type {boolean} @readonly */ isVerified;
 
 	/**
-	 * @param {object} data - Raw data for update.
+	 * @param {Object} data
 	 */
 	constructor(data) {
-		// Public fields
 		if (data.name !== undefined) this.name = data.name;
 		if (data.email !== undefined) this.email = data.email;
-		if (data.password !== undefined) this.password = data.password;
 		if (data.role !== undefined) this.role = data.role;
-		if (data.isVerified !== undefined) this.isVerified = data.isVerified;
+		if (data.isVerified !== undefined) this.isVerified = !!data.isVerified;
 
-		// Internal fields
-		if (data.lastLogin !== undefined) this.lastLogin = data.lastLogin;
-		if (data.verificationToken !== undefined) this.verificationToken = data.verificationToken;
-		if (data.verificationTokenExpiresAt !== undefined) this.verificationTokenExpiresAt = data.verificationTokenExpiresAt;
-		if (data.resetPasswordToken !== undefined) this.resetPasswordToken = data.resetPasswordToken;
-		if (data.resetPasswordTokenExpiresAt !== undefined) this.resetPasswordTokenExpiresAt = data.resetPasswordTokenExpiresAt;
+		Object.freeze(this);
 	}
 
 	/**
 	 * Creates a plain object containing only the fields that were provided for the update.
-	 * This is useful for passing to the persistence layer (Repository).
-	 * @returns {object}
+	 * @param {UserRoles} [requesterRole]
+	 * @returns {Object}
 	 */
-	toUpdateObject() {
-		const updateObject = {};
+	toPersistence(requesterRole = UserRoles.CUSTOMER) {
+		const data = {};
 
-		if (this.name !== undefined) updateObject.name = this.name;
-		if (this.email !== undefined) updateObject.email = this.email;
-		if (this.password !== undefined) updateObject.password = this.password;
-		if (this.role !== undefined) updateObject.role = this.role;
-		if (this.isVerified !== undefined) updateObject.isVerified = this.isVerified;
+		if (this.name !== undefined) data.name = this.name;
+		if (this.email !== undefined) data.email = this.email;
 
-		if (this.lastLogin !== undefined) updateObject.lastLogin = this.lastLogin;
-		if (this.verificationToken !== undefined) updateObject.verificationToken = this.verificationToken;
-		if (this.verificationTokenExpiresAt !== undefined) updateObject.verificationTokenExpiresAt = this.verificationTokenExpiresAt;
-		if (this.resetPasswordToken !== undefined) updateObject.resetPasswordToken = this.resetPasswordToken;
-		if (this.resetPasswordTokenExpiresAt !== undefined) updateObject.resetPasswordTokenExpiresAt = this.resetPasswordTokenExpiresAt;
+		if (requesterRole === UserRoles.ADMIN) {
+			if (this.role !== undefined) data.role = this.role;
+			if (this.isVerified !== undefined) data.isVerified = this.isVerified;
+		}
 
-		return updateObject;
+		return Object.freeze(data);
 	}
 }
 
@@ -139,13 +122,13 @@ export class UpdateUserDTO {
  * This is the object returned by the Service layer to controllers/clients.
  */
 export class UserDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {string} */ email;
-	/** @type {string} */ role;
-	/** @type {boolean} */ isVerified;
-	/** @type {Date} */ lastLogin;
-	/** @type {Date} */ createdAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ email;
+	/** @type {string} @readonly */ role;
+	/** @type {boolean} @readonly */ isVerified;
+	/** @type {Date} @readonly */ lastLogin;
+	/** @type {Date} @readonly */ createdAt;
 
 	/**
 	 * @param {UserEntity} entity
@@ -158,7 +141,8 @@ export class UserDTO {
 		this.isVerified = entity.isVerified;
 		this.lastLogin = entity.lastLogin;
 		this.createdAt = entity.createdAt;
-		// NOTE: password, tokens, and updatedAt are excluded from the DTO
+
+		Object.freeze(this);
 	}
 }
 
@@ -167,9 +151,9 @@ export class UserDTO {
  * This is the object returned by the Service layer to controllers/clients or used inside other entity's DTOs.
  */
 export class ShortUserDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ name;
-	/** @type {string} */ email;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ name;
+	/** @type {string} @readonly */ email;
 
 	/**
 	 * @param {UserEntity} entity
@@ -178,6 +162,8 @@ export class ShortUserDTO {
 		this.id = entity.id;
 		this.name = entity.name;
 		this.email = entity.email;
+
+		Object.freeze(this);
 	}
 }
 
@@ -185,16 +171,18 @@ export class ShortUserDTO {
  * Service-level pagination result DTO.
  */
 export class UserPaginationResultDTO {
-	/** @type {UserDTO[]} */ results;
-	/** @type {PaginationMetadata} */ pagination;
+	/** @type {UserDTO[]} @readonly */ users;
+	/** @type {PaginationMetadata} @readonly */ pagination;
 
 	/**
-	 * @param {UserDTO[]} results
+	 * @param {UserDTO[]} users
 	 * @param {PaginationMetadata} pagination
 	 */
-	constructor(results, pagination) {
-		this.results = results;
+	constructor(users, pagination) {
+		this.users = Object.freeze([...users]);
 		this.pagination = pagination;
+
+		Object.freeze(this);
 	}
 }
 
@@ -203,11 +191,11 @@ export class UserPaginationResultDTO {
  * This is the object returned by the Service layer for the /users/stats endpoint.
  */
 export class UserStatsDTO {
-	/** @type {number} */ total;
-	/** @type {number} */ verified;
-	/** @type {number} */ unverified;
-	/** @type {number} */ admins;
-	/** @type {number} */ customers;
+	/** @type {number} @readonly */ total;
+	/** @type {number} @readonly */ verified;
+	/** @type {number} @readonly */ unverified;
+	/** @type {number} @readonly */ admins;
+	/** @type {number} @readonly */ customers;
 
 	/**
 	 * @param {object} data
@@ -218,5 +206,7 @@ export class UserStatsDTO {
 		this.unverified = data.unverified;
 		this.admins = data.admins;
 		this.customers = data.customers;
+
+		Object.freeze(this);
 	}
 }

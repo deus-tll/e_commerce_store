@@ -32,8 +32,6 @@ export class ProductImageManager extends IProductImageManager {
 	}
 
 	async processNewImagesForCreation(imageData) {
-		if (!imageData || !imageData.mainImage) return null;
-
 		const additionalImages = imageData.additionalImages || [];
 
 		const mainImagePromise = this.#productStorageService.upload(imageData.mainImage);
@@ -56,10 +54,8 @@ export class ProductImageManager extends IProductImageManager {
 
 	async handleImageUpdate(newImagesData, existingImages) {
 		const oldImages = existingImages || new ProductImage({ mainImage: "", additionalImages: [] });
-		const finalImagesData = new ProductImage({
-			mainImage: oldImages.mainImage,
-			additionalImages: [...oldImages.additionalImages]
-		});
+		let finalMainImage = oldImages.mainImage;
+		let finalAdditionalImages = [...oldImages.additionalImages];
 		const urlsToDelete = [];
 
 		// --- 1. Main Image Update ---
@@ -68,7 +64,7 @@ export class ProductImageManager extends IProductImageManager {
 
 			if (newMainImage !== oldImages.mainImage) {
 				// Upload new image
-				finalImagesData.mainImage = await this.#productStorageService.upload(newMainImage);
+				finalMainImage = await this.#productStorageService.upload(newMainImage);
 				// Queue old URL for deletion if it exists
 				if (oldImages.mainImage) urlsToDelete.push(oldImages.mainImage);
 			} else if (!newMainImage) {
@@ -76,7 +72,7 @@ export class ProductImageManager extends IProductImageManager {
 				throw new BadRequestError("The main image is required and cannot be explicitly set to null or empty.");
 			}
 			// (Preservation): If newMainImage === oldImages.mainImage,
-			// nothing happens here, and finalImagesData.mainImage retains its initial
+			// nothing happens here, and finalMainImage retains its initial
 			// preserved value from when it was initialized above.
 		}
 
@@ -111,8 +107,13 @@ export class ProductImageManager extends IProductImageManager {
 			}
 
 			// Combine retained URLs and new uploaded URLs for the final list
-			finalImagesData.additionalImages = [...retainedUrlsSet, ...uploadedUrls];
+			finalAdditionalImages = [...retainedUrlsSet, ...uploadedUrls];
 		}
+
+		const finalImagesData = new ProductImage({
+			mainImage: finalMainImage,
+			additionalImages: finalAdditionalImages
+		});
 
 		return { finalImagesData, urlsToDelete };
 	}
@@ -123,7 +124,7 @@ export class ProductImageManager extends IProductImageManager {
 
 	async deleteProductImages(images) {
 		const urlsToDelete = [
-			images?.mainImage,
+			images?.image,
 			...(images?.additionalImages || [])
 		].filter(url => url);
 

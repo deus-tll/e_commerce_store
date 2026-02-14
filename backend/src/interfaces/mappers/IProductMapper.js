@@ -9,16 +9,10 @@ export class IProductMapper {
 	/**
 	 * Converts a Product entity object to the standard ProductDTO, resolving dependencies like Category.
 	 * @param {ProductEntity} entity - The Product entity record received from the repository.
-	 * @returns {Promise<ProductDTO>} - The mapped ProductDTO.
+	 * @param {CategoryDTO} categoryDTO - The category DTO for enriching product.
+	 * @returns {ProductDTO} - The mapped ProductDTO.
 	 */
-	async toDTO(entity) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Converts an array of Product entities to an array of standard ProductDTOs.
-	 * @param {ProductEntity[]} entities - Array of Product entity records.
-	 * @returns {Promise<ProductDTO[]>} - Array of mapped ProductDTOs.
-	 */
-	async toDTOs(entities) { throw new Error("Method not implemented."); }
+	toDTO(entity, categoryDTO) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Converts a Product entity object into a summarized ShortProductDTO.

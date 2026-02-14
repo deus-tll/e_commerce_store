@@ -1,28 +1,18 @@
 import {ICartMapper} from "../../interfaces/mappers/ICartMapper.js";
-import {IProductService} from "../../interfaces/product/IProductService.js";
-import {CartDTO, CartItemDTO} from "../../domain/index.js";
+import {CartEntity, CartDTO, CartItemDTO, ShortProductDTO} from "../../domain/index.js";
 
 /**
  * Concrete implementation of the ICartMapper interface.
  * @augments ICartMapper
  */
 export class CartMapper extends ICartMapper {
-	/** @type {IProductService} */ #productService;
-
 	/**
-	 * @param {IProductService} productService - The product service dependency.
+	 * @param {CartEntity} entity
+	 * @param {ShortProductDTO[]} shortProductDTOs
+	 * @returns {CartDTO}
 	 */
-	constructor(productService) {
-		super();
-		this.#productService = productService;
-	}
-
-	async #convertToFullDTO(entity) {
-		const productIds = entity.items.map(item => item.productId);
-
-		const productDTOs = await this.#productService.getShortDTOsByIds(productIds);
-
-		const productMap = new Map(productDTOs.map(p => [p.id, p]));
+	#convertToFullDTO(entity, shortProductDTOs) {
+		const productMap = new Map(shortProductDTOs.map(p => [p.id, p]));
 
 		const itemDTOs = entity.items.map(item => {
 			const product = productMap.get(item.productId);
@@ -36,7 +26,7 @@ export class CartMapper extends ICartMapper {
 				product: product,
 				quantity: item.quantity
 			});
-		}).filter(item => item !== null);
+		}).filter(Boolean);
 
 		return new CartDTO({
 			id: entity.id,
@@ -47,12 +37,7 @@ export class CartMapper extends ICartMapper {
 		});
 	}
 
-	async toDTO(entity) {
-		return await this.#convertToFullDTO(entity);
-	}
-
-	async toItemDTOs(entity) {
-		const cartDTO = await this.#convertToFullDTO(entity);
-		return cartDTO.items;
+	toDTO(entity, shortProductDTOs) {
+		return this.#convertToFullDTO(entity, shortProductDTOs);
 	}
 }

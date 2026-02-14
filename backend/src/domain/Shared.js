@@ -3,16 +3,18 @@
  * @template T
  */
 export class RepositoryPaginationResult {
-	/** @type {Array<T>} */ results;
-	/** @type {number} */ total;
+	/** @type {T[]} @readonly */ results;
+	/** @type {number} @readonly */ total;
 
 	/**
-	 * @param {Array<T>} results
+	 * @param {T[]} results
 	 * @param {number} total
 	 */
 	constructor(results, total) {
 		this.results = results;
 		this.total = total;
+
+		Object.freeze(this);
 	}
 }
 
@@ -20,10 +22,10 @@ export class RepositoryPaginationResult {
  * Agnostic class for pagination metadata, typically used by the Service layer.
  */
 export class PaginationMetadata {
-	/** @type {number} */ page;
-	/** @type {number} */ limit;
-	/** @type {number} */ total;
-	/** @type {number} */ pages;
+	/** @type {number} @readonly */ page;
+	/** @type {number} @readonly */ limit;
+	/** @type {number} @readonly */ total;
+	/** @type {number} @readonly */ pages;
 
 	/**
 	 * @param {number} page
@@ -36,5 +38,7 @@ export class PaginationMetadata {
 		this.limit = limit;
 		this.total = total;
 		this.pages = pages;
+
+		Object.freeze(this);
 	}
 }

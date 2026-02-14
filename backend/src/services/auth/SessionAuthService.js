@@ -7,7 +7,7 @@ import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
 import {InvalidCredentialsError, InvalidTokenError, NotFoundError} from "../../errors/apiErrors.js";
 
-import {TokenTypes} from "../../utils/constants.js";
+import {TokenTypes} from "../../constants/auth.js";
 
 /**
  * Implements the ISessionAuthService contract, focusing only on active user
@@ -15,17 +15,20 @@ import {TokenTypes} from "../../utils/constants.js";
  */
 export class SessionAuthService extends ISessionAuthService {
 	/** @type {IUserService} */ #userService;
+	/** @type {PasswordService} */ #passwordService;
 	/** @type {JwtProvider} */ #jwtProvider;
 	/** @type {AuthCacheService} */ #authCacheService;
 
 	/**
 	 * @param {IUserService} userService
+	 * @param {PasswordService} passwordService
 	 * @param {JwtProvider} jwtProvider
 	 * @param {AuthCacheService} authCacheService
 	 */
-	constructor(userService, jwtProvider, authCacheService) {
+	constructor(userService, passwordService, jwtProvider, authCacheService) {
 		super();
 		this.#userService = userService;
+		this.#passwordService = passwordService;
 		this.#jwtProvider = jwtProvider;
 		this.#authCacheService = authCacheService;
 	}
@@ -35,26 +38,23 @@ export class SessionAuthService extends ISessionAuthService {
 			withPassword: true
 		});
 
-		const isMatch = await this.#userService.comparePassword(
-			userEntityWithPassword.password,
-			password
+		const isMatch = await this.#passwordService.comparePassword(
+			password, userEntityWithPassword.hashedPassword
 		);
 		if (!isMatch) {
 			throw new InvalidCredentialsError("Invalid credentials");
 		}
 
-		const userId = userEntityWithPassword.id;
-
+		const { id: userId } = userEntityWithPassword;
 		const { accessToken, refreshToken } = this.#jwtProvider.generateTokens(userId);
 
-		const [userDTO] = await Promise.all([
-			this.#userService.updateLastLogin(userId),
-			this.#authCacheService.storeRefreshToken(userId, refreshToken)
-		]);
+		const userDTO = await this.#userService.updateLastLogin(userId);
 
 		if (!userDTO) {
 			throw new NotFoundError("User not found after login");
 		}
+
+		await this.#authCacheService.storeRefreshToken(userId, refreshToken)
 
 		return AuthResponseAssembler.assembleUserWithTokens({ user: userDTO, accessToken, refreshToken });
 	}
@@ -77,7 +77,6 @@ export class SessionAuthService extends ISessionAuthService {
 
 	async validateAccessToken(token) {
 		const decoded = this.#jwtProvider.verifyToken(token, TokenTypes.ACCESS_TOKEN);
-
 		const userDTO = await this.#userService.getByIdOrFail(decoded.userId);
 
 		return new ValidateTokenDTO(decoded.userId, userDTO);
@@ -88,8 +87,15 @@ export class SessionAuthService extends ISessionAuthService {
 			throw new InvalidTokenError("No refresh token provided");
 		}
 
-		const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
-		const userId = decoded.userId;
+		let decoded;
+		try {
+			decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
+		} catch (error) {
+			// If the token is simply invalid (e.g., malformed or expired), just fail.
+			throw new InvalidTokenError("Invalid refresh token");
+		}
+
+		const { userId } = decoded;
 
 		const [_, storedToken] = await Promise.all(
 			/** @type {[UserDTO, string | null]} */ ([
@@ -98,13 +104,16 @@ export class SessionAuthService extends ISessionAuthService {
 			])
 		);
 
-		if (storedToken !== refreshToken) {
+		// 1. Reuse detection and invalidation
+		if (!storedToken || storedToken !== refreshToken) {
 			await this.#authCacheService.invalidateAllSessions(userId);
-			throw new InvalidTokenError("Refresh token not found or revoked");
+			throw new InvalidTokenError("Refresh token not found or revoked (Possible session hijacking)");
 		}
 
-		const accessToken = this.#jwtProvider.signAccessToken(userId);
+		// 2. Token rotation
+		const tokens = this.#jwtProvider.generateTokens(userId);
+		await this.#authCacheService.storeRefreshToken(userId, tokens.refreshToken);
 
-		return { accessToken };
+		return tokens;
 	}
 }

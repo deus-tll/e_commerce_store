@@ -1,4 +1,4 @@
-import {mailtrapClient, sender} from "../../config/mailtrap.js";
+import {mailtrapClient, sender} from "../../infrastructure/mailtrap.js";
 
 import {IEmailService} from "../../interfaces/email/IEmailService.js";
 import {IEmailContentService} from "../../interfaces/email/IEmailContentService.js";

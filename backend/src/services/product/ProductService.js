@@ -3,7 +3,6 @@ import {IProductRepository} from "../../interfaces/repositories/IProductReposito
 import {ICategoryService} from "../../interfaces/category/ICategoryService.js";
 import {IProductImageManager} from "../../interfaces/product/IProductImageManager.js";
 import {IProductMapper} from "../../interfaces/mappers/IProductMapper.js";
-import {IProductCacheManager} from "../../interfaces/product/IProductCacheManager.js";
 import {PaginationMetadata, ProductPaginationResultDTO} from "../../domain/index.js";
 
 import {NotFoundError} from "../../errors/apiErrors.js";
@@ -18,41 +17,107 @@ const RECOMMENDED_PRODUCTS_SIZE = 4;
 export class ProductService extends IProductService {
 	/** @type {IProductRepository} */ #productRepository;
 	/** @type {ICategoryService} */ #categoryService;
+	/** @type {ProductCacheService} */ #productCacheService;
 	/** @type {IProductImageManager} */ #productImageManager;
-	/** @type {IProductCacheManager} */ #productCacheManager;
-	/** @type {IProductQueryBuilder} */ #productQueryBuilder;
+	/** @type {IProductQueryTranslator} */ #productQueryTranslator;
 	/** @type {IProductMapper} */ #productMapper;
 
 	/**
 	 * @param {IProductRepository} productRepository
 	 * @param {ICategoryService} categoryService
+	 * @param {ProductCacheService} productCacheService
 	 * @param {IProductImageManager} productImageManager
-	 * @param {IProductCacheManager} productCacheManager
-	 * @param {IProductQueryBuilder} productQueryBuilder
+	 * @param {IProductQueryTranslator} productQueryTranslator
 	 * @param {IProductMapper} productMapper
 	 */
-	constructor(productRepository, categoryService, productImageManager, productCacheManager, productQueryBuilder, productMapper) {
+	constructor(productRepository, categoryService, productCacheService, productImageManager, productQueryTranslator, productMapper) {
 		super();
 		this.#productRepository = productRepository;
 		this.#categoryService = categoryService;
+		this.#productCacheService = productCacheService;
 		this.#productImageManager = productImageManager;
-		this.#productCacheManager = productCacheManager;
-		this.#productQueryBuilder = productQueryBuilder;
+		this.#productQueryTranslator = productQueryTranslator;
 		this.#productMapper = productMapper;
 	}
 
+	async #formProductDTO(entity) {
+		const categoryDTO = await this.#categoryService.getById(entity.categoryId);
+		return this.#productMapper.toDTO(entity, categoryDTO);
+	}
+
+	async #formProductDTOs(entities) {
+		const uniqueCategoryIds = [
+			...new Set(entities.map(entity => entity.categoryId).filter(Boolean))
+		];
+		const categoryDTOs = await this.#categoryService.getDTOsByIds(uniqueCategoryIds);
+		const categoryMap = new Map(categoryDTOs.map(dto => [dto.id, dto]));
+
+		return entities.map(entity => {
+			const categoryDTO = categoryMap.get(entity.categoryId);
+			return this.#productMapper.toDTO(entity, categoryDTO);
+		});
+	}
+
+	/**
+	 * Centralized logic to sync cache.
+	 */
+	async #refreshFeaturedCache() {
+		const entities = await this.#productRepository.findByFeaturedStatus(true);
+		const dtos = await this.#formProductDTOs(entities);
+		await this.#productCacheService.setFeaturedProducts(dtos);
+
+		return dtos;
+	}
+
+	/**
+	 * Filters a list of attributes, keeping only those allowed by the category.
+	 * @param {string[]} allowedAttributeNames - Names from the Category entity.
+	 * @param {ProductAttribute[]} attributes - Attributes provided in the request.
+	 * @returns {ProductAttribute[]} - The filtered list.
+	 */
+	#filterAttributes(allowedAttributeNames, attributes) {
+		if (!attributes || attributes.length === 0) return [];
+		if (!allowedAttributeNames || allowedAttributeNames.length === 0) return [];
+
+		const allowedSet = new Set(allowedAttributeNames);
+		return attributes.filter(attr => allowedSet.has(attr.name));
+	}
+
 	async create(data) {
-		await this.#categoryService.getByIdOrFail(data.categoryId);
+		const category = await this.#categoryService.getByIdOrFail(data.categoryId);
 
-		data.images = await this.#productImageManager.processNewImagesForCreation(data.images);
+		const processedImages = await this.#productImageManager.processNewImagesForCreation(data.images);
+		const filteredAttributes = this.#filterAttributes(category.allowedAttributes, data.attributes);
+		const persistenceData = {
+			...data.toPersistence(),
+			images: processedImages,
+			attributes: filteredAttributes
+		};
 
-		const createdEntity = await this.#productRepository.create(data);
+		try {
+			const createdEntity = await this.#productRepository.create(persistenceData);
 
-		if (createdEntity.isFeatured) {
-			await this.#productCacheManager.updateFeaturedProducts();
+			if (createdEntity.isFeatured) {
+				await this.#refreshFeaturedCache();
+			}
+
+			return await this.#formProductDTO(createdEntity);
 		}
+		catch (error) {
+			if (processedImages) {
+				const urlsToCleanup = [
+					processedImages.mainImage,
+					...processedImages.additionalImages
+				].filter(Boolean);
 
-		return await this.#productMapper.toDTO(createdEntity);
+				if (urlsToCleanup.length > 0) {
+					this.#productImageManager.deleteImagesByUrls(urlsToCleanup)
+						.catch(err => console.error("Orphan image cleanup failed:", err));
+				}
+			}
+
+			throw error;
+		}
 	}
 
 	async update(id, data) {
@@ -62,43 +127,53 @@ export class ProductService extends IProductService {
 			throw new NotFoundError("Product not found.");
 		}
 
-		// 2. Check if category exists, if it is being updated
-		if (data.categoryId) {
-			await this.#categoryService.getByIdOrFail(data.categoryId);
+		const persistenceData = { ...data.toPersistence() };
+		let urlsToDelete = [];
+
+		// 2. Handle Category/Attribute logic if category is changing OR if new attributes are provided
+		if (data.categoryId || data.attributes !== undefined) {
+			const catId = data.categoryId || existingEntity.categoryId;
+			const category = await this.#categoryService.getByIdOrFail(catId);
+
+			if (data.attributes !== undefined) {
+				persistenceData.attributes = this.#filterAttributes(category.allowedAttributes, data.attributes);
+			}
 		}
 
 		// 3. Handle image updates: Preserve old, upload new, delete removed
 		if (data.images !== undefined) {
-			const { finalImagesData, urlsToDelete } = await this.#productImageManager.handleImageUpdate(
+			const imageResult = await this.#productImageManager.handleImageUpdate(
 				data.images,
 				existingEntity.images
 			);
 
-			await this.#productImageManager.deleteImagesByUrls(urlsToDelete);
-
-			data.images = finalImagesData;
+			persistenceData.images = imageResult.finalImagesData;
+			urlsToDelete = imageResult.urlsToDelete;
 		}
 
 		// 4. Update product entity
-		const updatedEntity = await this.#productRepository.updateById(id, data);
-		if (!updatedEntity) {
-			throw new NotFoundError("Product not found after attempted update.");
+		const updatedEntity = await this.#productRepository.updateById(id, persistenceData);
+		if (!updatedEntity) throw new NotFoundError("Product not found after attempted update.");
+
+		// 5. Delete no longer used images from storage
+		if (urlsToDelete.length > 0) {
+			await this.#productImageManager.deleteImagesByUrls(urlsToDelete);
 		}
 
-		// 5. Update cache if the product was or is now featured
+		// 6. Update cache if the product was or is now featured
 		if (existingEntity.isFeatured || updatedEntity.isFeatured) {
-			await this.#productCacheManager.updateFeaturedProducts();
+			await this.#refreshFeaturedCache();
 		}
 
-		return await this.#productMapper.toDTO(updatedEntity);
+		return await this.#formProductDTO(updatedEntity);
 	}
 
 	async toggleFeatured(id) {
 		const updatedEntity = await this.#productRepository.toggleFeatured(id);
 
-		await this.#productCacheManager.updateFeaturedProducts();
+		await this.#refreshFeaturedCache();
 
-		return await this.#productMapper.toDTO(updatedEntity);
+		return await this.#formProductDTO(updatedEntity);
 	}
 
 	async updateRatingStats(productId, ratingChange, totalReviewsChange, oldRating = 0) {
@@ -118,32 +193,41 @@ export class ProductService extends IProductService {
 		}
 
 		if (deletedEntity.isFeatured) {
-			await this.#productCacheManager.updateFeaturedProducts();
+			await this.#refreshFeaturedCache();
 		}
 
 		await this.#productImageManager.deleteProductImages(deletedEntity.images);
 
-		return await this.#productMapper.toDTO(deletedEntity);
+		return await this.#formProductDTO(deletedEntity);
 	}
 
 	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
-		const query = await this.#productQueryBuilder.buildQuery(filters);
 
-		if (query === null) {
-			const emptyMetadata = new PaginationMetadata(page, limit, 0, 0);
-			return new ProductPaginationResultDTO([], emptyMetadata);
+		let categoryId = null;
+
+		if (filters.categorySlug) {
+			const categoryDTO = await this.#categoryService.getBySlug(filters.categorySlug);
+
+			if (!categoryDTO) {
+				return new ProductPaginationResultDTO([], new PaginationMetadata(page, limit, 0, 0));
+			}
+			categoryId = categoryDTO.id;
 		}
 
-		const repositoryPaginationResult = await this.#productRepository.findAndCount(query, skip, limit, { createdAt: -1 });
+		const query = this.#productQueryTranslator.translate(filters, {categoryId});
 
-		const total = repositoryPaginationResult.total;
+		const { sortBy, order } = filters;
+
+		const { results, total } = await this.#productRepository.findAndCount(query, skip, limit, { sortBy, order });
+
 		const pages = Math.ceil(total / limit);
+		const productDTOs = await this.#formProductDTOs(results);
 
-		const productDTOs = await this.#productMapper.toDTOs(repositoryPaginationResult.results);
-		const paginationMetadata = new PaginationMetadata(page, limit, total, pages);
-
-		return new ProductPaginationResultDTO(productDTOs, paginationMetadata);
+		return new ProductPaginationResultDTO(
+			productDTOs,
+			new PaginationMetadata(page, limit, total, pages)
+		);
 	}
 
 	async getById(id) {
@@ -151,7 +235,7 @@ export class ProductService extends IProductService {
 
 		if (!entity) return null;
 
-		return await this.#productMapper.toDTO(entity);
+		return await this.#formProductDTO(entity);
 	}
 
 	async getByIdOrFail(id) {
@@ -165,12 +249,19 @@ export class ProductService extends IProductService {
 	}
 
 	async getFeatured() {
-		return await this.#productCacheManager.getFeaturedProducts();
+		const cached = await this.#productCacheService.getFeaturedProducts();
+		if (cached) return cached;
+
+		return await this.#refreshFeaturedCache();
+	}
+
+	async getCategoryFacets(categoryId) {
+		return await this.#productRepository.getAttributeFacets(categoryId);
 	}
 
 	async getRecommended() {
 		const entities = await this.#productRepository.findRecommended(RECOMMENDED_PRODUCTS_SIZE);
-		return await this.#productMapper.toDTOs(entities);
+		return await this.#formProductDTOs(entities);
 	}
 
 	async getShortDTOsByIds(ids) {

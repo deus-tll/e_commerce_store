@@ -1,4 +1,9 @@
-import { CategoryEntity, CreateCategoryDTO, UpdateCategoryDTO, RepositoryPaginationResult } from "../../domain/index.js";
+import { CategoryEntity, RepositoryPaginationResult } from "../../domain/index.js";
+
+/**
+ * @typedef {import("../../domain/index.js").CategoryEntity} CategoryEntity
+ * @typedef {import("../../domain/index.js").RepositoryPaginationResult<CategoryEntity>} CategoryPaginationResult
+ */
 
 /**
  * @interface ICategoryRepository
@@ -7,7 +12,7 @@ import { CategoryEntity, CreateCategoryDTO, UpdateCategoryDTO, RepositoryPaginat
 export class ICategoryRepository {
 	/**
 	 * Creates and saves a new category record.
-	 * @param {CreateCategoryDTO} data - The data for the new category.
+	 * @param {Object} data - The data for the new category.
 	 * @returns {Promise<CategoryEntity>} - The newly created category record.
 	 */
 	async create(data) {
@@ -17,8 +22,8 @@ export class ICategoryRepository {
 	/**
 	 * Updates a category record by its ID.
 	 * @param {string} id - The category ID.
-	 * @param {UpdateCategoryDTO} data - The data for the update category.
-	 * @returns {Promise<CategoryEntity | null>} - The updated category record.
+	 * @param {Object} data - The data for the update category.
+	 * @returns {Promise<CategoryEntity>} - The updated category record.
 	 */
 	async updateById(id, data) {
 		throw new Error("Method not implemented.");
@@ -27,7 +32,7 @@ export class ICategoryRepository {
 	/**
 	 * Deletes a category record by its ID.
 	 * @param {string} id - The category ID.
-	 * @returns {Promise<CategoryEntity | null>} - The deleted category record.
+	 * @returns {Promise<CategoryEntity>} - The deleted category record.
 	 */
 	async deleteById(id) {
 		throw new Error("Method not implemented.");
@@ -52,29 +57,22 @@ export class ICategoryRepository {
 	}
 
 	/**
-	 * Finds all category records.
+	 * Finds categories by an array of IDs.
+	 * @param {string[]} ids - Array of category IDs.
 	 * @returns {Promise<CategoryEntity[]>} - A list of found category records.
 	 */
-	async findAll() {
+	async findByIds(ids) {
 		throw new Error("Method not implemented.");
 	}
 
 	/**
 	 * Finds categories with pagination.
+	 * @param {object} query - The filtering query.
 	 * @param {number} skip - The number of documents to skip.
 	 * @param {number} limit - The maximum number of documents to return.
 	 * @returns {Promise<RepositoryPaginationResult<CategoryEntity>>} - The paginated results.
 	 */
-	async findAndCount(skip, limit) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
-	 * Checks if a category exists by its slug.
-	 * @param {string} slug - The category slug.
-	 * @returns {Promise<boolean>}
-	 */
-	async existsBySlug(slug) {
+	async findAndCount(query, skip, limit) {
 		throw new Error("Method not implemented.");
 	}
 }

@@ -1,24 +1,41 @@
 import Order from "../../models/mongoose/Order.js";
+import Counter from "../../models/mongoose/Counter.js";
 
 import {IOrderRepository} from "../../interfaces/repositories/IOrderRepository.js";
 import {SalesSummaryDTO, DailySalesSummaryDTO, RepositoryPaginationResult} from "../../domain/index.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {ConflictError} from "../../errors/apiErrors.js";
+import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
-	async create(data) {
+	async create(userId, data) {
+		let newOrderNumber;
+
+		try {
+			const counter = await Counter.findByIdAndUpdate(
+				{ _id: "orderNumber"},
+				{ $inc: { seq: 1 }},
+				{ new: true, upsert: true }
+			);
+
+			newOrderNumber = counter.seq.toString().padStart(6, '0');
+		}
+		catch (error) {
+			throw new InternalServerError("Failed to generate unique order number.");
+		}
+
 		const docData = {
-			user: data.userId,
+			user: userId,
 			totalAmount: data.totalAmount,
 			paymentSessionId: data.paymentSessionId,
+			orderNumber: newOrderNumber,
 
 			products: data.products.map(item => ({
-				product: item.productId,
+				product: item.id,
 				quantity: item.quantity,
 				price: item.price,
-				productName: item.productName,
-				productMainImage: item.productMainImage
+				name: item.name,
+				image: item.image
 			}))
 		};
 
@@ -29,37 +46,22 @@ export class OrderMongooseRepository extends IOrderRepository {
 		catch (error) {
 			const keyPattern = error['keyPattern'];
 
-			if (error.code === 11000 && keyPattern.paymentSessionId)
+			if (error.code === 11000 && keyPattern)
 			{
-				throw new ConflictError("An order with this payment session ID already exists.");
+				if (keyPattern.paymentSessionId) {
+					throw new ConflictError("An order with this payment session ID already exists.");
+				}
+				if (keyPattern.orderNumber) {
+					throw new InternalServerError("Order number conflict during save.");
+				}
 			}
 
 			throw error;
 		}
 	}
 
-	async updateById(id, data) {
-		const $set = data.toUpdateObject();
-
-		if (Object.keys($set).length === 0) {
-			return this.findById(id);
-		}
-
-		const updateOptions = { new: true, runValidators: true };
-
-		const updatedDoc = await Order.findByIdAndUpdate(id, { $set }, updateOptions).lean();
-
-		return MongooseAdapter.toOrderEntity(updatedDoc);
-	}
-
-	async findById(id, options = {}) {
-		let query = Order.findById(id);
-
-		if (options.populate) {
-			query = query.populate(options.populate);
-		}
-
-		const foundDoc = await query.lean();
+	async findById(id) {
+		const foundDoc = await Order.findById(id).lean();
 		return MongooseAdapter.toOrderEntity(foundDoc);
 	}
 

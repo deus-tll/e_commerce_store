@@ -1,6 +1,6 @@
 import {Route} from "react-router-dom";
 
-import {RedirectAuthenticatedUser} from "../components/RouteWrappers.jsx";
+import {RedirectAuthenticatedUser} from "../components/general/RouteWrappers.jsx";
 
 import SignupPage from "../pages/auth/SignupPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";

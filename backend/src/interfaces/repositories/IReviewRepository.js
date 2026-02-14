@@ -1,4 +1,9 @@
-import { ReviewEntity, CreateReviewDTO, UpdateReviewDTO, RepositoryPaginationResult } from "../../domain/index.js";
+import { ReviewEntity, RepositoryPaginationResult } from "../../domain/index.js";
+
+/**
+ * @typedef {import("../../domain/index.js").ReviewEntity} ReviewEntity
+ * @typedef {import("../../domain/index.js").RepositoryPaginationResult<ReviewEntity>} ReviewPaginationResult
+ */
 
 /**
  * @interface IReviewRepository
@@ -7,19 +12,23 @@ import { ReviewEntity, CreateReviewDTO, UpdateReviewDTO, RepositoryPaginationRes
 export class IReviewRepository {
 	/**
 	 * Creates and saves a new review record.
-	 * @param {CreateReviewDTO} data - The data for the new review.
+	 * @param {string} productId - The product ID.
+	 * @param {string} userId - The user ID.
+	 * @param {Object} data - The data for the new review.
 	 * @returns {Promise<ReviewEntity>} - The newly created review record.
 	 */
-	async create(data) {
+	async create(productId, userId, data) {
 		throw new Error("Method not implemented.");
 	}
 
 	/**
 	 * Updates a review entity by its ID and user ID.
-	 * @param {UpdateReviewDTO} data - The data for the update review.
+	 * @param {string} reviewId - The review ID.
+	 * @param {string} userId - The user ID.
+	 * @param {Object} data - The data for the update review.
 	 * @returns {Promise<ReviewEntity | null>} - The updated review record.
 	 */
-	async updateByIdAndUserId(data) {
+	async updateByIdAndUserId(reviewId, userId, data) {
 		throw new Error("Method not implemented.");
 	}
 

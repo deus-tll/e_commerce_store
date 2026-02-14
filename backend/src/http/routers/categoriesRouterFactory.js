@@ -10,7 +10,7 @@ import {
 	createCategorySchema,
 	updateCategorySchema,
 	categoryIdSchema,
-	getAllCategoriesSchema
+	getAllCategoriesSchema, categorySlugSchema
 } from "../validators/categoryValidator.js";
 
 /**
@@ -26,6 +26,7 @@ export function createCategoriesRouter(categoryController, authService) {
 
 	router.get("/", validationMiddleware(getAllCategoriesSchema), categoryController.getAll);
 	router.post("/", protectRoute, adminRoute, validationMiddleware(createCategorySchema), categoryController.create);
+	router.get("/slug/:slug", validationMiddleware(categorySlugSchema), categoryController.getBySlug);
 	router.patch("/:id", protectRoute, adminRoute, validationMiddleware(updateCategorySchema), categoryController.update);
 	router.delete("/:id", protectRoute, adminRoute, validationMiddleware(categoryIdSchema), categoryController.delete);
 

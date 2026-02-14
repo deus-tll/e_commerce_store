@@ -3,7 +3,6 @@ import crypto from "crypto";
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
 import {PasswordService} from "../security/PasswordService.js";
-import {UpdateUserDTO} from "../../domain/index.js";
 
 import {BadRequestError, ConflictError} from "../../errors/apiErrors.js";
 
@@ -35,12 +34,12 @@ export class UserTokenService extends IUserTokenService {
 	}
 
 	async setVerificationToken(userId, token, expiresAt) {
-		const updateUserDTO = new UpdateUserDTO({
+		const updateData = Object.freeze({
 			verificationToken: token,
 			verificationTokenExpiresAt: expiresAt
 		});
 
-		return this.#userRepository.updateById(userId, updateUserDTO);
+		return this.#userRepository.updateById(userId, updateData);
 	}
 
 	async verifyUser(token) {
@@ -50,13 +49,13 @@ export class UserTokenService extends IUserTokenService {
 			throw new BadRequestError("Invalid or expired verification token");
 		}
 
-		const updateUserDTO = new UpdateUserDTO({
+		const updateData = Object.freeze({
 			isVerified: true,
-			verificationToken: undefined,
-			verificationTokenExpiresAt: undefined,
+			verificationToken: null,
+			verificationTokenExpiresAt: null
 		});
 
-		const updatedEntity = await this.#userRepository.updateById(entity.id, updateUserDTO);
+		const updatedEntity = await this.#userRepository.updateById(entity.id, updateData);
 
 		if (!updatedEntity) {
 			throw new ConflictError("Could not update user verification status.");
@@ -66,12 +65,12 @@ export class UserTokenService extends IUserTokenService {
 	}
 
 	async setResetPasswordToken(userId, token, expiresAt) {
-		const updateUserDTO = new UpdateUserDTO({
+		const updateData = Object.freeze({
 			resetPasswordToken: token,
 			resetPasswordTokenExpiresAt: expiresAt
 		});
 
-		return this.#userRepository.updateById(userId, updateUserDTO);
+		return this.#userRepository.updateById(userId, updateData);
 	}
 
 	async resetPassword(token, newPassword) {
@@ -83,13 +82,13 @@ export class UserTokenService extends IUserTokenService {
 
 		const hashedPassword = await this.#passwordService.hashPassword(newPassword);
 
-		const updateUserDTO = new UpdateUserDTO({
+		const updateData = Object.freeze({
 			password: hashedPassword,
-			resetPasswordToken: undefined,
-			resetPasswordTokenExpiresAt: undefined,
+			resetPasswordToken: null,
+			resetPasswordTokenExpiresAt: null
 		});
 
-		const updatedEntity = await this.#userRepository.updateById(entity.id, updateUserDTO);
+		const updatedEntity = await this.#userRepository.updateById(entity.id, updateData);
 
 		if (!updatedEntity) {
 			throw new ConflictError("Could not update user password.");

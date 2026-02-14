@@ -5,7 +5,8 @@ import {RepositoryPaginationResult} from "../../domain/index.js";
 
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {BadRequestError, ConflictError} from "../../errors/apiErrors.js";
+import {ConflictError} from "../../errors/apiErrors.js";
+import {UserRoles} from "../../constants/app.js";
 
 export class UserMongooseRepository extends IUserRepository {
 	#buildMongooseQuery(query) {
@@ -45,19 +46,12 @@ export class UserMongooseRepository extends IUserRepository {
 		}
 	}
 
-	async updateById(id, data, options = {}) {
-		const agnosticUpdate = data.toUpdateObject();
-		const mongooseUpdate = { $set: {} };
-
-		Object.assign(mongooseUpdate.$set, agnosticUpdate);
-
-		if (Object.keys(mongooseUpdate.$set).length === 0) {
-			throw new BadRequestError("Nothing to update");
-		}
-
-		const updateOptions = { new: true, runValidators: true, ...options };
-
-		const updatedDoc = await User.findByIdAndUpdate(id, mongooseUpdate, updateOptions).lean();
+	async updateById(id, data) {
+		const updatedDoc = await User.findByIdAndUpdate(
+			id,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		).lean();
 
 		return MongooseAdapter.toUserEntity(updatedDoc);
 	}
@@ -67,26 +61,19 @@ export class UserMongooseRepository extends IUserRepository {
 		return MongooseAdapter.toUserEntity(deletedDoc);
 	}
 
-	async findById(id, options = {}) {
-		const { withPassword = false } = options;
+	async findById(id, { withPassword = false } = {}) {
 		let query = User.findById(id).lean();
 
-		if (withPassword) {
-			query = query.select('+password');
-		}
+		if (withPassword) query = query.select('+password');
 
 		const foundDoc = await query;
-
 		return MongooseAdapter.toUserEntity(foundDoc);
 	}
 
-	async findOne(query, options = {}) {
-		const { withPassword = false } = options;
+	async findOne(query, { withPassword = false } = {}) {
 		let dbQuery = User.findOne(query).lean();
 
-		if (withPassword) {
-			dbQuery = dbQuery.select("+password");
-		}
+		if (withPassword) dbQuery = dbQuery.select("+password");
 
 		const foundDoc = await dbQuery;
 		return MongooseAdapter.toUserEntity(foundDoc);
@@ -107,8 +94,12 @@ export class UserMongooseRepository extends IUserRepository {
 
 	async count(query) {
 		const mongooseQuery = this.#buildMongooseQuery(query);
-
 		return await User.countDocuments(mongooseQuery);
+	}
+
+	async findByIds(ids) {
+		const foundDocs = await User.find({ _id: { $in: ids } }).lean();
+		return foundDocs.map(doc => MongooseAdapter.toUserEntity(doc));
 	}
 
 	async findByValidVerificationToken(token) {
@@ -127,5 +118,37 @@ export class UserMongooseRepository extends IUserRepository {
 		}).lean();
 
 		return MongooseAdapter.toUserEntity(foundDoc);
+	}
+
+	async getGlobalStats() {
+		const [stats] = await User.aggregate([
+			{
+				$group: {
+					_id: null,
+					total: { $sum: 1 },
+					verified: {
+						$sum: { $cond: [{ $eq: ["$isVerified", true] }, 1, 0] }
+					},
+					admins: {
+						$sum: { $cond: [{ $eq: ["$role", UserRoles.ADMIN] }, 1, 0]  }
+					},
+					customers: {
+						$sum: { $cond: [{ $eq: ["$role", UserRoles.CUSTOMER] }, 1, 0]  }
+					}
+				}
+			},
+			{
+				$project: {
+					_id: 0,
+					total: 1,
+					verified: 1,
+					unverified: { $subtract: ["$total", "$verified"] },
+					admins: 1,
+					customers: 1
+				}
+			}
+		]);
+
+		return stats || { total: 0, verified: 0, unverified: 0, admins: 0, customers: 0 };
 	}
 }

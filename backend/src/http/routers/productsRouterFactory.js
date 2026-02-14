@@ -9,8 +9,7 @@ import {validationMiddleware} from "../middleware/validationMiddleware.js";
 import {
 	createProductSchema,
 	updateProductSchema,
-	getAllProductsSchema,
-	productIdSchema
+	productIdSchema, getAllProductsPublicSchema
 } from "../validators/productValidator.js";
 
 /**
@@ -24,21 +23,28 @@ export function createProductsRouter(productController, authService) {
 
 	const protectRoute = createProtectRoute(authService);
 
+	// GET
+	router.get("/categories/:id/facets",
+		validationMiddleware(productIdSchema),
+		productController.getFacets
+	);
 	router.get("/featured", productController.getFeatured);
 	router.get("/recommended", productController.getRecommended);
 	router.get("/",
-		protectRoute,
-		adminRoute,
-		validationMiddleware(getAllProductsSchema),
+		validationMiddleware(getAllProductsPublicSchema),
 		productController.getAll
 	);
 	router.get("/:id", validationMiddleware(productIdSchema), productController.getById);
+
+	// POST
 	router.post("/",
 		protectRoute,
 		adminRoute,
 		validationMiddleware(createProductSchema),
 		productController.create
 	);
+
+	// PATCH
 	router.patch("/:id/featured",
 		protectRoute,
 		adminRoute,
@@ -51,6 +57,8 @@ export function createProductsRouter(productController, authService) {
 		validationMiddleware(updateProductSchema),
 		productController.update
 	);
+
+	// DELETE
 	router.delete("/:id",
 		protectRoute,
 		adminRoute,

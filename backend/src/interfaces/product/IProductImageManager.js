@@ -8,8 +8,8 @@ import { ProductImage } from "../../domain/index.js";
 export class IProductImageManager {
 	/**
 	 * Processes new raw image data for product creation.
-	 * @param {ProductImage | null} imageData - Raw image data (Base64/files).
-	 * @returns {Promise<ProductImage | null>} - Image data with secure URLs.
+	 * @param {ProductImage} imageData - Raw image data (Base64/files).
+	 * @returns {Promise<ProductImage>} - Image data with secure URLs.
 	 */
 	async processNewImagesForCreation(imageData) { throw new Error("Method not implemented."); }
 

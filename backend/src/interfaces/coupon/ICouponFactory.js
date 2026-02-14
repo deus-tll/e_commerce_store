@@ -11,5 +11,5 @@ export class ICouponFactory {
 	 * @param {string} userId - The user ID to associate with the coupon.
 	 * @returns {CreateCouponDTO}
 	 */
-	createDTO(userId) { throw new Error("Method not implemented."); }
+	create(userId) { throw new Error("Method not implemented."); }
 }

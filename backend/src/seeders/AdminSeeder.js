@@ -2,7 +2,7 @@ import {IUserService} from "../interfaces/user/IUserService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
 import {CreateUserDTO} from "../domain/index.js";
 
-import {UserRoles} from "../utils/constants.js";
+import {UserRoles} from "../constants/app.js";
 
 export class AdminSeeder  extends BaseSeeder {
 	/** @type {IUserService} */ #userService;

@@ -1,19 +1,28 @@
 import { create } from "zustand";
 
 import axios from "../config/axios.js";
-import {handleRequestError} from "../utils/errorHandler.js";
+
+import {handleError} from "../utils/errorHandler.js";
+
+import {PaginationLimits} from "../constants/app.js";
 
 const USERS_API_PATH = "/users";
 
 export const useUserStore = create((set, get) => ({
 	users: [],
-	stats: null,
 	pagination: null,
+	stats: null,
 	loading: false,
 	error: null,
 
-	fetchUsers: async (page = 1, limit = 10, filters = {}) => {
-		set({ loading: true, error: null });
+	fetchUsers: async (options = {}) => {
+		const {
+			page = 1,
+			limit = PaginationLimits.USERS,
+			filters = {}
+		} = options;
+
+		set({ loading: true });
 
 		try {
 			const params = new URLSearchParams({
@@ -23,15 +32,22 @@ export const useUserStore = create((set, get) => ({
 			});
 
 			const res = await axios.get(`${USERS_API_PATH}?${params}`);
+
 			set({ 
 				users: res.data.users,
 				pagination: res.data.pagination
 			});
+
+			return true;
 		}
 		catch (error) {
-			set({ error: error.message });
-			handleRequestError(error);
-			throw error;
+			handleError(error, "Failed to load users. Please refresh.", {
+				isGlobal: true,
+				showToast: false,
+				forceUserMessage: true
+			});
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -42,10 +58,12 @@ export const useUserStore = create((set, get) => ({
 		try {
 			const res = await axios.get(`${USERS_API_PATH}/stats`);
 			set({ stats: res.data });
+
+			return true;
 		}
 		catch (error) {
-			handleRequestError(error);
-			throw error;
+			handleError(error, "Failed to fetch user statistics.");
+			return false;
 		}
 	},
 
@@ -53,16 +71,20 @@ export const useUserStore = create((set, get) => ({
 		set({ loading: true, error: null });
 
 		try {
-			const res = await axios.post(USERS_API_PATH, userData);
+			await axios.post(USERS_API_PATH, userData);
 
-			await get().fetchUsers();
+			await get().fetchUsers({ page: 1 });
 
-			return res.data;
+			return true;
 		}
 		catch (error) {
-			set({ error: error.message });
-			handleRequestError(error);
-			throw error;
+			const msg = handleError(error, "User creation failed.", {
+				isGlobal: false,
+				showToast: false
+			});
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -72,17 +94,22 @@ export const useUserStore = create((set, get) => ({
 	updateUser: async (userId, userData) => {
 		set({ loading: true, error: null });
 
+		const currentPage = get().pagination?.page || 1;
+
 		try {
-			const res = await axios.put(`${USERS_API_PATH}/${userId}`, userData);
+			await axios.patch(`${USERS_API_PATH}/${userId}`, userData);
+			await get().fetchUsers({ page: currentPage });
 
-			await get().fetchUsers();
-
-			return res.data;
+			return true;
 		}
 		catch (error) {
-			set({ error: error.message });
-			handleRequestError(error);
-			throw error;
+			const msg = handleError(error, "User update failed.", {
+				isGlobal: false,
+				showToast: false
+			});
+			set({ error: msg });
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
@@ -92,22 +119,34 @@ export const useUserStore = create((set, get) => ({
 	deleteUser: async (userId) => {
 		set({ loading: true, error: null });
 
+		const state = get();
+		const currentPage = state.pagination?.page || 1;
+		const limit = state.pagination?.limit || PaginationLimits.USERS;
+		const oldTotal = state.pagination?.totalPrice || 0;
+
 		try {
 			await axios.delete(`${USERS_API_PATH}/${userId}`);
 
-			await get().fetchUsers();
+			const newTotal = oldTotal > 0 ? oldTotal - 1 : 0;
+			const maxPage = Math.ceil(newTotal / limit) || 1;
+			const pageToFetch = currentPage > maxPage ? maxPage : currentPage;
+
+			await get().fetchUsers({ page: pageToFetch });
+
+			return true;
 		}
 		catch (error) {
-			set({ error: error.message });
-			handleRequestError(error);
-			throw error;
+			handleError(error, "User deletion failed.", {
+				isGlobal: true,
+				showToast: false
+			});
+
+			return false;
 		}
 		finally {
 			set({ loading: false });
 		}
 	},
 
-	clearError: () => {
-		set({ error: null });
-	}
+	clearError: () => set({ error: null })
 }));

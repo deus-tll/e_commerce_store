@@ -1,7 +1,8 @@
 import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandler.js";
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
-import {CheckoutSuccessDTO, CreateOrderDTO} from "../../domain/index.js";
+import {ICartService} from "../../interfaces/cart/ICartService.js";
+import {CheckoutSuccessDTO, CreateOrderDTO, OrderProductItem} from "../../domain/index.js";
 
 import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
 
@@ -16,15 +17,21 @@ import {Currency} from "../../utils/currency.js";
 export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 	/** @type {IOrderService} */ #orderService;
 	/** @type {ICouponService} */ #couponService;
+	/** @type {ICartService} */ #cartService;
+	/** @type {ICouponHandler} */ #couponHandler;
 
 	/**
 	 * @param {IOrderService} orderService
 	 * @param {ICouponService} couponService
+	 * @param {ICartService} cartService
+	 * @param {ICouponHandler} couponHandler
 	 */
-	constructor(orderService, couponService) {
+	constructor(orderService, couponService, cartService, couponHandler) {
 		super();
 		this.#orderService = orderService;
 		this.#couponService = couponService;
+		this.#cartService = cartService;
+		this.#couponHandler = couponHandler;
 	}
 
 	async checkExistingOrder(sessionId) {
@@ -34,7 +41,8 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 			return new CheckoutSuccessDTO({
 				success: true,
 				message: "Payment already processed",
-				orderId: existingOrder.id
+				orderId: existingOrder.id,
+				orderNumber: existingOrder.orderNumber
 			});
 		}
 
@@ -62,33 +70,39 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 
 		// 2. Create order
 		const orderData = new CreateOrderDTO({
-			userId,
-			products: parsedProducts,
+			products: parsedProducts.map(item => new OrderProductItem(item)),
 			totalAmount,
 			paymentSessionId: sessionId
 		});
 
 		try {
-			const newOrder = await this.#orderService.create(orderData);
+			const newOrder = await this.#orderService.create(userId, orderData);
+
+			const sideEffects = [];
+
+			sideEffects.push(this.#cartService.clear(userId));
+
+			if (couponCode) {
+				sideEffects.push(this.#couponService.deactivate(couponCode, userId));
+			}
+
+			sideEffects.push(
+				this.#couponHandler.grantNewCouponIfEligible(userId, totalAmountCents)
+			);
+
+			await Promise.all(sideEffects);
 
 			return new CheckoutSuccessDTO({
 				success: true,
-				message: "Payment successful, order created, and coupon deactivated if used",
-				orderId: newOrder.id
+				message: "Payment successful, order created, coupon deactivated(if used), and cart cleared.",
+				orderId: newOrder.id,
+				orderNumber: newOrder.orderNumber
 			});
 		} catch (error) {
 			// Handle database ConflictError (race condition during order creation)
 			if (error instanceof ConflictError) {
-				const existingOrder = await this.#orderService.getByPaymentSessionId(sessionId);
-
-				if (existingOrder) {
-					// Return success if the order already exists due to concurrency
-					return new CheckoutSuccessDTO({
-						success: true,
-						message: "Order already processed concurrently",
-						orderId: existingOrder.id
-					});
-				}
+				const existingOrderResult = await this.checkExistingOrder(sessionId);
+				if (existingOrderResult) return existingOrderResult;
 			}
 
 			throw error;

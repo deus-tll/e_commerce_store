@@ -4,6 +4,8 @@ services:
     build:
       context: ./backend
       dockerfile: dev.Dockerfile
+    stdin_open: true
+    tty: true
     ports:
       - "${BACKEND_API_PORT}:3001"
     volumes:

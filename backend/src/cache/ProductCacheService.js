@@ -1,5 +1,6 @@
 import {BaseCacheService} from "./BaseCacheService.js";
-import {CacheKeys} from "../utils/constants.js";
+
+import {CacheKeys} from "../constants/app.js";
 
 /**
  * Manages the storage and retrieval of product related data in the cache (Redis).
@@ -12,7 +13,7 @@ export class ProductCacheService extends BaseCacheService {
 	 * @protected
 	 */
 	get _cacheContextPrefix() {
-		return `PRODUCTS:${CacheKeys.FEATURED_PRODUCTS}`;
+		return "PRODUCTS";
 	}
 
 	/**
@@ -20,17 +21,16 @@ export class ProductCacheService extends BaseCacheService {
 	 * @returns {Promise<ProductDTO[] | null>} Array of Product DTOs or null if not found.
 	 */
 	async getFeaturedProducts() {
-		const cached = await this._get("");
-		return cached ? JSON.parse(cached) : null;
+		return await this._get(CacheKeys.FEATURED_PRODUCTS);
 	}
 
 	/**
 	 * Stores the list of featured products.
-	 * @param {object[]} productDTOs
+	 * @param {ProductDTO[]} productDTOs
 	 * @returns {Promise<void>}
 	 */
 	async setFeaturedProducts(productDTOs) {
-		await this._set("", JSON.stringify(productDTOs));
+		await this._set(CacheKeys.FEATURED_PRODUCTS, productDTOs);
 	}
 
 	/**
@@ -38,6 +38,6 @@ export class ProductCacheService extends BaseCacheService {
 	 * @returns {Promise<void>}
 	 */
 	async invalidateFeaturedProducts() {
-		await this._delete("");
+		await this._delete(CacheKeys.FEATURED_PRODUCTS);
 	}
 }

@@ -5,25 +5,27 @@ import {ShortUserDTO, PaginationMetadata} from "../index.js";
  * All relationships (product, user) are represented by string IDs.
  */
 export class ReviewEntity {
-	/** @type {string} */ id;
-	/** @type {string} */ productId;
-	/** @type {string} */ userId;
-	/** @type {number} */ rating;
-	/** @type {string} */ comment;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ productId;
+	/** @type {string} @readonly */ userId;
+	/** @type {number} @readonly */ rating;
+	/** @type {string} @readonly */ comment;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
-	 * @param {object} data - Plain data object with standardized 'id' field.
+	 * @param {object} data
 	 */
 	constructor(data) {
-		this.id = data.id.toString();
-		this.productId = data.productId.toString();
-		this.userId = data.userId.toString();
+		this.id = data.id;
+		this.productId = data.productId;
+		this.userId = data.userId;
 		this.rating = data.rating;
 		this.comment = data.comment;
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
+
+		Object.freeze(this);
 	}
 }
 
@@ -31,19 +33,34 @@ export class ReviewEntity {
  * Agnostic class for input data when creating a Review.
  */
 export class CreateReviewDTO {
-	/** @type {string} */ productId;
-	/** @type {string} */ userId;
-	/** @type {number} */ rating;
-	/** @type {string} */ comment;
+	/** @type {string} @readonly */ productId;
+	/** @type {string} @readonly */ userId;
+	/** @type {number} @readonly */ rating;
+	/** @type {string} @readonly */ comment;
 
 	/**
-	 * @param {object} data - Raw data for creation.
+	 * @param {object} data
 	 */
 	constructor(data) {
 		this.productId = data.productId;
 		this.userId = data.userId;
 		this.rating = data.rating;
 		this.comment = data.comment;
+
+		Object.freeze(this);
+	}
+
+	/**
+	 * Transforms the DTO into a clean object for the Repository.
+	 * @returns {Object}
+	 */
+	toPersistence() {
+		return Object.freeze({
+			productId: this.productId,
+			userId: this.userId,
+			rating: this.rating,
+			comment: this.comment
+		});
 	}
 }
 
@@ -51,40 +68,30 @@ export class CreateReviewDTO {
  * Agnostic class for input data when updating a review.
  */
 export class UpdateReviewDTO {
-	/** @type {string} */ reviewId;
-	/** @type {string} */ userId;
-	/** @type {number} [rating] */ rating;
-	/** @type {string} [comment] */ comment;
+	/** @type {number} [rating] @readonly */ rating;
+	/** @type {string} [comment] @readonly */ comment;
 
 	/**
 	 * @param {object} data
 	 */
 	constructor(data) {
-		this.reviewId = data.reviewId;
-		this.userId = data.userId;
 		if (data.rating !== undefined) this.rating = data.rating;
 		if (data.comment !== undefined) this.comment = data.comment;
+
+		Object.freeze(this);
 	}
 
 	/**
-	 * Returns an object containing only the fields that were explicitly
-	 * provided by the caller for update.
-	 * This object can be used by the persistence layer to perform a partial update.
-	 * Excludes fields used for identifying the review (reviewId, userId).
-	 * @returns {object} An object with only the fields to be updated.
+	 * Creates a plain object containing only the fields that were provided for the update.
+	 * @returns {object}
 	 */
-	toUpdateObject() {
-		const update = {};
+	toPersistence() {
+		const data = {};
 
-		if (this.rating !== undefined) {
-			update.rating = this.rating;
-		}
+		if (this.rating !== undefined) data.rating = this.rating;
+		if (this.comment !== undefined) data.comment = this.comment;
 
-		if (this.comment !== undefined) {
-			update.comment = this.comment;
-		}
-
-		return update;
+		return Object.freeze(data);
 	}
 }
 
@@ -92,13 +99,13 @@ export class UpdateReviewDTO {
  * Data Transfer Object for a Review, used by the Service layer.
  */
 export class ReviewDTO {
-	/** @type {string} */ id;
-	/** @type {string} */ productId;
-	/** @type {ShortUserDTO | null} */ user;
-	/** @type {number} */ rating;
-	/** @type {string} */ comment;
-	/** @type {Date} */ createdAt;
-	/** @type {Date} */ updatedAt;
+	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ productId;
+	/** @type {ShortUserDTO | null} @readonly */ user;
+	/** @type {number} @readonly */ rating;
+	/** @type {string} @readonly */ comment;
+	/** @type {Date} @readonly */ createdAt;
+	/** @type {Date} @readonly */ updatedAt;
 
 	/**
 	 * @param {ReviewEntity} entity
@@ -112,6 +119,8 @@ export class ReviewDTO {
 		this.comment = entity.comment;
 		this.createdAt = entity.createdAt;
 		this.updatedAt = entity.updatedAt;
+
+		Object.freeze(this);
 	}
 }
 
@@ -119,15 +128,17 @@ export class ReviewDTO {
  * Service-level pagination result DTO.
  */
 export class ReviewPaginationResultDTO {
-	/** @type {ReviewDTO[]} */ reviews;
-	/** @type {PaginationMetadata} */ pagination;
+	/** @type {ReviewDTO[]} @readonly */ reviews;
+	/** @type {PaginationMetadata} @readonly */ pagination;
 
 	/**
 	 * @param {ReviewDTO[]} reviews
 	 * @param {PaginationMetadata} pagination
 	 */
 	constructor(reviews, pagination) {
-		this.reviews = reviews;
+		this.reviews = Object.freeze([...reviews]);
 		this.pagination = pagination;
+
+		Object.freeze(this);
 	}
 }

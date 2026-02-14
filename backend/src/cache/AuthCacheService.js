@@ -1,7 +1,7 @@
 import {BaseCacheService} from "./BaseCacheService.js";
 
-import {CacheKeys} from "../utils/constants.js";
-import {SECONDS_PER_DAY} from "../utils/timeConstants.js";
+import {CacheKeys} from "../constants/app.js";
+import {SECONDS_PER_DAY} from "../constants/time.js";
 
 const REFRESH_TOKEN_CACHE_TTL = 7 * SECONDS_PER_DAY;
 
