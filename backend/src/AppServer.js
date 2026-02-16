@@ -105,6 +105,8 @@ export class AppServer {
 		try {
 			await connectDB();
 
+			this.#container.verify();
+
 			this.configureMiddleware();
 			this.setupRoutes();
 			this.setupErrorHandling();
