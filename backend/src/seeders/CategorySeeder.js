@@ -1,15 +1,14 @@
 import {ICategoryService} from "../interfaces/category/ICategoryService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
-
-import {EnvModes} from "../constants/app.js";
 import {CreateCategoryDTO} from "../domain/index.js";
 
-const PORT = process.env.PORT || 3001;
-const NODE_ENV = process.env.NODE_ENV || EnvModes.DEV;
+import {EnvModes} from "../constants/app.js";
+import {config} from "../config.js";
+
 const APP_URL =
-	NODE_ENV !== EnvModes.PROD
-		? `http://localhost:${PORT}`
-		: process.env.APP_URL;
+	config.nodeEnv !== EnvModes.PROD
+		? `http://localhost:${config.port}`
+		: config.appUrl;
 
 const defaultCategories = [
 	{ name: "Bags", image: "/public/categories/bags.jpg" },

@@ -10,12 +10,12 @@ import {BadRequestError, InvalidCredentialsError} from "../../errors/apiErrors.j
 
 import {EnvModes} from "../../constants/app.js";
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
+import {config} from "../../config.js";
 
 const APP_URL =
-	process.env.NODE_ENV !== EnvModes.PROD
-		? process.env.DEVELOPMENT_CLIENT_URL
-		: process.env.APP_URL;
-const RESET_PASSWORD_PATH = process.env.RESET_PASSWORD_PATH;
+	config.nodeEnv !== EnvModes.PROD
+		? config.developmentClientUrl
+		: config.appUrl;
 
 /**
  * Implements the IUserAccountService contract, focusing on user account state
@@ -125,7 +125,7 @@ export class UserAccountService extends IUserAccountService {
 		const { id: userId } = userEntity;
 
 		const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-		const resetPasswordUrl = `${APP_URL}/${RESET_PASSWORD_PATH}/${resetToken}`;
+		const resetPasswordUrl = `${APP_URL}/${config.auth.resetPasswordUrl}/${resetToken}`;
 
 		await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
 		await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl)

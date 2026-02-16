@@ -1,6 +1,7 @@
 import Redis from "ioredis";
+import {config} from "../config.js";
 
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = config.database.redisUrl;
 
 if (!redisUrl) {
 	throw new Error("REDIS_URL environment variable is not set.");

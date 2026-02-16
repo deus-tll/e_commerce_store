@@ -3,6 +3,7 @@ import {BaseSeeder} from "./BaseSeeder.js";
 import {CreateUserDTO} from "../domain/index.js";
 
 import {UserRoles} from "../constants/app.js";
+import {config} from "../config.js";
 
 export class AdminSeeder  extends BaseSeeder {
 	/** @type {IUserService} */ #userService;
@@ -17,14 +18,14 @@ export class AdminSeeder  extends BaseSeeder {
 
 	async seed() {
 		try {
-			const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+			const { name: adminName, email: adminEmail, password: adminPassword } = config.admin;
 
-			if (!ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+			if (!adminName || !adminEmail || !adminPassword) {
 				console.warn("Admin credentials missing in environment variables, skipping seeding.");
 				return;
 			}
 
-			const exists = await this.#userService.existsByEmail(ADMIN_EMAIL);
+			const exists = await this.#userService.existsByEmail(adminEmail);
 
 			if (exists) {
 				console.log("Admin already exists, skipping seeding.");
@@ -32,9 +33,9 @@ export class AdminSeeder  extends BaseSeeder {
 			}
 
 			const createAdminDTO = new CreateUserDTO({
-				name: ADMIN_NAME,
-				email: ADMIN_EMAIL,
-				password: ADMIN_PASSWORD,
+				name: adminName,
+				email: adminEmail,
+				password: adminPassword,
 				role: UserRoles.ADMIN,
 				isVerified: true
 			});

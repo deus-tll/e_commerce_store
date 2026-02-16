@@ -13,14 +13,13 @@ import {EnvModes} from "./constants/app.js";
 import {RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
+import {config} from "./config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const NODE_ENV = process.env.NODE_ENV || EnvModes.DEV;
-const DEVELOPMENT_CLIENT_URL = process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173";
-const PORT = process.env.PORT || 3001;
-const JSON_LIMIT = process.env.JSON_LIMIT || "10mb";
+const NODE_ENV = config.nodeEnv;
+const JSON_LIMIT = config.jsonLimit;
 
 /**
  * Encapsulates the configuration and execution of the Express application.
@@ -35,7 +34,7 @@ export class AppServer {
 	 */
 	constructor() {
 		this.#app = express();
-		this.#port = PORT;
+		this.#port = config.port;
 		this.configureMiddleware();
 		this.setupRoutes();
 		this.#app.use(errorHandler);
@@ -48,7 +47,7 @@ export class AppServer {
 		if (NODE_ENV !== EnvModes.PROD) {
 			this.#app.use(
 				cors({
-					origin: DEVELOPMENT_CLIENT_URL,
+					origin: config.developmentClientUrl,
 					credentials: true,
 				})
 			);
