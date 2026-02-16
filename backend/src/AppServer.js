@@ -5,7 +5,6 @@ import path from "path";
 import {fileURLToPath} from "url";
 
 import connectDB from "./infrastructure/db.js";
-import {DependencyLocator} from "./core/ioc/DependencyLocator.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
@@ -28,16 +27,16 @@ const JSON_LIMIT = config.jsonLimit;
 export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
+	/** @type {Container} */ #container;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
+	 * @param {Container} container - The IoC container instance.
 	 */
-	constructor() {
+	constructor(container) {
 		this.#app = express();
 		this.#port = config.port;
-		this.configureMiddleware();
-		this.setupRoutes();
-		this.#app.use(errorHandler);
+		this.#container = container;
 	}
 
 	/**
@@ -68,23 +67,30 @@ export class AppServer {
 	 * Configures the application routers, retrieving them from the IoC container.
 	 */
 	setupRoutes() {
-		this.#app.use(RouteTypes.AUTH, DependencyLocator.getRouter(RouterTypes.AUTH));
-		this.#app.use(RouteTypes.ANALYTICS, DependencyLocator.getRouter(RouterTypes.ANALYTICS));
-		this.#app.use(RouteTypes.CART, DependencyLocator.getRouter(RouterTypes.CART));
-		this.#app.use(RouteTypes.CATEGORY, DependencyLocator.getRouter(RouterTypes.CATEGORY));
-		this.#app.use(RouteTypes.COUPON, DependencyLocator.getRouter(RouterTypes.COUPON));
-		this.#app.use(RouteTypes.PAYMENT, DependencyLocator.getRouter(RouterTypes.PAYMENT));
-		this.#app.use(RouteTypes.PRODUCT, DependencyLocator.getRouter(RouterTypes.PRODUCT));
-		this.#app.use(RouteTypes.REVIEW, DependencyLocator.getRouter(RouterTypes.REVIEW));
-		this.#app.use(RouteTypes.USER, DependencyLocator.getRouter(RouterTypes.USER));
+		this.#app.use(RouteTypes.AUTH, this.#container.get(RouterTypes.AUTH));
+		this.#app.use(RouteTypes.ANALYTICS, this.#container.get(RouterTypes.ANALYTICS));
+		this.#app.use(RouteTypes.CART, this.#container.get(RouterTypes.CART));
+		this.#app.use(RouteTypes.CATEGORY, this.#container.get(RouterTypes.CATEGORY));
+		this.#app.use(RouteTypes.COUPON, this.#container.get(RouterTypes.COUPON));
+		this.#app.use(RouteTypes.PAYMENT, this.#container.get(RouterTypes.PAYMENT));
+		this.#app.use(RouteTypes.PRODUCT, this.#container.get(RouterTypes.PRODUCT));
+		this.#app.use(RouteTypes.REVIEW, this.#container.get(RouterTypes.REVIEW));
+		this.#app.use(RouteTypes.USER, this.#container.get(RouterTypes.USER));
+	}
+
+	/**
+	 * Sets up error middleware.
+	 */
+	setupErrorHandling() {
+		this.#app.use(errorHandler);
 	}
 
 	/**
 	 * Executes seeding operations.
 	 */
 	async runSeeders() {
-		const categorySeeder = DependencyLocator.getSeeder(SeederTypes.CATEGORY);
-		const adminSeeder = DependencyLocator.getSeeder(SeederTypes.ADMIN);
+		const categorySeeder = this.#container.get(SeederTypes.CATEGORY);
+		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
 
 		console.log("Starting seeders...");
 		await categorySeeder.seed();
@@ -98,6 +104,10 @@ export class AppServer {
 	async start() {
 		try {
 			await connectDB();
+
+			this.configureMiddleware();
+			this.setupRoutes();
+			this.setupErrorHandling();
 
 			await this.runSeeders();
 
