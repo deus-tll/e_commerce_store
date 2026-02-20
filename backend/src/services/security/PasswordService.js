@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import {SystemError} from "../../errors/index.js";
 
 const SALT_ROUNDS = 10;
 
@@ -12,7 +13,12 @@ export class PasswordService {
 	 * @returns {Promise<string>} The hashed password.
 	 */
 	async hashPassword(password) {
-		return await bcrypt.hash(password, SALT_ROUNDS);
+		try {
+			return bcrypt.hash(password, SALT_ROUNDS);
+		}
+		catch (error) {
+			throw new SystemError("Failed to secure password.");
+		}
 	}
 
 	/**
@@ -24,8 +30,14 @@ export class PasswordService {
 	 */
 	async comparePassword(plaintextPassword, hashedPassword) {
 		if (!hashedPassword) {
-			throw new Error("Cannot compare password: hashed password string is missing.");
+			throw new SystemError("Authentication failed due to a system data mismatch.");
 		}
-		return await bcrypt.compare(plaintextPassword, hashedPassword);
+
+		try {
+			return bcrypt.compare(plaintextPassword, hashedPassword);
+		}
+		catch (error) {
+			throw new SystemError("Error during password verification.");
+		}
 	}
 }

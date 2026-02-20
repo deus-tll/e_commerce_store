@@ -165,11 +165,11 @@ class Container {
 	 * Ensures all registered services can be resolved without errors.
 	 */
 	verify() {
-		console.log("Verifying IoC Container...");
+		console.log("[IoC Container] Verifying...");
 		for (const name of this.services.keys()) {
 			this.get(name);
 		}
-		console.log("IoC Container verified successfully.");
+		console.log("[IoC Container] Verified successfully.");
 	}
 }
 
@@ -297,7 +297,7 @@ container.register(ServiceTypes.CHECKOUT_ORDER_HANDLER, CheckoutOrderHandler,
 	[ServiceTypes.ORDER, ServiceTypes.COUPON, ServiceTypes.CART, ServiceTypes.CHECKOUT_COUPON_HANDLER]
 );
 container.register(ServiceTypes.PAYMENT, StripePaymentService,
-	[ServiceTypes.STRIPE, ServiceTypes.CHECKOUT_ORDER_HANDLER, ServiceTypes.CHECKOUT_COUPON_HANDLER]
+	[ServiceTypes.STRIPE, ServiceTypes.PRODUCT, ServiceTypes.CHECKOUT_ORDER_HANDLER, ServiceTypes.CHECKOUT_COUPON_HANDLER]
 );
 // ====================================================================
 
@@ -309,7 +309,7 @@ container.register(ControllerTypes.AUTH, AuthController, [ServiceTypes.SESSION_A
 container.register(ControllerTypes.CART, CartController, [ServiceTypes.CART]);
 container.register(ControllerTypes.CATEGORY, CategoryController, [ServiceTypes.CATEGORY]);
 container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
-container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT, ServiceTypes.PRODUCT]);
+container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT]);
 container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT]);
 container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
 container.register(ControllerTypes.USER, UserController, [ServiceTypes.USER, ServiceTypes.USER_STATS]);

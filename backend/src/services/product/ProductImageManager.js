@@ -2,7 +2,7 @@ import {IProductImageManager} from "../../interfaces/product/IProductImageManage
 import {IProductStorageService} from "../../interfaces/storage/IProductStorageService.js";
 import {ProductImage} from "../../domain/index.js";
 
-import {BadRequestError} from "../../errors/apiErrors.js";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * @augments IProductImageManager
@@ -28,7 +28,16 @@ export class ProductImageManager extends IProductImageManager {
 	async #deleteUrls(urls) {
 		const validUrls = urls.filter(url => url);
 		if (validUrls.length === 0) return;
-		await Promise.all(validUrls.map(url => this.#productStorageService.delete(url)));
+
+		const results = await Promise.allSettled(
+			validUrls.map(url => this.#productStorageService.delete(url))
+		);
+
+		results.forEach((result, index) => {
+			if (result.status === 'rejected') {
+				console.warn(`[Storage] Failed to delete orphaned image: ${validUrls[index]}`, result.reason);
+			}
+		});
 	}
 
 	async processNewImagesForCreation(imageData) {
@@ -69,7 +78,7 @@ export class ProductImageManager extends IProductImageManager {
 				if (oldImages.mainImage) urlsToDelete.push(oldImages.mainImage);
 			} else if (!newMainImage) {
 				// Disallow explicit null/empty update unless logic permits.
-				throw new BadRequestError("The main image is required and cannot be explicitly set to null or empty.");
+				throw new DomainValidationError("The main image is required and cannot be empty.");
 			}
 			// (Preservation): If newMainImage === oldImages.mainImage,
 			// nothing happens here, and finalMainImage retains its initial
@@ -124,7 +133,7 @@ export class ProductImageManager extends IProductImageManager {
 
 	async deleteProductImages(images) {
 		const urlsToDelete = [
-			images?.image,
+			images?.mainImage,
 			...(images?.additionalImages || [])
 		].filter(url => url);
 

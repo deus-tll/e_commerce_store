@@ -6,11 +6,12 @@ import {CouponEntity} from "../../domain/index.js";
  */
 export class ICouponRepository {
 	/**
-	 * Creates and saves a new coupon record.
+	 * Finds the existing coupon for the user and replaces it, or creates a new one if it doesn't exist.
+	 * @param {string} userId - The user ID.
 	 * @param {Object} data - The data for the new coupon.
 	 * @returns {Promise<CouponEntity>} - The newly created coupon record.
 	 */
-	async create(data) {
+	async replaceOrCreate(userId, data) {
 		throw new Error("Method not implemented.");
 	}
 

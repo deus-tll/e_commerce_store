@@ -1,7 +1,7 @@
 import {IUserService} from "../interfaces/user/IUserService.js";
 import {CreateUserDTO, UpdateUserDTO} from "../domain/index.js";
 
-import {ForbiddenError} from "../errors/apiErrors.js";
+import {ActionNotAllowedError} from "../errors/index.js";
 
 /**
  * Handles incoming HTTP requests related to user management (CRUD for Admins),
@@ -62,7 +62,7 @@ export class UserController {
 		const { userId } = req.params;
 
 		if (userId === req.userId) {
-			throw new ForbiddenError("You cannot delete your own account");
+			throw new ActionNotAllowedError("You cannot delete your own account");
 		}
 
 		const userDTO = await this.#userService.delete(userId);

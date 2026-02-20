@@ -1,4 +1,4 @@
-import { BadRequestError } from "../../errors/apiErrors.js";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * Creates an Express middleware function that validates the request object
@@ -23,11 +23,8 @@ export const validationMiddleware = (schema) => (req, res, next) => {
 	});
 
 	if (error) {
-		console.log('DEBUG: Validation Target:', JSON.stringify(validationTarget, null, 2));
-		console.log('DEBUG: Joi Error Details:', error.details);
-
-		const messages = error.details.map(detail => detail.message);
-		throw new BadRequestError(`Validation Failed: ${messages.join("; ")}`);
+		const messages = error.details.map(detail => detail.message).join("; ");
+		throw new DomainValidationError(`Validation Failed: ${messages}`);
 	}
 
 	if (value.body) {

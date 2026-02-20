@@ -2,7 +2,7 @@ import cloudinary from "../../infrastructure/cloudinary.js";
 
 import {IStorageService} from "../../interfaces/storage/IStorageService.js";
 
-import {InternalServerError} from "../../errors/apiErrors.js";
+import {SystemError} from "../../errors/index.js";
 
 /**
  * Cloudinary implementation of the IStorageService contract.
@@ -21,7 +21,7 @@ export class CloudinaryStorageService extends IStorageService {
 
 		if (urlSegments.length < 2) {
 			// Folder path wasn't found in the URL.
-			console.warn(`Cloudinary delete warning: Could not find folder path '${folder}' in URL: ${fileUrl}`);
+			console.warn(`[Cloudinary] Delete warning: Could not find folder path '${folder}' in URL: ${fileUrl}`);
 			return null;
 		}
 
@@ -32,7 +32,7 @@ export class CloudinaryStorageService extends IStorageService {
 
 		if (lastDotIndex === -1) {
 			// Handle case where file has no extension
-			console.warn(`Cloudinary delete warning: Could not find file extension in URL segment: ${publicIdWithExt}`);
+			console.warn(`[Cloudinary] Delete warning: Could not find file extension in URL segment: ${publicIdWithExt}`);
 			return null;
 		}
 
@@ -46,8 +46,8 @@ export class CloudinaryStorageService extends IStorageService {
 			return response["secure_url"];
 		}
 		catch (error) {
-			console.error("Error uploading file to Cloudinary", error);
-			throw new InternalServerError("Failed to upload file.");
+			console.error("[Cloudinary] Upload failed:", error.message);
+			throw new SystemError("Failed to upload file to cloud storage.");
 		}
 	}
 
@@ -57,16 +57,13 @@ export class CloudinaryStorageService extends IStorageService {
 
 			const publicIdSegment = this.#extractPublicIdSegment(fileUrl, folder);
 
-			if (!publicIdSegment) {
-				return;
-			}
+			if (!publicIdSegment) return;
 
 			const fullPublicId = `${folder}/${publicIdSegment}`;
-
 			await cloudinary.uploader.destroy(fullPublicId);
 		}
 		catch (error) {
-			console.error("Error deleting file from Cloudinary", error);
+			console.error("[Cloudinary] Delete failed:", error.message);
 		}
 	}
 }

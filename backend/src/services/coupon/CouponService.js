@@ -31,10 +31,9 @@ export class CouponService extends ICouponService {
 
 	async create(userId) {
 		await this.#couponValidator.validateUserExists(userId);
-		await this.#couponRepository.deleteByUserId(userId);
 
 		const createCouponDTO = this.#couponFactory.create(userId);
-		const createdCoupon = await this.#couponRepository.create(createCouponDTO.toPersistence());
+		const createdCoupon = await this.#couponRepository.replaceOrCreate(userId, createCouponDTO.toPersistence());
 
 		return this.#couponMapper.toDTO(createdCoupon);
 	}

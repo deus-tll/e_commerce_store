@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 import path from "path";
 
 import {IEmailContentService} from "../../interfaces/email/IEmailContentService.js";
+import {SystemError} from "../../errors/index.js";
 
 const templatesDir = path.join(process.cwd(), "src", "templates");
 
@@ -23,8 +24,8 @@ export class FilesystemEmailContentService extends IEmailContentService {
 			return await fs.readFile(templatePath, "utf-8");
 		}
 		catch (error) {
-			console.error(`Error reading email template ${templateName}:`, error);
-			throw new Error("Failed to read email template file.");
+			console.error(`[EmailContent] Missing template: ${templatePath}`);
+			throw new SystemError("Email rendering failed due to a missing template.");
 		}
 	}
 

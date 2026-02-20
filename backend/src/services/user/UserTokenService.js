@@ -4,7 +4,7 @@ import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
 import {PasswordService} from "../security/PasswordService.js";
 
-import {BadRequestError, ConflictError} from "../../errors/apiErrors.js";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * Service dedicated to managing user account tokens (verification, password reset)
@@ -30,7 +30,7 @@ export class UserTokenService extends IUserTokenService {
 	}
 
 	generateResetToken() {
-		return crypto.randomBytes(20).toString("hex");
+		return crypto.randomUUID();
 	}
 
 	async setVerificationToken(userId, token, expiresAt) {
@@ -46,7 +46,7 @@ export class UserTokenService extends IUserTokenService {
 		const entity = await this.#userRepository.findByValidVerificationToken(token);
 
 		if (!entity) {
-			throw new BadRequestError("Invalid or expired verification token");
+			throw new DomainValidationError("Invalid or expired verification token");
 		}
 
 		const updateData = Object.freeze({
@@ -55,13 +55,7 @@ export class UserTokenService extends IUserTokenService {
 			verificationTokenExpiresAt: null
 		});
 
-		const updatedEntity = await this.#userRepository.updateById(entity.id, updateData);
-
-		if (!updatedEntity) {
-			throw new ConflictError("Could not update user verification status.");
-		}
-
-		return updatedEntity;
+		return await this.#userRepository.updateById(entity.id, updateData);
 	}
 
 	async setResetPasswordToken(userId, token, expiresAt) {
@@ -77,7 +71,7 @@ export class UserTokenService extends IUserTokenService {
 		const entity = await this.#userRepository.findByValidResetToken(token);
 
 		if (!entity) {
-			throw new BadRequestError("Invalid or expired reset token");
+			throw new DomainValidationError("Invalid or expired reset token");
 		}
 
 		const hashedPassword = await this.#passwordService.hashPassword(newPassword);
@@ -88,12 +82,6 @@ export class UserTokenService extends IUserTokenService {
 			resetPasswordTokenExpiresAt: null
 		});
 
-		const updatedEntity = await this.#userRepository.updateById(entity.id, updateData);
-
-		if (!updatedEntity) {
-			throw new ConflictError("Could not update user password.");
-		}
-
-		return updatedEntity;
+		return await this.#userRepository.updateById(entity.id, updateData);
 	}
 }

@@ -21,14 +21,14 @@ export class AdminSeeder  extends BaseSeeder {
 			const { name: adminName, email: adminEmail, password: adminPassword } = config.admin;
 
 			if (!adminName || !adminEmail || !adminPassword) {
-				console.warn("Admin credentials missing in environment variables, skipping seeding.");
+				console.warn("[Seeder] Admin credentials missing in config. Skipping...");
 				return;
 			}
 
 			const exists = await this.#userService.existsByEmail(adminEmail);
 
 			if (exists) {
-				console.log("Admin already exists, skipping seeding.");
+				console.log("[Seeder] Admin user already exists.");
 				return;
 			}
 
@@ -42,10 +42,10 @@ export class AdminSeeder  extends BaseSeeder {
 
 			await this.#userService.create(createAdminDTO);
 
-			console.log("Admin created successfully!");
+			console.log("[Seeder] Admin account seeded successfully.");
 		}
 		catch (error) {
-			console.error("Error while seeding admin:", error.message);
+			console.error("[Seeder] Critical failure seeding admin:", error.message);
 		}
 	}
 }

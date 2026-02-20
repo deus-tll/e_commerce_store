@@ -30,7 +30,7 @@ export class IUserService {
 	/**
 	 * Updates the user's last login timestamp.
 	 * @param {string} id - The user ID.
-	 * @returns {Promise<UserDTO | null>} - The updated user DTO.
+	 * @returns {Promise<UserDTO>} - The updated user DTO.
 	 */
 	async updateLastLogin(id) { throw new Error("Method not implemented."); }
 
@@ -75,14 +75,6 @@ export class IUserService {
 	async getEntityByIdOrFail(id, options) { throw new Error("Method not implemented."); }
 
 	/**
-	 * Finds a user by ID.
-	 * @param {string} id - The user ID.
-	 * @param {object} [options] - Query options.
-	 * @returns {Promise<UserDTO | null>} - The found user DTO.
-	 */
-	async getById(id, options) { throw new Error("Method not implemented."); }
-
-	/**
 	 * Finds a user by ID and returns short version.
 	 * @param {string} id - The user ID.
 	 * @returns {Promise<ShortUserDTO | null>} - The found short user DTO.
@@ -112,22 +104,6 @@ export class IUserService {
 	 * @returns {Promise<UserEntity>} - The found user entity record.
 	 */
 	async getEntityByEmailOrFail(email, options) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Finds a user by email.
-	 * @param {string} email - The user email.
-	 * @param {object} [options] - Query options.
-	 * @returns {Promise<UserDTO | null>} - The found user DTO.
-	 */
-	async getByEmail(email, options) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Finds a user by email, throws if not found.
-	 * @param {string} email - The user email.
-	 * @param {object} [options] - Query options.
-	 * @returns {Promise<UserDTO>} - The found user DTO.
-	 */
-	async getByEmailOrFail(email, options) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Finds a minimal set of user details for an array of IDs.

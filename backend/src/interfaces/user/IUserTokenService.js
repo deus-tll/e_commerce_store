@@ -37,8 +37,6 @@ export class IUserTokenService {
 	 * Finds a user by a valid verification token, verifies them, and clears the token fields.
 	 * @param {string} token - The verification token.
 	 * @returns {Promise<UserEntity>} - The updated user entity.
-	 * @throws {BadRequestError} If the token is invalid or expired.
-	 * @throws {ConflictError} If the update fails.
 	 */
 	async verifyUser(token) {
 		throw new Error("Method not implemented.");
@@ -60,8 +58,6 @@ export class IUserTokenService {
 	 * @param {string} token - The reset token.
 	 * @param {string} newPassword - The new plaintext password.
 	 * @returns {Promise<UserEntity>} - The updated user entity.
-	 * @throws {BadRequestError} If the token is invalid or expired.
-	 * @throws {ConflictError} If the update fails.
 	 */
 	async resetPassword(token, newPassword) {
 		throw new Error("Method not implemented.");

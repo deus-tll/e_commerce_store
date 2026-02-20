@@ -5,7 +5,7 @@ import {IProductStatsService} from "../../interfaces/product/IProductStatsServic
 import {IReviewValidator} from "../../interfaces/review/IReviewValidator.js";
 import {ReviewPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
-import {NotFoundError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for review operations.
@@ -63,7 +63,7 @@ export class ReviewService extends IReviewService {
 	async #getReviewOrFail(reviewId, userId) {
 		const existingReview = await this.#reviewRepository.findByIdAndUserId(reviewId, userId);
 		if (!existingReview) {
-			throw new NotFoundError("Review not found or not owned by user");
+			throw new EntityNotFoundError("Review", { reviewId, userId });
 		}
 		return existingReview;
 	}
@@ -90,10 +90,10 @@ export class ReviewService extends IReviewService {
 	async update(reviewId, userId, data) {
 		const existingReview = await this.#getReviewOrFail(reviewId, userId);
 		const oldRating = existingReview.rating;
-		const persistenceData = data.toPersistence();
 
-		const updatedReview = await this.#reviewRepository.updateByIdAndUserId(reviewId, userId, persistenceData);
-		if (!updatedReview) throw new NotFoundError("Failed to update review.");
+		const updatedReview = await this.#reviewRepository.updateByIdAndUserId(
+			reviewId, userId, data.toPersistence()
+		);
 
 		const newRating = updatedReview.rating;
 
@@ -107,7 +107,7 @@ export class ReviewService extends IReviewService {
 			}
 			catch (error) {
 				// Could be passed to Event Bus (RabbitMQ/Kafka) for eventual consistency
-				console.error("Failed to update product stats after review update:", error);
+				console.error("Failed to update product stats:", error);
 			}
 		}
 
@@ -116,7 +116,6 @@ export class ReviewService extends IReviewService {
 
 	async delete(userId, reviewId) {
 		const deletedReview = await this.#reviewRepository.deleteByIdAndUserId(reviewId, userId);
-		if (!deletedReview) throw new NotFoundError("Review not found or not owned by user");
 
 		await this.#productStatsService.handleReviewDeletion(
 			deletedReview.productId,

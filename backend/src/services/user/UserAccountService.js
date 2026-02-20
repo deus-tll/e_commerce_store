@@ -6,7 +6,7 @@ import {AuthResponseAssembler} from "../../domain/index.js";
 import {JwtProvider} from "../../providers/JwtProvider.js";
 import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
-import {BadRequestError, InvalidCredentialsError} from "../../errors/apiErrors.js";
+import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
 import {EnvModes} from "../../constants/app.js";
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
@@ -109,7 +109,7 @@ export class UserAccountService extends IUserAccountService {
 		const { email, isVerified } = userEntity;
 
 		if (isVerified) {
-			throw new BadRequestError("Email is already verified");
+			throw new ActionNotAllowedError("Email is already verified");
 		}
 
 		const { token: verificationToken, expiresAt: verificationTokenExpiresAt } = this.#generateVerificationTokenDetails();
@@ -121,14 +121,22 @@ export class UserAccountService extends IUserAccountService {
 	}
 
 	async forgotPassword(email) {
-		const userEntity = await this.#userService.getEntityByEmailOrFail(email);
-		const { id: userId } = userEntity;
+		try {
+			const userEntity = await this.#userService.getEntityByEmailOrFail(email);
+			const { id: userId } = userEntity;
 
-		const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-		const resetPasswordUrl = `${APP_URL}/${config.auth.resetPasswordUrl}/${resetToken}`;
+			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
+			const resetPasswordUrl = `${APP_URL}/${config.auth.resetPasswordUrl}/${resetToken}`;
 
-		await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
-		await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl)
+			await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
+			await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl);
+		}
+		catch (error) {
+			if (!(error instanceof EntityNotFoundError)) {
+				throw error;
+			}
+			console.info(`Forgot password requested for non-existent email: ${email}`);
+		}
 
 		return {
 			message: "Password reset link sent to your email"

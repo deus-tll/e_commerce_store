@@ -1,14 +1,13 @@
+import mongoose from "mongoose";
 import Product from "../../models/mongoose/Product.js";
 
 import {IProductRepository} from "../../interfaces/repositories/IProductRepository.js";
 import {AttributeFacetDTO, RepositoryPaginationResult} from "../../domain/index.js";
-
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {NotFoundError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 import {sanitizeSearchTerm} from "../../utils/sanitize.js";
-import mongoose from "mongoose";
 
 export class ProductMongooseRepository extends IProductRepository {
 	#buildMongooseQuery(query) {
@@ -58,6 +57,10 @@ export class ProductMongooseRepository extends IProductRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
+		if (!updatedDoc) {
+			throw new EntityNotFoundError("Product", { id });
+		}
+
 		return MongooseAdapter.toProductEntity(updatedDoc);
 	}
 
@@ -75,7 +78,7 @@ export class ProductMongooseRepository extends IProductRepository {
 		).lean();
 
 		if (!updatedDoc) {
-			throw new NotFoundError("Updated product not found");
+			throw new EntityNotFoundError("Product", { id });
 		}
 
 		return MongooseAdapter.toProductEntity(updatedDoc);
@@ -121,15 +124,16 @@ export class ProductMongooseRepository extends IProductRepository {
 			{ new: true, runValidators: true },
 		);
 
-		if (!updatedProduct) {
-			throw new Error("Product not found");
-		}
+		if (!updatedProduct) throw new EntityNotFoundError("Product", { id: productId });
 
 		return updatedProduct;
 	}
 
 	async deleteById(id) {
 		const deletedDoc = await Product.findByIdAndDelete(id).lean();
+
+		if (!deletedDoc) throw new EntityNotFoundError("Product", { id });
+
 		return MongooseAdapter.toProductEntity(deletedDoc);
 	}
 
@@ -201,7 +205,7 @@ export class ProductMongooseRepository extends IProductRepository {
 			...pipeline,
 			{ $count: "total" }
 		]);
-		const calculatedTotal = totalResult ? totalResult.totalPrice : 0;
+		const calculatedTotal = totalResult ? totalResult.total : 0;
 
 		// F. Final Steps: Sort, Skip, Limit, and Project (for Entity conversion)
 		pipeline.push({ $sort: sort });

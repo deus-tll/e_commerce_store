@@ -10,5 +10,5 @@ if (!redisUrl) {
 export const redis = new Redis(redisUrl);
 
 redis.on('error', (err) => {
-	console.error(`[ioredis] Connection Error: ${err.message}`);
+	console.error(`[Redis] Connection Error: ${err.message}`);
 });

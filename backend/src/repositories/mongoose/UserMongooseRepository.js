@@ -5,7 +5,8 @@ import {RepositoryPaginationResult} from "../../domain/index.js";
 
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {ConflictError} from "../../errors/apiErrors.js";
+import {EntityAlreadyExistsError, EntityNotFoundError} from "../../errors/index.js";
+
 import {UserRoles} from "../../constants/app.js";
 
 export class UserMongooseRepository extends IUserRepository {
@@ -40,7 +41,7 @@ export class UserMongooseRepository extends IUserRepository {
 			const keyPattern = error['keyPattern'];
 
 			if (error.code === 11000 && keyPattern.email) {
-				throw new ConflictError("A user with this email already exists.");
+				throw new EntityAlreadyExistsError("User", { email: data.email });
 			}
 			throw error;
 		}
@@ -53,11 +54,16 @@ export class UserMongooseRepository extends IUserRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
+		if (!updatedDoc) throw new EntityNotFoundError("User", { id });
+
 		return MongooseAdapter.toUserEntity(updatedDoc);
 	}
 
 	async deleteById(id) {
 		const deletedDoc = await User.findByIdAndDelete(id).lean();
+
+		if (!deletedDoc) throw new EntityNotFoundError("User", { id });
+
 		return MongooseAdapter.toUserEntity(deletedDoc);
 	}
 

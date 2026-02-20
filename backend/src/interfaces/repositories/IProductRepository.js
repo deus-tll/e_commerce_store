@@ -23,7 +23,7 @@ export class IProductRepository {
 	 * Updates a product entity by its ID.
 	 * @param {string} id - The product ID.
 	 * @param {Object} data - The data for the update product.
-	 * @returns {Promise<ProductEntity | null>} - The updated product record.
+	 * @returns {Promise<ProductEntity>} - The updated product record.
 	 */
 	async updateById(id, data) {
 		throw new Error("Method not implemented.");
@@ -44,7 +44,7 @@ export class IProductRepository {
 	/**
 	 * Toggles the `isFeatured` status of a product by ID.
 	 * @param {string} id - The product ID.
-	 * @returns {Promise<ProductEntity | null>} - The updated product record.
+	 * @returns {Promise<ProductEntity>} - The updated product record.
 	 */
 	async toggleFeatured(id) {
 		throw new Error("Method not implemented.");
@@ -53,7 +53,7 @@ export class IProductRepository {
 	/**
 	 * Deletes a product entity by its ID.
 	 * @param {string} id - The product ID.
-	 * @returns {Promise<ProductEntity | null>} - The deleted product record.
+	 * @returns {Promise<ProductEntity>} - The deleted product record.
 	 */
 	async deleteById(id) {
 		throw new Error("Method not implemented.");

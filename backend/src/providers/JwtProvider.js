@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-import {InvalidTokenError, TokenExpiredError} from "../errors/apiErrors.js";
+import {InvalidTokenError, TokenExpiredError} from "../errors/index.js";
 
 import {TokenTypes} from "../constants/auth.js";
 import {config} from "../config.js";

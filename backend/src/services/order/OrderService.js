@@ -4,7 +4,7 @@ import {IUserService} from "../../interfaces/user/IUserService.js";
 import {IOrderMapper} from "../../interfaces/mappers/IOrderMapper.js";
 import {OrderPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
-import {NotFoundError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for order operations.
@@ -65,7 +65,7 @@ export class OrderService extends IOrderService {
 	async getByIdOrFail(id) {
 		const orderDTO = await this.getById(id);
 
-		if (!orderDTO) throw new NotFoundError(`Order with ID ${id} not found`);
+		if (!orderDTO) throw new EntityNotFoundError("Order", { id });
 
 		return orderDTO;
 	}
@@ -81,7 +81,7 @@ export class OrderService extends IOrderService {
 	async getByPaymentSessionIdOrFail(sessionId) {
 		const orderDTO = await this.getByPaymentSessionId(sessionId);
 
-		if (!orderDTO) throw new NotFoundError(`Order with session ID ${sessionId} not found`);
+		if (!orderDTO) throw new EntityNotFoundError("Order", { sessionId });
 
 		return orderDTO;
 	}

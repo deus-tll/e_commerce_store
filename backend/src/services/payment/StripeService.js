@@ -1,7 +1,7 @@
 import {stripe} from "../../infrastructure/stripe.js";
 import {IStripeService} from "../../interfaces/payment/IStripeService.js";
 
-import {BadRequestError} from "../../errors/apiErrors.js";
+import {SystemError, DomainValidationError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
 import {EnvModes} from "../../constants/app.js";
@@ -108,10 +108,17 @@ export class StripeService extends IStripeService {
 	}
 
 	async retrievePaidSessionData(sessionId) {
-		const session = await this.#retrieveCheckoutSession(sessionId);
+		let session;
+
+		try {
+			session = await this.#retrieveCheckoutSession(sessionId);
+		}
+		catch (error) {
+			throw new SystemError("External payment provider communication failure.");
+		}
 
 		if (session.payment_status !== PaymentStatus.PAID) {
-			throw new BadRequestError("Payment confirmation failed");
+			throw new DomainValidationError("Payment has not been confirmed by the provider.");
 		}
 
 		return {

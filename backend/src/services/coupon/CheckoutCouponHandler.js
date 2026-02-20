@@ -43,10 +43,10 @@ export class CheckoutCouponHandler extends ICouponHandler {
 		// Check if the purchase meets the minimum threshold
 		if (amountPaidInCents < config.coupon.amountForGrantingCoupon) return;
 
-		const couponDTO = await this.#couponService.create(userId);
-
-		if (!couponDTO) {
-			console.error("Failed to create coupon.");
+		try {
+			await this.#couponService.create(userId);
+		} catch (error) {
+			console.error(`Failed to grant coupon to user ${userId}:`, error.message);
 		}
 	}
 }

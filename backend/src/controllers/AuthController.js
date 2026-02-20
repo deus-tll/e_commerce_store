@@ -179,10 +179,14 @@ export class AuthController {
 	refreshAccessToken = async (req, res) => {
 		const { refreshToken: oldRefreshToken } = req.cookies;
 
-		const { accessToken, refreshToken: newRefreshToken } = await this.#sessionAuthService.refreshAccessToken(oldRefreshToken);
-
-		this.#authCookieHandler.setTokens(res, accessToken, newRefreshToken);
-
-		return res.status(200).json({ message: "Tokens refreshed successfully" });
+		try {
+			const { accessToken, refreshToken: newRefreshToken } = await this.#sessionAuthService.refreshAccessToken(oldRefreshToken);
+			this.#authCookieHandler.setTokens(res, accessToken, newRefreshToken);
+			return res.status(200).json({ message: "Tokens refreshed successfully" });
+		}
+		catch (error) {
+			this.#authCookieHandler.clearTokens(res);
+			throw error;
+		}
 	}
 }

@@ -6,7 +6,7 @@
 export class IReviewValidator {
 	/**
 	 * Checks if the required Product and User exist before creating a new review.
-	 * Throws a NotFoundError if either ID is invalid.
+	 * Throws exception if either ID is invalid.
 	 * @param {string} productId - The ID of the product being reviewed.
 	 * @param {string} userId - The ID of the user creating the review.
 	 * @returns {Promise<void>}
@@ -15,7 +15,7 @@ export class IReviewValidator {
 
 	/**
 	 * Checks if the required Product exists.
-	 * Throws a NotFoundError if the ID is invalid.
+	 * Throws exception if the ID is invalid.
 	 * @param {string} productId - The ID of the product.
 	 * @returns {Promise<void>}
 	 */

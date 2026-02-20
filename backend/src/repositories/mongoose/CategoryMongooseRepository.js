@@ -4,8 +4,7 @@ import {ICategoryRepository} from "../../interfaces/repositories/ICategoryReposi
 import {RepositoryPaginationResult} from "../../domain/index.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {ConflictError} from "../../errors/apiErrors.js";
-import {EntityNotFoundError} from "../../errors/domainErrors.js";
+import {EntityAlreadyExistsError, EntityNotFoundError} from "../../errors/index.js";
 
 import {sanitizeSearchTerm} from "../../utils/sanitize.js";
 
@@ -29,9 +28,8 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 		catch (error) {
 			if (error.code === 11000) {
 				const keyPattern = error['keyPattern'];
-
 				const key = Object.keys(keyPattern)[0];
-				throw new ConflictError(`A category with this ${key} already exists.`);
+				throw new EntityAlreadyExistsError("Category", { [key]: data[key] });
 			}
 			throw error;
 		}

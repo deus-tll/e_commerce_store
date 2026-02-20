@@ -92,10 +92,10 @@ export class AppServer {
 		const categorySeeder = this.#container.get(SeederTypes.CATEGORY);
 		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
 
-		console.log("Starting seeders...");
+		console.log("[Server] Starting seeders...");
 		await categorySeeder.seed();
 		await adminSeeder.seed();
-		console.log("Seeding complete.");
+		console.log("[Server] Seeding complete.");
 	}
 
 	/**
@@ -114,11 +114,11 @@ export class AppServer {
 			await this.runSeeders();
 
 			this.#app.listen(this.#port, () => {
-				console.log(`Server is running on port ${this.#port}`);
-				console.log(`Environment: ${NODE_ENV}`);
+				console.log(`[Server] Running on port ${this.#port}`);
+				console.log(`[Server] Environment: ${NODE_ENV}`);
 			});
 		} catch (error) {
-			console.error("Fatal error during server startup:", error);
+			console.error("[Server] Fatal error during server startup:", error);
 			process.exit(1);
 		}
 	}

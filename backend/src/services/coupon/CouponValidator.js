@@ -3,7 +3,8 @@ import {IUserService} from "../../interfaces/user/IUserService.js";
 import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository.js";
 import {CouponValidationDTO} from "../../domain/index.js";
 
-import {DomainValidationError, EntityNotFoundError} from "../../errors/domainErrors.js";
+import {DomainValidationError, EntityNotFoundError} from "../../errors/index.js";
+import {ValidationErrorTypes} from "../../constants/errors.js";
 
 /**
  * @augments ICouponValidator
@@ -26,7 +27,7 @@ export class CouponValidator extends ICouponValidator {
 	async #handleExpiredCoupon(couponEntity, userId) {
 		if (couponEntity.isExpired()) {
 			await this.#couponRepository.updateCouponActiveState(couponEntity.code, userId, false);
-			throw new DomainValidationError("Coupon expired", "EXPIRED");
+			throw new DomainValidationError("Coupon expired", ValidationErrorTypes.EXPIRED);
 		}
 	}
 

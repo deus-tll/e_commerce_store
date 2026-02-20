@@ -36,7 +36,7 @@ export class CategorySeeder extends BaseSeeder {
 			const categoryPaginationResultDTO = await this.#categoryService.getAll(1, 1);
 
 			if (categoryPaginationResultDTO.pagination.total > 0) {
-				console.log("Categories already exist, skipping seeding.");
+				console.log("[Seeder] Categories already exist, skipping seeding.");
 				return;
 			}
 
@@ -50,10 +50,10 @@ export class CategorySeeder extends BaseSeeder {
 				await this.#categoryService.create(createCategoryDTO);
 			}
 
-			console.log("Categories seeded successfully!");
+			console.log("[Seeder] Categories seeded successfully!");
 		}
 		catch (error) {
-			console.error("Error while seeding categories:", error.message);
+			console.error("[Seeder] Error while seeding categories:", error.message);
 		}
 	}
 }
