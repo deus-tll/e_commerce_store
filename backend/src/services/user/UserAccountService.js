@@ -8,14 +8,8 @@ import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
-import {EnvModes} from "../../constants/app.js";
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
 import {config} from "../../config.js";
-
-const APP_URL =
-	config.nodeEnv !== EnvModes.PROD
-		? config.developmentClientUrl
-		: config.appUrl;
 
 /**
  * Implements the IUserAccountService contract, focusing on user account state
@@ -126,7 +120,7 @@ export class UserAccountService extends IUserAccountService {
 			const { id: userId } = userEntity;
 
 			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-			const resetPasswordUrl = `${APP_URL}/${config.auth.resetPasswordUrl}/${resetToken}`;
+			const resetPasswordUrl = `${config.app.clientUrl}/${config.auth.password.resetUrl}/${resetToken}`;
 
 			await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
 			await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl);

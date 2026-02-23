@@ -10,7 +10,6 @@ import {
 } from "../../errors/index.js";
 
 import {config} from "../../config.js";
-import {EnvModes} from "../../constants/app.js";
 import {ValidationErrorTypes} from "../../constants/errors.js";
 
 /**
@@ -23,7 +22,7 @@ import {ValidationErrorTypes} from "../../constants/errors.js";
  * @type {ErrorRequestHandler}
  */
 const errorHandler = (err, req, res, _next) => {
-	const isProduction = config.nodeEnv === EnvModes.PROD;
+	const { isProduction } = config.app;
 
 	if (!(err instanceof DomainError) || err instanceof SystemError) {
 		console.error("[Runtime/System Error]:", err);

@@ -2,13 +2,7 @@ import {ICategoryService} from "../interfaces/category/ICategoryService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
 import {CreateCategoryDTO} from "../domain/index.js";
 
-import {EnvModes} from "../constants/app.js";
 import {config} from "../config.js";
-
-const APP_URL =
-	config.nodeEnv !== EnvModes.PROD
-		? `http://localhost:${config.port}`
-		: config.appUrl;
 
 const defaultCategories = [
 	{ name: "Bags", image: "/public/categories/bags.jpg" },
@@ -43,7 +37,7 @@ export class CategorySeeder extends BaseSeeder {
 			for (const category of defaultCategories) {
 				const createCategoryDTO = new CreateCategoryDTO({
 					name: category.name,
-					image: `${APP_URL}${category.image}`,
+					image: `${config.app.serverUrl}${category.image}`,
 					allowedAttributes: []
 				});
 

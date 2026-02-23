@@ -8,7 +8,6 @@ import connectDB from "./infrastructure/db.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {EnvModes} from "./constants/app.js";
 import {RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
@@ -17,8 +16,7 @@ import {config} from "./config.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const NODE_ENV = config.nodeEnv;
-const JSON_LIMIT = config.jsonLimit;
+const JSON_LIMIT = config.app.jsonLimit;
 
 /**
  * Encapsulates the configuration and execution of the Express application.
@@ -35,7 +33,7 @@ export class AppServer {
 	 */
 	constructor(container) {
 		this.#app = express();
-		this.#port = config.port;
+		this.#port = config.app.port;
 		this.#container = container;
 	}
 
@@ -43,10 +41,10 @@ export class AppServer {
 	 * Configures global middleware (CORS, body parsers, static files).
 	 */
 	configureMiddleware() {
-		if (NODE_ENV !== EnvModes.PROD) {
+		if (!config.app.isProduction) {
 			this.#app.use(
 				cors({
-					origin: config.developmentClientUrl,
+					origin: config.app.clientUrl,
 					credentials: true,
 				})
 			);
@@ -115,7 +113,7 @@ export class AppServer {
 
 			this.#app.listen(this.#port, () => {
 				console.log(`[Server] Running on port ${this.#port}`);
-				console.log(`[Server] Environment: ${NODE_ENV}`);
+				console.log(`[Server] Environment: ${config.app.nodeEnv}`);
 			});
 		} catch (error) {
 			console.error("[Server] Fatal error during server startup:", error);

@@ -18,7 +18,7 @@ export class AdminSeeder  extends BaseSeeder {
 
 	async seed() {
 		try {
-			const { name: adminName, email: adminEmail, password: adminPassword } = config.admin;
+			const { name: adminName, email: adminEmail, password: adminPassword } = config.business.initialAdmin;
 
 			if (!adminName || !adminEmail || !adminPassword) {
 				console.warn("[Seeder] Admin credentials missing in config. Skipping...");

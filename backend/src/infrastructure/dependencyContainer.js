@@ -202,7 +202,7 @@ container.register(ServiceTypes.STORAGE, CloudinaryStorageService, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
 
 // Factories
-container.register(FactoryTypes.COUPON, () => new CouponFactory(config.coupon.discountPercentage));
+container.register(FactoryTypes.COUPON, () => new CouponFactory(config.business.coupon.discountPercentage));
 
 // Mappers
 container.register(MapperTypes.CART, CartMapper, []);

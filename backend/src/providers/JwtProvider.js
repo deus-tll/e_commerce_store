@@ -5,10 +5,10 @@ import {InvalidTokenError, TokenExpiredError} from "../errors/index.js";
 import {TokenTypes} from "../constants/auth.js";
 import {config} from "../config.js";
 
-const ACCESS_TOKEN_SECRET = config.auth.accessTokenSecret;
-const REFRESH_TOKEN_SECRET = config.auth.refreshTokenSecret;
-const ACCESS_TOKEN_TTL = config.auth.accessTokenTtl;
-const REFRESH_TOKEN_TTL = config.auth.refreshTokenTtl;
+const ACCESS_TOKEN_SECRET = config.auth.access.secret;
+const REFRESH_TOKEN_SECRET = config.auth.refresh.secret;
+const ACCESS_TOKEN_TTL = config.auth.access.ttl;
+const REFRESH_TOKEN_TTL = config.auth.refresh.ttl;
 
 /**
  * Handles all technical JWT signing and verification details.

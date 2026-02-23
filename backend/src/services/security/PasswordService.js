@@ -1,12 +1,14 @@
 import bcrypt from "bcryptjs";
-import {SystemError} from "../../errors/index.js";
 
-const SALT_ROUNDS = 10;
+import {SystemError} from "../../errors/index.js";
+import {config} from "../../config.js";
 
 /**
  * Service dedicated to handling password security operations (hashing, comparing).
  */
 export class PasswordService {
+	#saltRounds = config.auth.password.saltRounds;
+
 	/**
 	 * Hashes a plaintext password.
 	 * @param {string} password - The plaintext password.
@@ -14,7 +16,7 @@ export class PasswordService {
 	 */
 	async hashPassword(password) {
 		try {
-			return bcrypt.hash(password, SALT_ROUNDS);
+			return await bcrypt.hash(password, this.#saltRounds);
 		}
 		catch (error) {
 			throw new SystemError("Failed to secure password.");
@@ -34,7 +36,7 @@ export class PasswordService {
 		}
 
 		try {
-			return bcrypt.compare(plaintextPassword, hashedPassword);
+			return await bcrypt.compare(plaintextPassword, hashedPassword);
 		}
 		catch (error) {
 			throw new SystemError("Error during password verification.");

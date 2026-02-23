@@ -5,7 +5,7 @@ import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 
 import {config} from "../../config.js";
 
-const IS_PROD = config.nodeEnv === EnvModes.PROD;
+const IS_PROD = config.app.nodeEnv === EnvModes.PROD;
 
 const SAME_SITE_COOKIE_SETTER = IS_PROD
 	? SameSiteCookieOptions.STRICT

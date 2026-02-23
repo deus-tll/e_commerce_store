@@ -41,7 +41,7 @@ export class CheckoutCouponHandler extends ICouponHandler {
 
 	async grantNewCouponIfEligible(userId, amountPaidInCents) {
 		// Check if the purchase meets the minimum threshold
-		if (amountPaidInCents < config.coupon.amountForGrantingCoupon) return;
+		if (amountPaidInCents < config.business.coupon.minAmountForGrant) return;
 
 		try {
 			await this.#couponService.create(userId);
