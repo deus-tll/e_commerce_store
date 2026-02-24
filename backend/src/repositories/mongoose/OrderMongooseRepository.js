@@ -5,7 +5,7 @@ import {IOrderRepository} from "../../interfaces/repositories/IOrderRepository.j
 import {SalesSummaryDTO, DailySalesSummaryDTO, RepositoryPaginationResult} from "../../domain/index.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
+import {EntityAlreadyExistsError, SystemError} from "../../errors/index.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
 	async create(userId, data) {
@@ -21,7 +21,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 			newOrderNumber = counter.seq.toString().padStart(6, '0');
 		}
 		catch (error) {
-			throw new InternalServerError("Failed to generate unique order number.");
+			throw new SystemError("Failed to generate unique order number.");
 		}
 
 		const docData = {
@@ -49,10 +49,10 @@ export class OrderMongooseRepository extends IOrderRepository {
 			if (error.code === 11000 && keyPattern)
 			{
 				if (keyPattern.paymentSessionId) {
-					throw new ConflictError("An order with this payment session ID already exists.");
+					throw new EntityAlreadyExistsError("Order", { paymentSessionId: data.paymentSessionId } );
 				}
 				if (keyPattern.orderNumber) {
-					throw new InternalServerError("Order number conflict during save.");
+					throw new SystemError("Order number conflict during save.");
 				}
 			}
 

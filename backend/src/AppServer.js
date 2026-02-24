@@ -5,22 +5,18 @@ import path from "path";
 import {fileURLToPath} from "url";
 
 import connectDB from "./infrastructure/db.js";
-import {DependencyLocator} from "./core/ioc/DependencyLocator.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {EnvModes} from "./constants/app.js";
 import {RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
+import {config} from "./config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const NODE_ENV = process.env.NODE_ENV || EnvModes.DEV;
-const DEVELOPMENT_CLIENT_URL = process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173";
-const PORT = process.env.PORT || 3001;
-const JSON_LIMIT = process.env.JSON_LIMIT || "10mb";
+const JSON_LIMIT = config.app.jsonLimit;
 
 /**
  * Encapsulates the configuration and execution of the Express application.
@@ -29,26 +25,26 @@ const JSON_LIMIT = process.env.JSON_LIMIT || "10mb";
 export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
+	/** @type {Container} */ #container;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
+	 * @param {Container} container - The IoC container instance.
 	 */
-	constructor() {
+	constructor(container) {
 		this.#app = express();
-		this.#port = PORT;
-		this.configureMiddleware();
-		this.setupRoutes();
-		this.#app.use(errorHandler);
+		this.#port = config.app.port;
+		this.#container = container;
 	}
 
 	/**
 	 * Configures global middleware (CORS, body parsers, static files).
 	 */
 	configureMiddleware() {
-		if (NODE_ENV !== EnvModes.PROD) {
+		if (!config.app.isProduction) {
 			this.#app.use(
 				cors({
-					origin: DEVELOPMENT_CLIENT_URL,
+					origin: config.app.clientUrl,
 					credentials: true,
 				})
 			);
@@ -69,28 +65,35 @@ export class AppServer {
 	 * Configures the application routers, retrieving them from the IoC container.
 	 */
 	setupRoutes() {
-		this.#app.use(RouteTypes.AUTH, DependencyLocator.getRouter(RouterTypes.AUTH));
-		this.#app.use(RouteTypes.ANALYTICS, DependencyLocator.getRouter(RouterTypes.ANALYTICS));
-		this.#app.use(RouteTypes.CART, DependencyLocator.getRouter(RouterTypes.CART));
-		this.#app.use(RouteTypes.CATEGORY, DependencyLocator.getRouter(RouterTypes.CATEGORY));
-		this.#app.use(RouteTypes.COUPON, DependencyLocator.getRouter(RouterTypes.COUPON));
-		this.#app.use(RouteTypes.PAYMENT, DependencyLocator.getRouter(RouterTypes.PAYMENT));
-		this.#app.use(RouteTypes.PRODUCT, DependencyLocator.getRouter(RouterTypes.PRODUCT));
-		this.#app.use(RouteTypes.REVIEW, DependencyLocator.getRouter(RouterTypes.REVIEW));
-		this.#app.use(RouteTypes.USER, DependencyLocator.getRouter(RouterTypes.USER));
+		this.#app.use(RouteTypes.AUTH, this.#container.get(RouterTypes.AUTH));
+		this.#app.use(RouteTypes.ANALYTICS, this.#container.get(RouterTypes.ANALYTICS));
+		this.#app.use(RouteTypes.CART, this.#container.get(RouterTypes.CART));
+		this.#app.use(RouteTypes.CATEGORY, this.#container.get(RouterTypes.CATEGORY));
+		this.#app.use(RouteTypes.COUPON, this.#container.get(RouterTypes.COUPON));
+		this.#app.use(RouteTypes.PAYMENT, this.#container.get(RouterTypes.PAYMENT));
+		this.#app.use(RouteTypes.PRODUCT, this.#container.get(RouterTypes.PRODUCT));
+		this.#app.use(RouteTypes.REVIEW, this.#container.get(RouterTypes.REVIEW));
+		this.#app.use(RouteTypes.USER, this.#container.get(RouterTypes.USER));
+	}
+
+	/**
+	 * Sets up error middleware.
+	 */
+	setupErrorHandling() {
+		this.#app.use(errorHandler);
 	}
 
 	/**
 	 * Executes seeding operations.
 	 */
 	async runSeeders() {
-		const categorySeeder = DependencyLocator.getSeeder(SeederTypes.CATEGORY);
-		const adminSeeder = DependencyLocator.getSeeder(SeederTypes.ADMIN);
+		const categorySeeder = this.#container.get(SeederTypes.CATEGORY);
+		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
 
-		console.log("Starting seeders...");
+		console.log("[Server] Starting seeders...");
 		await categorySeeder.seed();
 		await adminSeeder.seed();
-		console.log("Seeding complete.");
+		console.log("[Server] Seeding complete.");
 	}
 
 	/**
@@ -100,14 +103,20 @@ export class AppServer {
 		try {
 			await connectDB();
 
+			this.#container.verify();
+
+			this.configureMiddleware();
+			this.setupRoutes();
+			this.setupErrorHandling();
+
 			await this.runSeeders();
 
 			this.#app.listen(this.#port, () => {
-				console.log(`Server is running on port ${this.#port}`);
-				console.log(`Environment: ${NODE_ENV}`);
+				console.log(`[Server] Running on port ${this.#port}`);
+				console.log(`[Server] Environment: ${config.app.nodeEnv}`);
 			});
 		} catch (error) {
-			console.error("Fatal error during server startup:", error);
+			console.error("[Server] Fatal error during server startup:", error);
 			process.exit(1);
 		}
 	}

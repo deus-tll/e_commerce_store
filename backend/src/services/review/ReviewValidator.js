@@ -21,10 +21,10 @@ export class ReviewValidator extends IReviewValidator {
 	}
 
 	async validateCreation(productId, userId) {
-		await Promise.all([
+		await Promise.all(/** @type {Promise<any>[]} */([
 			this.#productService.getByIdOrFail(productId),
 			this.#userService.getByIdOrFail(userId),
-		]);
+		]));
 	}
 
 	async validateProductExistence(productId) {

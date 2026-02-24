@@ -98,15 +98,29 @@ import {config} from "../config.js";
 class Container {
 	constructor() {
 		this.services = new Map();
+		this.resolving = new Set();
 	}
 
 	/**
-	 * Registers a singleton service.
-	 * @param {string} name - A unique name (token) for the service.
-	 * @param {function} definition - A factory function that creates a service and its dependencies.
+	 * Registers a service.
+	 * @param {string} name - Unique token.
+	 * @param {function|Class} definition - Factory function OR Class constructor.
+	 * @param {string[]} [dependencies=null] - Optional array of tokens to inject.
 	 */
-	register(name, definition) {
-		this.services.set(name, { definition, instance: null });
+	register(name, definition, dependencies = null) {
+		if (dependencies && typeof definition === 'function' && definition.prototype) {
+			const expected = definition.length;
+			const actual = dependencies.length;
+
+			if (actual !== expected) {
+				throw new Error(
+					`[DI Error]: "${name}" registration mismatch. ` +
+					`Class expects ${expected} arguments, but ${actual} were provided.`
+				);
+			}
+		}
+
+		this.services.set(name, { definition, dependencies, instance: null });
 	}
 
 	/**
@@ -117,14 +131,45 @@ class Container {
 		const service = this.services.get(name);
 
 		if (!service) {
-			throw new Error(`Service "${name}" is not registered.`);
+			throw new Error(`[DI Error]: Service "${name}" is not registered in the container.`);
 		}
 
-		if (!service.instance) {
-			service.instance = service.definition(this);
+		if (service.instance) return service.instance;
+
+		if (this.resolving.has(name)) {
+			const chain = [...this.resolving, name].join(" -> ");
+			throw new Error(`[DI Error]: Circular dependency detected: ${chain}`);
 		}
 
-		return service.instance;
+		this.resolving.add(name);
+
+		try {
+			const { definition, dependencies } = service;
+
+			if (dependencies) {
+				const resolvedDeps = dependencies.map(dep => this.get(dep));
+				service.instance = new definition(...resolvedDeps);
+			}
+			else {
+				service.instance = definition(this);
+			}
+
+			return service.instance;
+		}
+		finally {
+			this.resolving.delete(name);
+		}
+	}
+
+	/**
+	 * Ensures all registered services can be resolved without errors.
+	 */
+	verify() {
+		console.log("[IoC Container] Verifying...");
+		for (const name of this.services.keys()) {
+			this.get(name);
+		}
+		console.log("[IoC Container] Verified successfully.");
 	}
 }
 
@@ -133,286 +178,141 @@ const container = new Container();
 
 // 1. Repositories (lowest level dependency, have no dependencies)
 // ====================================================================
-container.register(RepositoryTypes.CART, () => new CartMongooseRepository());
-container.register(RepositoryTypes.CATEGORY, () => new CategoryMongooseRepository());
-container.register(RepositoryTypes.COUPON, () => new CouponMongooseRepository());
-container.register(RepositoryTypes.ORDER, () => new OrderMongooseRepository());
-container.register(RepositoryTypes.PRODUCT, () => new ProductMongooseRepository());
-container.register(RepositoryTypes.REVIEW, () => new ReviewMongooseRepository());
-container.register(RepositoryTypes.USER, () => new UserMongooseRepository());
+container.register(RepositoryTypes.CART, CartMongooseRepository, []);
+container.register(RepositoryTypes.CATEGORY, CategoryMongooseRepository, []);
+container.register(RepositoryTypes.COUPON, CouponMongooseRepository, []);
+container.register(RepositoryTypes.ORDER, OrderMongooseRepository, []);
+container.register(RepositoryTypes.PRODUCT, ProductMongooseRepository, []);
+container.register(RepositoryTypes.REVIEW, ReviewMongooseRepository, []);
+container.register(RepositoryTypes.USER, UserMongooseRepository, []);
 // ====================================================================
 
 
 // 2. Independent Instances (lowest level dependency, have no dependencies)
 // ====================================================================
 // Services
-container.register(ServiceTypes.AUTH_CACHE, () => new AuthCacheService());
-container.register(ServiceTypes.PRODUCT_CACHE, () => new ProductCacheService());
-container.register(ServiceTypes.EMAIL_CONTENT, () => new FilesystemEmailContentService());
-container.register(ServiceTypes.PASSWORD, () => new PasswordService());
-container.register(ServiceTypes.SLUG_GENERATOR, () => new SlugGenerator());
-container.register(ServiceTypes.STORAGE, () => new CloudinaryStorageService());
+container.register(ServiceTypes.AUTH_CACHE, AuthCacheService, []);
+container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, []);
+container.register(ServiceTypes.EMAIL_CONTENT, FilesystemEmailContentService, []);
+container.register(ServiceTypes.PASSWORD, PasswordService, []);
+container.register(ServiceTypes.SLUG_GENERATOR, SlugGenerator, []);
+container.register(ServiceTypes.STORAGE, CloudinaryStorageService, []);
 
 // Providers
-container.register(ProviderTypes.JWT, () => new JwtProvider());
+container.register(ProviderTypes.JWT, JwtProvider, []);
 
 // Factories
-container.register(FactoryTypes.COUPON, () => new CouponFactory(config.coupon.discountPercentage));
+container.register(FactoryTypes.COUPON, () => new CouponFactory(config.business.coupon.discountPercentage));
 
 // Mappers
-container.register(MapperTypes.CART, () => new CartMapper());
-container.register(MapperTypes.CATEGORY, () => new CategoryMapper());
-container.register(MapperTypes.COUPON, () => new CouponMapper());
-container.register(MapperTypes.ORDER, () => new OrderMapper());
-container.register(MapperTypes.PRODUCT, () => new ProductMapper());
-container.register(MapperTypes.REVIEW, () => new ReviewMapper());
-container.register(MapperTypes.USER, () => new UserMapper());
+container.register(MapperTypes.CART, CartMapper, []);
+container.register(MapperTypes.CATEGORY, CategoryMapper, []);
+container.register(MapperTypes.COUPON, CouponMapper, []);
+container.register(MapperTypes.ORDER, OrderMapper, []);
+container.register(MapperTypes.PRODUCT, ProductMapper, []);
+container.register(MapperTypes.REVIEW, ReviewMapper, []);
+container.register(MapperTypes.USER, UserMapper, []);
 
 // Translators
-container.register(QueryTranslatorTypes.PRODUCT, () => new ProductQueryTranslator());
-container.register(QueryTranslatorTypes.USER, () => new UserQueryTranslator());
+container.register(QueryTranslatorTypes.PRODUCT, ProductQueryTranslator, []);
+container.register(QueryTranslatorTypes.USER, UserQueryTranslator, []);
 
 // Utils
-container.register(UtilityTypes.DATE, () => new DateTimeService());
+container.register(UtilityTypes.DATE, DateTimeService, []);
 // ====================================================================
 
 
 // 3. Cookie Handlers
 // ====================================================================
-container.register(CookieHandlerTypes.AUTH, (c) => {
-	const dateTimeService = c.get(UtilityTypes.DATE);
-	return new AuthCookieHandler(dateTimeService);
-});
+container.register(CookieHandlerTypes.AUTH, AuthCookieHandler, [UtilityTypes.DATE]);
 // ====================================================================
 
 
 // 4. Dependent Services (depends on repositories and independent services)
 // ====================================================================
 // Email
-container.register(ServiceTypes.EMAIL, (c) => {
-	const contentService = c.get(ServiceTypes.EMAIL_CONTENT);
-	return new MailTrapEmailService(contentService);
-});
+container.register(ServiceTypes.EMAIL, MailTrapEmailService, [ServiceTypes.EMAIL_CONTENT]);
 // =============
 // Storage
-container.register(ServiceTypes.CATEGORY_STORAGE, (c) => {
-	const storageService = c.get(ServiceTypes.STORAGE);
-	return new CategoryStorageService(storageService);
-});
-container.register(ImageManagerTypes.CATEGORY, (c) => {
-	const categoryStorageService = c.get(ServiceTypes.CATEGORY_STORAGE);
-	return new CategoryImageManager(categoryStorageService);
-});
-container.register(ServiceTypes.PRODUCT_STORAGE, (c) => {
-	const storageService = c.get(ServiceTypes.STORAGE);
-	return new ProductStorageService(storageService);
-});
-container.register(ImageManagerTypes.PRODUCT, (c) => {
-	const productStorageService = c.get(ServiceTypes.PRODUCT_STORAGE);
-	return new ProductImageManager(productStorageService);
-});
+container.register(ServiceTypes.CATEGORY_STORAGE, CategoryStorageService, [ServiceTypes.STORAGE]);
+container.register(ImageManagerTypes.CATEGORY, CategoryImageManager, [ServiceTypes.CATEGORY_STORAGE]);
+container.register(ServiceTypes.PRODUCT_STORAGE, ProductStorageService, [ServiceTypes.STORAGE]);
+container.register(ImageManagerTypes.PRODUCT, ProductImageManager, [ServiceTypes.PRODUCT_STORAGE]);
 // =============
 // User
-container.register(ServiceTypes.USER_TOKEN, (c) => {
-	const userRepository = c.get(RepositoryTypes.USER);
-	const passwordService = c.get(ServiceTypes.PASSWORD);
-
-	return new UserTokenService(userRepository, passwordService);
-});
-container.register(ServiceTypes.USER_STATS, (c) => {
-	const userRepository = c.get(RepositoryTypes.USER);
-	return new UserStatsService(userRepository);
-});
-container.register(ServiceTypes.USER, (c) => {
-	const userRepository = c.get(RepositoryTypes.USER);
-	const passwordService = c.get(ServiceTypes.PASSWORD);
-	const userTokenService = c.get(ServiceTypes.USER_TOKEN);
-	const userMapper = c.get(MapperTypes.USER);
-	const userQueryBuilder = c.get(QueryTranslatorTypes.USER);
-
-	return new UserService(userRepository, passwordService, userTokenService, userMapper, userQueryBuilder);
-});
-container.register(ServiceTypes.USER_ACCOUNT, (c) => {
-	const userService = c.get(ServiceTypes.USER);
-	const emailService = c.get(ServiceTypes.EMAIL);
-	const passwordService = c.get(ServiceTypes.PASSWORD);
-	const jwtProvider = c.get(ProviderTypes.JWT);
-	const authCacheService = c.get(ServiceTypes.AUTH_CACHE);
-	const userTokenService = c.get(ServiceTypes.USER_TOKEN);
-	const userMapper = c.get(MapperTypes.USER);
-
-	return new UserAccountService(userService, emailService, passwordService, jwtProvider, authCacheService, userTokenService, userMapper);
-});
+container.register(ServiceTypes.USER_TOKEN, UserTokenService, [RepositoryTypes.USER, ServiceTypes.PASSWORD]);
+container.register(ServiceTypes.USER_STATS, UserStatsService, [RepositoryTypes.USER]);
+container.register(ServiceTypes.USER, UserService,
+	[RepositoryTypes.USER, ServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, QueryTranslatorTypes.USER]
+);
+container.register(ServiceTypes.USER_ACCOUNT, UserAccountService,
+	[ServiceTypes.USER, ServiceTypes.EMAIL, ServiceTypes.PASSWORD, ProviderTypes.JWT, ServiceTypes.AUTH_CACHE, ServiceTypes.USER_TOKEN, MapperTypes.USER]
+);
 // =============
 // Category
-container.register(ServiceTypes.CATEGORY, (c) => {
-	const categoryRepository = c.get(RepositoryTypes.CATEGORY);
-	const categoryImageManager = c.get(ImageManagerTypes.CATEGORY);
-	const categoryMapper = c.get(MapperTypes.CATEGORY);
-	const slugGenerator = c.get(ServiceTypes.SLUG_GENERATOR);
-
-	return new CategoryService(categoryRepository, categoryImageManager, categoryMapper, slugGenerator);
-});
+container.register(ServiceTypes.CATEGORY, CategoryService,
+	[RepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY, ServiceTypes.SLUG_GENERATOR]
+);
 // =============
 // Product
-container.register(ServiceTypes.PRODUCT, (c) => {
-	const productRepository = c.get(RepositoryTypes.PRODUCT);
-	const categoryService = c.get(ServiceTypes.CATEGORY);
-	const productCacheService = c.get(ServiceTypes.PRODUCT_CACHE);
-	const productImageManager = c.get(ImageManagerTypes.PRODUCT);
-	const productQueryTranslator = c.get(QueryTranslatorTypes.PRODUCT);
-	const productMapper = c.get(MapperTypes.PRODUCT);
-
-	return new ProductService(productRepository, categoryService, productCacheService, productImageManager, productQueryTranslator, productMapper);
-});
-container.register(ServiceTypes.PRODUCT_STATS, (c) => {
-	const productService = c.get(ServiceTypes.PRODUCT);
-	return new ProductStatsService(productService);
-});
+container.register(ServiceTypes.PRODUCT, ProductService,
+	[RepositoryTypes.PRODUCT, ServiceTypes.CATEGORY, ServiceTypes.PRODUCT_CACHE, ImageManagerTypes.PRODUCT, QueryTranslatorTypes.PRODUCT, MapperTypes.PRODUCT]
+);
+container.register(ServiceTypes.PRODUCT_STATS, ProductStatsService, [ServiceTypes.PRODUCT]);
 // =============
 // Cart
-container.register(ServiceTypes.CART, (c) => {
-	const cartRepository = c.get(RepositoryTypes.CART);
-	const productService = c.get(ServiceTypes.PRODUCT);
-	const cartMapper = c.get(MapperTypes.CART);
-
-	return new CartService(cartRepository, productService, cartMapper);
-});
+container.register(ServiceTypes.CART, CartService,
+	[RepositoryTypes.CART, ServiceTypes.PRODUCT, MapperTypes.CART]
+);
 // =============
 // Review
-container.register(ValidatorTypes.REVIEW, (c) => {
-	const productService = c.get(ServiceTypes.PRODUCT);
-	const userService = c.get(ServiceTypes.USER);
-
-	return new ReviewValidator(productService, userService);
-});
-container.register(ServiceTypes.REVIEW, (c) => {
-	const reviewRepository = c.get(RepositoryTypes.REVIEW);
-	const userService = c.get(ServiceTypes.USER);
-	const productStatsService = c.get(ServiceTypes.PRODUCT_STATS);
-	const reviewValidator = c.get(ValidatorTypes.REVIEW);
-	const reviewMapper = c.get(MapperTypes.REVIEW);
-
-	return new ReviewService(reviewRepository, userService, productStatsService, reviewValidator, reviewMapper);
-});
+container.register(ValidatorTypes.REVIEW, ReviewValidator, [ServiceTypes.PRODUCT, ServiceTypes.USER]);
+container.register(ServiceTypes.REVIEW, ReviewService,
+	[RepositoryTypes.REVIEW, ServiceTypes.USER, ServiceTypes.PRODUCT_STATS, ValidatorTypes.REVIEW, MapperTypes.REVIEW]
+);
 // =============
 // Order
-container.register(ServiceTypes.ORDER, (c) => {
-	const orderRepository = c.get(RepositoryTypes.ORDER);
-	const userService = c.get(ServiceTypes.USER);
-	const orderMapper = c.get(MapperTypes.ORDER);
-
-	return new OrderService(orderRepository, userService, orderMapper);
-});
+container.register(ServiceTypes.ORDER, OrderService, [RepositoryTypes.ORDER, ServiceTypes.USER, MapperTypes.ORDER]);
 // =============
 // Coupon
-container.register(ValidatorTypes.COUPON, (c) => {
-	const userService = c.get(ServiceTypes.USER);
-	const couponRepository = c.get(RepositoryTypes.COUPON);
-
-	return new CouponValidator(userService, couponRepository);
-});
-container.register(ServiceTypes.COUPON, (c) => {
-	const couponRepository = c.get(RepositoryTypes.COUPON);
-	const couponValidator = c.get(ValidatorTypes.COUPON);
-	const couponFactory = c.get(FactoryTypes.COUPON);
-	const couponMapper = c.get(MapperTypes.COUPON);
-
-	return new CouponService(couponRepository, couponValidator, couponFactory, couponMapper);
-});
+container.register(ValidatorTypes.COUPON, CouponValidator, [ServiceTypes.USER, RepositoryTypes.COUPON]);
+container.register(ServiceTypes.COUPON, CouponService,
+	[RepositoryTypes.COUPON, ValidatorTypes.COUPON, FactoryTypes.COUPON, MapperTypes.COUPON]
+);
 // =============
 // Analytics
-container.register(ServiceTypes.ANALYTICS, (c) => {
-	const orderRepository = c.get(RepositoryTypes.ORDER);
-	const userRepository = c.get(RepositoryTypes.USER);
-	const productRepository = c.get(RepositoryTypes.PRODUCT);
-	const dateTimeService = c.get(UtilityTypes.DATE);
-
-	return new AnalyticsService(orderRepository, userRepository, productRepository, dateTimeService);
-});
+container.register(ServiceTypes.ANALYTICS, AnalyticsService,
+	[RepositoryTypes.ORDER, RepositoryTypes.USER, RepositoryTypes.PRODUCT, UtilityTypes.DATE]
+);
 // =============
 // Session Auth
-container.register(ServiceTypes.SESSION_AUTH, (c) => {
-	const userService = c.get(ServiceTypes.USER);
-	const passwordService = c.get(ServiceTypes.PASSWORD);
-	const jwtProvider = c.get(ProviderTypes.JWT);
-	const authCacheService = c.get(ServiceTypes.AUTH_CACHE);
-
-	return new SessionAuthService(userService, passwordService, jwtProvider, authCacheService);
-});
+container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
+	[ServiceTypes.USER, ServiceTypes.PASSWORD, ProviderTypes.JWT, ServiceTypes.AUTH_CACHE]
+);
 // =============
 // Payment
-container.register(ServiceTypes.STRIPE, () => {
-	return new StripeService();
-});
-container.register(ServiceTypes.CHECKOUT_ORDER_HANDLER, (c) => {
-	const orderService = c.get(ServiceTypes.ORDER);
-	const couponService = c.get(ServiceTypes.COUPON);
-	const cartService = c.get(ServiceTypes.CART);
-	const couponHandler = c.get(ServiceTypes.CHECKOUT_COUPON_HANDLER);
-
-	return new CheckoutOrderHandler(orderService, couponService, cartService, couponHandler);
-});
-container.register(ServiceTypes.CHECKOUT_COUPON_HANDLER, (c) => {
-	const couponService = c.get(ServiceTypes.COUPON);
-
-	return new CheckoutCouponHandler(couponService);
-});
-container.register(ServiceTypes.PAYMENT, (c) => {
-	const stripeService = c.get(ServiceTypes.STRIPE);
-	const orderHandler = c.get(ServiceTypes.CHECKOUT_ORDER_HANDLER);
-	const couponHandler = c.get(ServiceTypes.CHECKOUT_COUPON_HANDLER);
-
-	return new StripePaymentService(stripeService, orderHandler, couponHandler);
-});
+container.register(ServiceTypes.STRIPE, StripeService, []);
+container.register(ServiceTypes.CHECKOUT_COUPON_HANDLER, CheckoutCouponHandler, [ServiceTypes.COUPON]);
+container.register(ServiceTypes.CHECKOUT_ORDER_HANDLER, CheckoutOrderHandler,
+	[ServiceTypes.ORDER, ServiceTypes.COUPON, ServiceTypes.CART, ServiceTypes.CHECKOUT_COUPON_HANDLER]
+);
+container.register(ServiceTypes.PAYMENT, StripePaymentService,
+	[ServiceTypes.STRIPE, ServiceTypes.PRODUCT, ServiceTypes.CHECKOUT_ORDER_HANDLER, ServiceTypes.CHECKOUT_COUPON_HANDLER]
+);
 // ====================================================================
 
 
 // 5. Controllers (depends on services)
 // ====================================================================
-container.register(ControllerTypes.ANALYTICS, (c) => {
-	const analyticsService = c.get(ServiceTypes.ANALYTICS);
-	return new AnalyticsController(analyticsService);
-});
-container.register(ControllerTypes.AUTH, (c) => {
-	const userAccountService = c.get(ServiceTypes.USER_ACCOUNT);
-	const authCookieHandler = c.get(CookieHandlerTypes.AUTH);
-	const sessionAuthService = c.get(ServiceTypes.SESSION_AUTH);
-
-	return new AuthController(sessionAuthService, userAccountService, authCookieHandler);
-});
-container.register(ControllerTypes.CART, (c) => {
-	const cartService = c.get(ServiceTypes.CART);
-	return new CartController(cartService);
-});
-container.register(ControllerTypes.CATEGORY, (c) => {
-	const categoryService = c.get(ServiceTypes.CATEGORY);
-	return new CategoryController(categoryService);
-});
-container.register(ControllerTypes.COUPON, (c) => {
-	const couponService = c.get(ServiceTypes.COUPON);
-	return new CouponController(couponService);
-});
-container.register(ControllerTypes.PAYMENT, (c) => {
-	const paymentService = c.get(ServiceTypes.PAYMENT);
-	const productService = c.get(ServiceTypes.PRODUCT);
-
-	return new PaymentController(paymentService, productService);
-});
-container.register(ControllerTypes.PRODUCT, (c) => {
-	const productService = c.get(ServiceTypes.PRODUCT);
-	return new ProductController(productService);
-});
-container.register(ControllerTypes.REVIEW, (c) => {
-	const reviewService = c.get(ServiceTypes.REVIEW);
-	return new ReviewController(reviewService);
-});
-container.register(ControllerTypes.USER, (c) => {
-	const userService = c.get(ServiceTypes.USER);
-	const userStatsService = c.get(ServiceTypes.USER_STATS);
-
-	return new UserController(userService, userStatsService);
-});
+container.register(ControllerTypes.ANALYTICS, AnalyticsController, [ServiceTypes.ANALYTICS]);
+container.register(ControllerTypes.AUTH, AuthController, [ServiceTypes.SESSION_AUTH, ServiceTypes.USER_ACCOUNT, CookieHandlerTypes.AUTH]);
+container.register(ControllerTypes.CART, CartController, [ServiceTypes.CART]);
+container.register(ControllerTypes.CATEGORY, CategoryController, [ServiceTypes.CATEGORY]);
+container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
+container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT]);
+container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT]);
+container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
+container.register(ControllerTypes.USER, UserController, [ServiceTypes.USER, ServiceTypes.USER_STATS]);
 // ====================================================================
 
 
@@ -477,14 +377,8 @@ container.register(RouterTypes.USER, (c) => {
 
 // 7. Seeders (depends on services)
 // ====================================================================
-container.register(SeederTypes.CATEGORY, (c) => {
-	const categoryService = c.get(ServiceTypes.CATEGORY);
-	return new CategorySeeder(categoryService);
-});
-container.register(SeederTypes.ADMIN, (c) => {
-	const userService = c.get(ServiceTypes.USER);
-	return new AdminSeeder(userService);
-});
+container.register(SeederTypes.CATEGORY, CategorySeeder, [ServiceTypes.CATEGORY]);
+container.register(SeederTypes.ADMIN, AdminSeeder, [ServiceTypes.USER]);
 // ====================================================================
 
 export default container;

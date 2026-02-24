@@ -3,15 +3,13 @@ import {IStorageService} from "../../interfaces/storage/IStorageService.js";
 
 import {FileFolders} from "../../constants/file.js";
 
-const FOLDER_NAME = FileFolders.CATEGORIES;
-
 /**
  * Service to manage file operations specific to the 'categories' domain.
  * @augments ICategoryStorageService
  */
 export class CategoryStorageService extends ICategoryStorageService {
 	/** @type {IStorageService} */ #storageService;
-	/** @type {string} */ #folder = FOLDER_NAME;
+	/** @type {string} */ #folder = FileFolders.CATEGORIES;
 
 	/**
 	 * @param {IStorageService} storageService
@@ -26,8 +24,6 @@ export class CategoryStorageService extends ICategoryStorageService {
 	}
 
 	async delete(fileUrl) {
-		if (fileUrl) {
-			return this.#storageService.delete(fileUrl, this.#folder);
-		}
+		if (fileUrl) return this.#storageService.delete(fileUrl, this.#folder);
 	}
 }

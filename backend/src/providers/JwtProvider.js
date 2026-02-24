@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 
-import { InvalidTokenError, TokenExpiredError } from "../errors/apiErrors.js";
+import {InvalidTokenError, TokenExpiredError} from "../errors/index.js";
 
-import { TokenTypes } from "../constants/auth.js";
+import {TokenTypes} from "../constants/auth.js";
+import {config} from "../config.js";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL;
-const REFRESH_TOKEN_TTL = process.env.REFRESH_TOKEN_TTL;
+const ACCESS_TOKEN_SECRET = config.auth.access.secret;
+const REFRESH_TOKEN_SECRET = config.auth.refresh.secret;
+const ACCESS_TOKEN_TTL = config.auth.access.ttl;
+const REFRESH_TOKEN_TTL = config.auth.refresh.ttl;
 
 /**
  * Handles all technical JWT signing and verification details.

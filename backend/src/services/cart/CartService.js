@@ -3,7 +3,7 @@ import {ICartRepository} from "../../interfaces/repositories/ICartRepository.js"
 import {IProductService} from "../../interfaces/product/IProductService.js";
 import {ICartMapper} from "../../interfaces/mappers/ICartMapper.js";
 
-import {BadRequestError, InternalServerError} from "../../errors/apiErrors.js";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for cart operations.
@@ -39,55 +39,44 @@ export class CartService extends ICartService {
 	async addProduct(userId, productId) {
 		const product = await this.#productService.getByIdOrFail(productId);
 		if (product.stock < 1) {
-			throw new BadRequestError("Product is out of stock.");
+			throw new DomainValidationError("Product is out of stock.");
 		}
 
-		const updatedEntity = await this.#cartRepository.addItemOrIncrement(userId, productId);
+		const updatedEntity = await this.#cartRepository.addProductOrIncrement(userId, productId);
 
 		return await this.#formItemDTOs(updatedEntity);
 	}
 
 	async removeProduct(userId, productId) {
-		const updatedEntity = await this.#cartRepository.removeItem(userId, productId);
+		const updatedEntity = await this.#cartRepository.removeProduct(userId, productId);
 
-		if (!updatedEntity) {
-			throw new InternalServerError("Something went wrong on the server while removing product from cart.");
-		}
+		if (!updatedEntity) return [];
 
 		return await this.#formItemDTOs(updatedEntity);
 	}
 
 	async updateProductQuantity(userId, productId, quantity) {
 		if (quantity < 0) {
-			throw new BadRequestError("Quantity must be non-negative.");
+			throw new DomainValidationError("Quantity must be non-negative.");
 		}
 
 		if (quantity === 0) {
-			const updatedEntity = await this.#cartRepository.removeItem(userId, productId);
+			const updatedEntity = await this.#cartRepository.removeProduct(userId, productId);
 			return updatedEntity ? await this.#formItemDTOs(updatedEntity) : [];
 		}
 
 		const product = await this.#productService.getByIdOrFail(productId);
 		if (product.stock < quantity) {
-			throw new BadRequestError(`Only ${product.stock} items available in stock.`);
+			throw new DomainValidationError(`Only ${product.stock} items available in stock.`);
 		}
 
-		const updatedEntity = await this.#cartRepository.updateItemQuantity(userId, productId, quantity);
-
-		if (!updatedEntity) {
-			throw new InternalServerError("Something went wrong on the server while updating quantity of the item.");
-		}
+		const updatedEntity = await this.#cartRepository.updateProductQuantity(userId, productId, quantity);
 
 		return await this.#formItemDTOs(updatedEntity);
 	}
 
 	async clear(userId) {
-		const updatedEntity = await this.#cartRepository.updateItemsByUserId(userId, []);
-
-		if (!updatedEntity) {
-			return [];
-		}
-
+		await this.#cartRepository.updateItemsByUserId(userId, []);
 		return [];
 	}
 

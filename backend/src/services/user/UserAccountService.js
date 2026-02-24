@@ -6,16 +6,10 @@ import {AuthResponseAssembler} from "../../domain/index.js";
 import {JwtProvider} from "../../providers/JwtProvider.js";
 import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
-import {BadRequestError, InvalidCredentialsError} from "../../errors/apiErrors.js";
+import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
-import {EnvModes} from "../../constants/app.js";
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
-
-const APP_URL =
-	process.env.NODE_ENV !== EnvModes.PROD
-		? process.env.DEVELOPMENT_CLIENT_URL
-		: process.env.APP_URL;
-const RESET_PASSWORD_PATH = process.env.RESET_PASSWORD_PATH;
+import {config} from "../../config.js";
 
 /**
  * Implements the IUserAccountService contract, focusing on user account state
@@ -109,7 +103,7 @@ export class UserAccountService extends IUserAccountService {
 		const { email, isVerified } = userEntity;
 
 		if (isVerified) {
-			throw new BadRequestError("Email is already verified");
+			throw new ActionNotAllowedError("Email is already verified");
 		}
 
 		const { token: verificationToken, expiresAt: verificationTokenExpiresAt } = this.#generateVerificationTokenDetails();
@@ -121,14 +115,22 @@ export class UserAccountService extends IUserAccountService {
 	}
 
 	async forgotPassword(email) {
-		const userEntity = await this.#userService.getEntityByEmailOrFail(email);
-		const { id: userId } = userEntity;
+		try {
+			const userEntity = await this.#userService.getEntityByEmailOrFail(email);
+			const { id: userId } = userEntity;
 
-		const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-		const resetPasswordUrl = `${APP_URL}/${RESET_PASSWORD_PATH}/${resetToken}`;
+			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
+			const resetPasswordUrl = `${config.app.clientUrl}/${config.auth.password.resetUrl}/${resetToken}`;
 
-		await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
-		await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl)
+			await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
+			await this.#emailService.sendPasswordResetEmail(email, resetPasswordUrl);
+		}
+		catch (error) {
+			if (!(error instanceof EntityNotFoundError)) {
+				throw error;
+			}
+			console.info(`Forgot password requested for non-existent email: ${email}`);
+		}
 
 		return {
 			message: "Password reset link sent to your email"

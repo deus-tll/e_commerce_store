@@ -1,5 +1,4 @@
 import {OrderProductItem} from "../../domain/index.js";
-import {BadRequestError} from "../../errors/apiErrors.js";
 
 /**
  * @interface IStripeService
@@ -40,7 +39,6 @@ export class IStripeService {
 	 * or 'amount_total'.
 	 * @param {string} sessionId
 	 * @returns {Promise<{ metadata: object, amountTotal: number }>}
-	 * @throws {BadRequestError} if payment is not 'paid'.
 	 */
 	async retrievePaidSessionData(sessionId) { throw new Error("Method not implemented."); }
 }

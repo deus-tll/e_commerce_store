@@ -1,26 +1,30 @@
 import {IPaymentService} from "../../interfaces/payment/IPaymentService.js";
 import {IStripeService} from "../../interfaces/payment/IStripeService.js";
+import {IProductService} from "../../interfaces/product/IProductService.js";
 import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandler.js";
 import {ICouponHandler} from "../../interfaces/coupon/ICouponHandler.js";
 import {CheckoutSessionDTO, OrderProductItem} from "../../domain/index.js";
 
-import {BadRequestError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
 
 export class StripePaymentService extends IPaymentService {
 	/** @type {IStripeService} */ #stripeService;
+	/** @type {IProductService} */ #productService;
 	/** @type {ICheckoutOrderHandler} */ #orderHandler;
 	/** @type {ICouponHandler} */ #couponHandler;
 
 	/**
 	 * @param {IStripeService} stripeService
+	 * @param {IProductService} productService
 	 * @param {ICheckoutOrderHandler} orderHandler
 	 * @param {ICouponHandler} couponHandler
 	 */
-	constructor(stripeService, orderHandler, couponHandler) {
+	constructor(stripeService, productService, orderHandler, couponHandler) {
 		super();
 		this.#stripeService = stripeService;
+		this.#productService = productService;
 		this.#orderHandler = orderHandler;
 		this.#couponHandler = couponHandler;
 	}
@@ -45,12 +49,28 @@ export class StripePaymentService extends IPaymentService {
 	}
 
 	async createCheckoutSession(products, couponCode, userId) {
-		if (!Array.isArray(products) || products.length === 0) {
-			throw new BadRequestError("Invalid or empty products array");
+		const productIds = products.map(p => p.id);
+		const shortProductDTOs = await this.#productService.getShortDTOsByIds(productIds);
+
+		if (shortProductDTOs.length !== productIds.length) {
+			const foundIds = shortProductDTOs.map(p => p.id);
+			const missingId = productIds.find(id => !foundIds.includes(id));
+			throw new EntityNotFoundError("Product", { id: missingId });
 		}
 
+		const orderItems = shortProductDTOs.map((p) => {
+			const clientProduct = products.find((cp) => cp.id === p.id);
+			return new OrderProductItem({
+				id: p.id,
+				quantity: clientProduct.quantity,
+				price: p.price,
+				name: p.name,
+				image: p.image
+			});
+		});
+
 		// 1. Prepare line items
-		const { lineItems, initialTotalAmount } = this.#stripeService.processProductsForStripe(products);
+		const { lineItems, initialTotalAmount } = this.#stripeService.processProductsForStripe(orderItems);
 
 		// 2. Apply coupon discount
 		const { totalAmount, appliedCoupon } = await this.#couponHandler.applyDiscount(
@@ -62,7 +82,7 @@ export class StripePaymentService extends IPaymentService {
 		// 4. Prepare Stripe discounts (if coupon applied)
 		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);
 
-		const productsSnapshot = this.#getProductsMetadataSnapshot(products);
+		const productsSnapshot = this.#getProductsMetadataSnapshot(orderItems);
 
 		// 5. Create Stripe session
 		const session = await this.#stripeService.createCheckoutSession(
@@ -81,9 +101,7 @@ export class StripePaymentService extends IPaymentService {
 
 	async checkoutSuccess(sessionId) {
 		const existingOrder = await this.#orderHandler.checkExistingOrder(sessionId);
-		if (existingOrder) {
-			return existingOrder;
-		}
+		if (existingOrder) return existingOrder;
 
 		const sessionData = await this.#stripeService.retrievePaidSessionData(sessionId);
 

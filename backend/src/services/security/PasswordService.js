@@ -1,18 +1,26 @@
 import bcrypt from "bcryptjs";
 
-const SALT_ROUNDS = 10;
+import {SystemError} from "../../errors/index.js";
+import {config} from "../../config.js";
 
 /**
  * Service dedicated to handling password security operations (hashing, comparing).
  */
 export class PasswordService {
+	#saltRounds = config.auth.password.saltRounds;
+
 	/**
 	 * Hashes a plaintext password.
 	 * @param {string} password - The plaintext password.
 	 * @returns {Promise<string>} The hashed password.
 	 */
 	async hashPassword(password) {
-		return await bcrypt.hash(password, SALT_ROUNDS);
+		try {
+			return await bcrypt.hash(password, this.#saltRounds);
+		}
+		catch (error) {
+			throw new SystemError("Failed to secure password.");
+		}
 	}
 
 	/**
@@ -24,8 +32,14 @@ export class PasswordService {
 	 */
 	async comparePassword(plaintextPassword, hashedPassword) {
 		if (!hashedPassword) {
-			throw new Error("Cannot compare password: hashed password string is missing.");
+			throw new SystemError("Authentication failed due to a system data mismatch.");
 		}
-		return await bcrypt.compare(plaintextPassword, hashedPassword);
+
+		try {
+			return await bcrypt.compare(plaintextPassword, hashedPassword);
+		}
+		catch (error) {
+			throw new SystemError("Error during password verification.");
+		}
 	}
 }

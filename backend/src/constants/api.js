@@ -1,4 +1,6 @@
-const API_BASE = process.env.API_BASE || "/api";
+import {config} from "../config.js";
+
+const API_BASE = config.app.apiBaseUrl;
 
 export const RouteTypes = Object.freeze({
 	AUTH: `${API_BASE}/auth`,

@@ -1,20 +1,12 @@
 import {stripe} from "../../infrastructure/stripe.js";
 import {IStripeService} from "../../interfaces/payment/IStripeService.js";
 
-import {BadRequestError} from "../../errors/apiErrors.js";
+import {SystemError, DomainValidationError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
-import {EnvModes} from "../../constants/app.js";
 import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../constants/payment.js";
 import {StripeCouponDurations} from "../../constants/stripe.js";
-
-const APP_URL =
-	process.env.NODE_ENV !== EnvModes.PROD
-		? process.env.DEVELOPMENT_CLIENT_URL
-		: process.env.APP_URL;
-
-const SUCCESS_PATH = process.env.STRIPE_SUCCESS_PATH || "/purchase-success?session_id={CHECKOUT_SESSION_ID}";
-const CANCEL_PATH = process.env.STRIPE_CANCEL_PATH || "/purchase-cancel";
+import {config} from "../../config.js";
 
 /**
  * @augments IStripeService
@@ -80,8 +72,8 @@ export class StripeService extends IStripeService {
 	}
 
 	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, productsSnapshot) {
-		const successUrl = new URL(SUCCESS_PATH, APP_URL).toString();
-		const cancelUrl = new URL(CANCEL_PATH, APP_URL).toString();
+		const successUrl = new URL(config.services.payment.successUrl, config.app.clientUrl).toString();
+		const cancelUrl = new URL(config.services.payment.cancelUrl, config.app.clientUrl).toString();
 
 		const session = await stripe.checkout.sessions.create(
 			{
@@ -110,10 +102,17 @@ export class StripeService extends IStripeService {
 	}
 
 	async retrievePaidSessionData(sessionId) {
-		const session = await this.#retrieveCheckoutSession(sessionId);
+		let session;
+
+		try {
+			session = await this.#retrieveCheckoutSession(sessionId);
+		}
+		catch (error) {
+			throw new SystemError("External payment provider communication failure.");
+		}
 
 		if (session.payment_status !== PaymentStatus.PAID) {
-			throw new BadRequestError("Payment confirmation failed");
+			throw new DomainValidationError("Payment has not been confirmed by the provider.");
 		}
 
 		return {

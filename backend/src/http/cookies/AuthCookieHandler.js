@@ -3,8 +3,9 @@ import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
 import {EnvModes} from "../../constants/app.js";
 import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 
-const NODE_ENV = process.env.NODE_ENV;
-const IS_PROD = NODE_ENV === EnvModes.PROD;
+import {config} from "../../config.js";
+
+const IS_PROD = config.app.nodeEnv === EnvModes.PROD;
 
 const SAME_SITE_COOKIE_SETTER = IS_PROD
 	? SameSiteCookieOptions.STRICT

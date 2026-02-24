@@ -1,6 +1,16 @@
-import {ApiError} from "../../errors/apiErrors.js";
-import {DatabaseError} from "../../errors/databaseErrors.js";
-import {DomainValidationError, EntityNotFoundError} from "../../errors/domainErrors.js";
+import {
+	DomainError,
+	ActionNotAllowedError,
+	DomainValidationError,
+	EntityAlreadyExistsError,
+	EntityNotFoundError,
+	SystemError,
+	UnauthenticatedError,
+	UnauthorizedError
+} from "../../errors/index.js";
+
+import {config} from "../../config.js";
+import {ValidationErrorTypes} from "../../constants/errors.js";
 
 /**
  * @typedef {import('express').ErrorRequestHandler} ErrorRequestHandler
@@ -11,60 +21,53 @@ import {DomainValidationError, EntityNotFoundError} from "../../errors/domainErr
  * checks if they are custom ApiErrors, and sends a standardized JSON response.
  * @type {ErrorRequestHandler}
  */
-const errorHandler = (err, req, res, next) => {
-	if (err instanceof DatabaseError) {
-		console.error("Critical Database Error:", {
-			message: err.message,
-			original: err.originalError?.message || err.originalError,
-			stack: err.stack
-		});
-	}
-	else if (!(
-		err instanceof ApiError ||
-		err instanceof EntityNotFoundError ||
-		err instanceof DomainValidationError)) {
-		console.error("Unhandled Runtime Error:", err);
+const errorHandler = (err, req, res, _next) => {
+	const { isProduction } = config.app;
+
+	if (!(err instanceof DomainError) || err instanceof SystemError) {
+		console.error("[Runtime/System Error]:", err);
 	}
 
+	// 2. Resource Errors (404, 409)
 	if (err instanceof EntityNotFoundError) {
-		return res.status(404).json({
-			message: err.message,
-			status: 404
-		});
+		return res.status(404).json({ message: err.message, status: 404 });
 	}
 
+	if (err instanceof EntityAlreadyExistsError) {
+		return res.status(409).json({ message: err.message, status: 409 });
+	}
+
+	// 3. Validation Errors (400, 410)
 	if (err instanceof DomainValidationError) {
 		const statusMap = {
-			"EXPIRED": 410,
-			"BAD_REQUEST": 400
+			[ValidationErrorTypes.EXPIRED]: 410,
+			[ValidationErrorTypes.BAD_REQUEST]: 400
 		};
 
 		const status = statusMap[err.type] || 400;
+		return res.status(status).json({ message: err.message, status: status });
+	}
 
-		return res.status(status).json({
+	// 4. Security Errors (401, 403)
+	if (err instanceof UnauthenticatedError) {
+		return res.status(401).json({
 			message: err.message,
-			status: status
+			status: 401,
+			code: err.code || null
 		});
 	}
 
-	if (err instanceof ApiError) {
-        return res.status(err.status).json({
-            message: err.message,
-            status: err.status,
-            code: err.code || null
-        });
-	}
-
-	if (err instanceof DatabaseError) {
-		return res.status(500).json({
-			message: "A database error occurred",
-			status: 500
+	if (err instanceof UnauthorizedError || err instanceof ActionNotAllowedError) {
+		return res.status(403).json({
+			message: err.message,
+			status: 403,
+			code: err.code || null
 		});
 	}
 
 	return res.status(500).json({
-		message: "Internal Server Error",
-        status: 500
+		message: isProduction ? "Internal Server Error" : err.message,
+		status: 500
 	});
 }
 

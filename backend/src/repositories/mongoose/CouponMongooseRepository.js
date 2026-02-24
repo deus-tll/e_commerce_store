@@ -1,14 +1,28 @@
 import Coupon from "../../models/mongoose/Coupon.js";
 
-import { ICouponRepository } from "../../interfaces/repositories/ICouponRepository.js";
+import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository.js";
+import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import { MongooseAdapter } from "../adapters/MongooseAdapter.js";
-import {EntityNotFoundError} from "../../errors/domainErrors.js";
+import {EntityAlreadyExistsError, EntityNotFoundError} from "../../errors/index.js";
 
 export class CouponMongooseRepository extends ICouponRepository {
-	async create(data) {
-		const createdDoc = await Coupon.create(data);
-		return MongooseAdapter.toCouponEntity(createdDoc);
+	async replaceOrCreate(userId, data) {
+		try {
+			const updatedDoc = await Coupon.findOneAndReplace(
+				{ userId: userId },
+				{ ...data, userId: userId },
+				{ upsert: true, new: true, runValidators: true }
+			).lean();
+
+			return MongooseAdapter.toCouponEntity(updatedDoc);
+		}
+		catch (error) {
+			const keyPattern = error['keyPattern'];
+			if (error.code === 11000 && keyPattern?.code) {
+				throw new EntityAlreadyExistsError("Coupon", { code: data.code });
+			}
+			throw error;
+		}
 	}
 
 	async updateCouponActiveState(couponCode, userId, isActive) {

@@ -1,6 +1,7 @@
 import Redis from "ioredis";
+import {config} from "../config.js";
 
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = config.database.redisUrl;
 
 if (!redisUrl) {
 	throw new Error("REDIS_URL environment variable is not set.");
@@ -9,5 +10,5 @@ if (!redisUrl) {
 export const redis = new Redis(redisUrl);
 
 redis.on('error', (err) => {
-	console.error(`[ioredis] Connection Error: ${err.message}`);
+	console.error(`[Redis] Connection Error: ${err.message}`);
 });

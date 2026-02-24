@@ -5,13 +5,13 @@ import {RepositoryPaginationResult} from "../../domain/index.js";
 
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {BadRequestError} from "../../errors/apiErrors.js";
+import {EntityAlreadyExistsError, EntityNotFoundError} from "../../errors/index.js";
 
 export class ReviewMongooseRepository extends IReviewRepository {
 	async create(productId, userId, data) {
 		try {
 			const createdDoc = await Review.create({
-				data,
+				...data,
 				product: productId,
 				user: userId
 			});
@@ -21,7 +21,7 @@ export class ReviewMongooseRepository extends IReviewRepository {
 		catch (error) {
 			if (error.code === 11000)
 			{
-				throw new BadRequestError("You have already reviewed this product");
+				throw new EntityAlreadyExistsError("Review", { productId, userId });
 			}
 
 			throw error;
@@ -35,11 +35,20 @@ export class ReviewMongooseRepository extends IReviewRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
+		if (!updatedDoc) {
+			throw new EntityNotFoundError("Review", { reviewId, userId });
+		}
+
 		return MongooseAdapter.toReviewEntity(updatedDoc);
 	}
 
 	async deleteByIdAndUserId(reviewId, userId) {
 		const deletedDoc = await Review.findOneAndDelete({ _id: reviewId, user: userId }).lean();
+
+		if (!deletedDoc) {
+			throw new EntityNotFoundError("Review", { reviewId, userId });
+		}
+
 		return MongooseAdapter.toReviewEntity(deletedDoc);
 	}
 

@@ -28,7 +28,7 @@ export class CategoryController {
 
 		const createCategoryDTO = new CreateCategoryDTO({
 			...rest,
-			allowedAttributes: allowedAttributes || []
+			allowedAttributes: allowedAttributes
 		});
 		const categoryDTO = await this.#categoryService.create(createCategoryDTO);
 

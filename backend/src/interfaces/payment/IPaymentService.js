@@ -1,4 +1,4 @@
-import {OrderProductItem, CheckoutSessionDTO, CheckoutSuccessDTO} from "../../domain/index.js";
+import {CheckoutSessionDTO, CheckoutSuccessDTO} from "../../domain/index.js";
 
 /**
  * @interface IPaymentService
@@ -7,7 +7,7 @@ import {OrderProductItem, CheckoutSessionDTO, CheckoutSuccessDTO} from "../../do
 export class IPaymentService {
 	/**
 	 * Creates a new payment checkout session for a list of products.
-	 * @param {OrderProductItem[]} products - Array of products to purchase.
+	 * @param {[{id, quantity}]} products - Array of products to purchase.
 	 * @param {string} [couponCode] - Optional coupon code to apply.
 	 * @param {string} userId - ID of the user creating the session.
 	 * @returns {Promise<CheckoutSessionDTO>} - The newly created checkout session DTO.

@@ -1,8 +1,6 @@
 import {ICouponHandler} from "../../interfaces/coupon/ICouponHandler.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
-
-const TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS =
-	Number(process.env.TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) || 20000;
+import {config} from "../../config.js";
 
 /**
  * @augments ICouponHandler
@@ -43,12 +41,12 @@ export class CheckoutCouponHandler extends ICouponHandler {
 
 	async grantNewCouponIfEligible(userId, amountPaidInCents) {
 		// Check if the purchase meets the minimum threshold
-		if (amountPaidInCents < TOTAL_AMOUNT_FOR_GRANTING_COUPON_DISCOUNT_IN_CENTS) return;
+		if (amountPaidInCents < config.business.coupon.minAmountForGrant) return;
 
-		const couponDTO = await this.#couponService.create(userId);
-
-		if (!couponDTO) {
-			console.error("Failed to create coupon.");
+		try {
+			await this.#couponService.create(userId);
+		} catch (error) {
+			console.error(`Failed to grant coupon to user ${userId}:`, error.message);
 		}
 	}
 }

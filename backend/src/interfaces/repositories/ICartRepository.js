@@ -11,7 +11,7 @@ export class ICartRepository {
 	 * @param {string} productId - The ID of the product to add/increment.
 	 * @returns {Promise<CartEntity | null>} - The updated cart record.
 	 */
-	async addItemOrIncrement(userId, productId) {
+	async addProductOrIncrement(userId, productId) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -21,7 +21,7 @@ export class ICartRepository {
 	 * @param {string} productId - The ID of the product to remove.
 	 * @returns {Promise<CartEntity | null>} - The updated cart record.
 	 */
-	async removeItem(userId, productId) {
+	async removeProduct(userId, productId) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -32,7 +32,7 @@ export class ICartRepository {
 	 * @param {number} quantity - The new quantity (must be >= 0).
 	 * @returns {Promise<CartEntity | null>} - The updated cart record.
 	 */
-	async updateItemQuantity(userId, productId, quantity) {
+	async updateProductQuantity(userId, productId, quantity) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -52,15 +52,6 @@ export class ICartRepository {
 	 * @returns {Promise<CartEntity | null>} - The found cart record.
 	 */
 	async findByUserId(userId) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
-	 * Checks if a cart exists for a given user ID.
-	 * @param {string} userId - The user ID.
-	 * @returns {Promise<boolean>}
-	 */
-	async existsByUserId(userId) {
 		throw new Error("Method not implemented.");
 	}
 }

@@ -1,8 +1,4 @@
 import {IPaymentService} from "../interfaces/payment/IPaymentService.js";
-import {IProductService} from "../interfaces/product/IProductService.js";
-import {OrderProductItem} from "../domain/index.js";
-
-import {NotFoundError} from "../errors/apiErrors.js";
 
 /**
  * Handles incoming HTTP requests related to payment and checkout,
@@ -10,15 +6,12 @@ import {NotFoundError} from "../errors/apiErrors.js";
  */
 export class PaymentController {
 	/** @type {IPaymentService} */ #paymentService;
-	/** @type {IProductService} */ #productService;
 
 	/**
 	 * @param {IPaymentService} paymentService
-	 * @param {IProductService} productService
 	 */
-	constructor(paymentService, productService) {
+	constructor(paymentService) {
 		this.#paymentService = paymentService;
-		this.#productService = productService;
 	}
 
 	/**
@@ -32,28 +25,8 @@ export class PaymentController {
 		const { products, couponCode } = req.body;
 		const userId = req.userId;
 
-		const productIds = products.map(p => p.id);
-		const shortProductDTOs = await this.#productService.getShortDTOsByIds(productIds);
-
-		if (shortProductDTOs.length !== productIds.length) {
-			throw new NotFoundError("One or more products not found.");
-		}
-
-		const orderItems = shortProductDTOs.map((p) => {
-			const clientProduct = products.find((cp) => cp.id === p.id);
-			const quantity = clientProduct.quantity;
-
-			return new OrderProductItem({
-				id: p.id,
-				quantity,
-				price: p.price,
-				name: p.name,
-				image: p.image
-			});
-		});
-
 		const sessionData = await this.#paymentService.createCheckoutSession(
-			orderItems,
+			products,
 			couponCode,
 			userId
 		);

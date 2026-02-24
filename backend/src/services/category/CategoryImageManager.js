@@ -25,21 +25,23 @@ export class CategoryImageManager extends ICategoryImageManager {
 
 		let finalImageUrl = oldImageValue;
 
-		// 1. Delete the old image if it exists AND is being replaced by a new upload OR explicitly removed.
-		if (oldImageExists && (isNewUpload || isRemoval)) {
-			await this.#categoryStorageService.delete(oldImageValue);
-			finalImageUrl = null; // Clear URL
-		}
-
-		// 2. Upload the new image if it is a Base64 string.
+		// 1. Determine the new state of the image URL.
+		// We prioritize uploading first so that if it fails, the old image is preserved.
 		if (isNewUpload) {
 			finalImageUrl = await this.#categoryStorageService.upload(newImageValue);
 		}
-		// 3. Otherwise, if newImageValue is provided (and it's a non-Base64 string, meaning an existing URL), keep it.
-		else if (newImageValue && !isRemoval) {
+		// 2. // Client provided an existing URL string; retain it.
+		else if (newImageValue) {
 			finalImageUrl = newImageValue;
 		}
-		// 4. If nothing was uploaded and nothing was retained, it remains null.
+		else if (isRemoval) {
+			finalImageUrl = null;
+		}
+
+		// 3. Cleanup orphaned images.
+		if (oldImageExists && (isNewUpload || isRemoval)) {
+			await this.#categoryStorageService.delete(oldImageValue);
+		}
 
 		return finalImageUrl;
 	}

@@ -5,7 +5,7 @@ import {IProductImageManager} from "../../interfaces/product/IProductImageManage
 import {IProductMapper} from "../../interfaces/mappers/IProductMapper.js";
 import {PaginationMetadata, ProductPaginationResultDTO} from "../../domain/index.js";
 
-import {NotFoundError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 const RECOMMENDED_PRODUCTS_SIZE = 4;
 
@@ -123,9 +123,7 @@ export class ProductService extends IProductService {
 	async update(id, data) {
 		// 1. Get existing product entity to manage old images
 		const existingEntity = await this.#productRepository.findById(id);
-		if (!existingEntity) {
-			throw new NotFoundError("Product not found.");
-		}
+		if (!existingEntity) throw new EntityNotFoundError("Product", { id });
 
 		const persistenceData = { ...data.toPersistence() };
 		let urlsToDelete = [];
@@ -153,7 +151,6 @@ export class ProductService extends IProductService {
 
 		// 4. Update product entity
 		const updatedEntity = await this.#productRepository.updateById(id, persistenceData);
-		if (!updatedEntity) throw new NotFoundError("Product not found after attempted update.");
 
 		// 5. Delete no longer used images from storage
 		if (urlsToDelete.length > 0) {
@@ -187,10 +184,6 @@ export class ProductService extends IProductService {
 
 	async delete(id) {
 		const deletedEntity = await this.#productRepository.deleteById(id);
-
-		if (!deletedEntity) {
-			throw new NotFoundError("Product not found");
-		}
 
 		if (deletedEntity.isFeatured) {
 			await this.#refreshFeaturedCache();
@@ -242,7 +235,7 @@ export class ProductService extends IProductService {
 		const entityDTO = await this.getById(id);
 
 		if (!entityDTO) {
-			throw new NotFoundError("Product not found");
+			throw new EntityNotFoundError("Product", { id });
 		}
 
 		return entityDTO;

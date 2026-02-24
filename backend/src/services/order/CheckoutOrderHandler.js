@@ -4,7 +4,7 @@ import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
 import {ICartService} from "../../interfaces/cart/ICartService.js";
 import {CheckoutSuccessDTO, CreateOrderDTO, OrderProductItem} from "../../domain/index.js";
 
-import {ConflictError, InternalServerError} from "../../errors/apiErrors.js";
+import {EntityAlreadyExistsError, SystemError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
 
@@ -56,19 +56,12 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 		try {
 			parsedProducts = JSON.parse(products);
 		} catch (e) {
-			console.error("Failed to parse product metadata from payment session:", products, e);
-			throw new InternalServerError("Internal error: Corrupted product metadata.");
+			throw new SystemError("Corrupted product metadata in payment session.");
 		}
 
 		// Convert from cents (base unit) back to standard currency for the order record
 		const totalAmount = Currency.fromCents(totalAmountCents);
 
-		// 1. Deactivate coupon if one was used
-		if (couponCode) {
-			await this.#couponService.deactivate(couponCode, userId);
-		}
-
-		// 2. Create order
 		const orderData = new CreateOrderDTO({
 			products: parsedProducts.map(item => new OrderProductItem(item)),
 			totalAmount,
@@ -94,17 +87,16 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 
 			return new CheckoutSuccessDTO({
 				success: true,
-				message: "Payment successful, order created, coupon deactivated(if used), and cart cleared.",
+				message: "Payment successful and order processed.",
 				orderId: newOrder.id,
 				orderNumber: newOrder.orderNumber
 			});
 		} catch (error) {
-			// Handle database ConflictError (race condition during order creation)
-			if (error instanceof ConflictError) {
+			// Handle database EntityAlreadyExistsError (race condition during order creation)
+			if (error instanceof EntityAlreadyExistsError) {
 				const existingOrderResult = await this.checkExistingOrder(sessionId);
 				if (existingOrderResult) return existingOrderResult;
 			}
-
 			throw error;
 		}
 	}

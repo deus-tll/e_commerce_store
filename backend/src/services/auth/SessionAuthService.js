@@ -5,7 +5,7 @@ import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 import {JwtProvider} from "../../providers/JwtProvider.js";
 import {AuthCacheService} from "../../cache/AuthCacheService.js";
 
-import {InvalidCredentialsError, InvalidTokenError, NotFoundError} from "../../errors/apiErrors.js";
+import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js";
 
 import {TokenTypes} from "../../constants/auth.js";
 
@@ -50,10 +50,6 @@ export class SessionAuthService extends ISessionAuthService {
 
 		const userDTO = await this.#userService.updateLastLogin(userId);
 
-		if (!userDTO) {
-			throw new NotFoundError("User not found after login");
-		}
-
 		await this.#authCacheService.storeRefreshToken(userId, refreshToken)
 
 		return AuthResponseAssembler.assembleUserWithTokens({ user: userDTO, accessToken, refreshToken });
@@ -87,13 +83,7 @@ export class SessionAuthService extends ISessionAuthService {
 			throw new InvalidTokenError("No refresh token provided");
 		}
 
-		let decoded;
-		try {
-			decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
-		} catch (error) {
-			// If the token is simply invalid (e.g., malformed or expired), just fail.
-			throw new InvalidTokenError("Invalid refresh token");
-		}
+		const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
 
 		const { userId } = decoded;
 

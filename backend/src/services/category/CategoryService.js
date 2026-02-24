@@ -5,7 +5,7 @@ import {ICategoryMapper} from "../../interfaces/mappers/ICategoryMapper.js";
 import {ISlugGenerator} from "../../interfaces/utils/ISlugGenerator.js";
 import {CategoryPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
-import {NotFoundError} from "../../errors/apiErrors.js";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for category operations.
@@ -51,9 +51,7 @@ export class CategoryService extends ICategoryService {
 
 	async update(id, data) {
 		const existingEntity = await this.#categoryRepository.findById(id);
-		if (!existingEntity) {
-			throw new NotFoundError("Category not found");
-		}
+		if (!existingEntity) throw new EntityNotFoundError("Category", { id });
 
 		const persistenceData = { ...data.toPersistence() };
 
@@ -109,7 +107,7 @@ export class CategoryService extends ICategoryService {
 		const category = await this.getById(id);
 
 		if (!category) {
-			throw new NotFoundError("Category not found");
+			throw new EntityNotFoundError("Category", { id });
 		}
 
 		return category;
@@ -124,7 +122,7 @@ export class CategoryService extends ICategoryService {
 		const category = await this.getBySlug(slug);
 
 		if (!category) {
-			throw new NotFoundError("Category not found");
+			throw new EntityNotFoundError("Category", { slug });
 		}
 
 		return category;
