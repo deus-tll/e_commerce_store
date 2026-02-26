@@ -61,6 +61,7 @@ import {AuthController} from "../controllers/AuthController.js";
 import {CartController} from "../controllers/CartController.js";
 import {CategoryController} from "../controllers/CategoryController.js";
 import {CouponController} from "../controllers/CouponController.js";
+import {OrderController} from "../controllers/OrderController.js";
 import {PaymentController} from "../controllers/PaymentController.js";
 import {ProductController} from "../controllers/ProductController.js";
 import {ReviewController} from "../controllers/ReviewController.js";
@@ -71,6 +72,7 @@ import {createAnalyticsRouter} from "../http/routers/analyticsRouterFactory.js";
 import {createCartRouter} from "../http/routers/cartRouterFactory.js";
 import {createCategoriesRouter} from "../http/routers/categoriesRouterFactory.js";
 import {createCouponsRouter} from "../http/routers/couponsRouterFactory.js";
+import {createOrdersRouter} from "../http/routers/ordersRouterFactory.js";
 import {createPaymentsRouter} from "../http/routers/paymentsRouterFactory.js";
 import {createProductsRouter} from "../http/routers/productsRouterFactory.js";
 import {createReviewsRouter} from "../http/routers/reviewsRouterFactory.js";
@@ -309,6 +311,7 @@ container.register(ControllerTypes.AUTH, AuthController, [ServiceTypes.SESSION_A
 container.register(ControllerTypes.CART, CartController, [ServiceTypes.CART]);
 container.register(ControllerTypes.CATEGORY, CategoryController, [ServiceTypes.CATEGORY]);
 container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
+container.register(ControllerTypes.ORDER, OrderController, [ServiceTypes.ORDER]);
 container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT]);
 container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT]);
 container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
@@ -347,6 +350,12 @@ container.register(RouterTypes.COUPON, (c) => {
 	const sessionAuthService = c.get(ServiceTypes.SESSION_AUTH);
 
 	return createCouponsRouter(couponController, sessionAuthService);
+});
+container.register(RouterTypes.ORDER, (c) => {
+	const orderController = c.get(ControllerTypes.ORDER);
+	const sessionAuthService = c.get(ServiceTypes.SESSION_AUTH);
+
+	return createOrdersRouter(orderController, sessionAuthService);
 });
 container.register(RouterTypes.PAYMENT, (c) => {
 	const paymentController = c.get(ControllerTypes.PAYMENT);

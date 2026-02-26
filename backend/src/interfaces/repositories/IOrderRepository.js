@@ -4,6 +4,7 @@ import {
 	DailySalesSummaryDTO,
 	RepositoryPaginationResult
 } from "../../domain/index.js";
+import {OrderStatus} from "../../constants/domain.js";
 
 /**
  * @typedef {import("../../domain/index.js").OrderEntity} OrderEntity
@@ -26,11 +27,31 @@ export class IOrderRepository {
 	}
 
 	/**
+	 * Updates status of an order.
+	 * @param {string} id - The order ID.
+	 * @param {keyof OrderStatus} status
+	 * @returns {Promise<OrderEntity>}
+	 */
+	async updateStatus(id, status) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Finds an order record by its ID.
 	 * @param {string} id - The order ID.
 	 * @returns {Promise<OrderEntity | null>} - The found order record.
 	 */
 	async findById(id) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Finds an order record by its ID and user ID.
+	 * @param {string} id - The order ID.
+	 * @param {string} userId - The user ID.
+	 * @returns {Promise<OrderEntity | null>} - The found order record.
+	 */
+	async findByIdAndUser(id, userId) {
 		throw new Error("Method not implemented.");
 	}
 
@@ -44,13 +65,23 @@ export class IOrderRepository {
 	}
 
 	/**
-	 * Finds orders and their total count for pagination purposes, filtered by user ID.
-	 * @param {string} userId - The user ID.
+	 * Finds an order record by its order number.
+	 * @param {string} orderNumber - The order number.
+	 * @returns {Promise<OrderEntity | null>} - The found order record.
+	 */
+	async findByOrderNumber(orderNumber) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Finds orders and their total count for pagination purposes.
+	 * @param {object} query - The filtering query.
 	 * @param {number} skip - The number of documents to skip.
 	 * @param {number} limit - The maximum number of documents to return.
-	 * @returns {Promise<RepositoryPaginationResult<OrderEntity>>} - The paginated results.
+	 * @param {object} [options={}] - Options(such as sortBy and order).
+	 * @returns {Promise<RepositoryPaginationResult<OrderEntity>>}
 	 */
-	async findAndCountByUser(userId, skip, limit) {
+	async findAndCount(query, skip, limit, options) {
 		throw new Error("Method not implemented.");
 	}
 

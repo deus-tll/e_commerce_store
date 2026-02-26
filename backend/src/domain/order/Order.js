@@ -1,4 +1,5 @@
 import {ShortUserDTO, PaginationMetadata} from "../index.js";
+import {OrderStatus} from "../../constants/domain.js";
 
 /**
  * Agnostic class for nested product item data.
@@ -35,6 +36,7 @@ export class OrderEntity {
 	/** @type {string | null} @readonly */ userId;
 	/** @type {OrderProductItem[]} @readonly */ products;
 	/** @type {number} @readonly */ totalAmount;
+	/** @type {keyof OrderStatus} @readonly */ status;
 	/** @type {string | undefined} @readonly */ paymentSessionId;
 	/** @type {string} @readonly */ orderNumber;
 	/** @type {Date} @readonly */ createdAt;
@@ -48,6 +50,7 @@ export class OrderEntity {
 		this.userId = data.userId;
 		this.products = Object.freeze([...data.products]);
 		this.totalAmount = data.totalAmount;
+		this.status = data.status;
 		this.paymentSessionId = data.paymentSessionId;
 		this.orderNumber = data.orderNumber;
 		this.createdAt = data.createdAt;
@@ -98,6 +101,7 @@ export class OrderDTO {
 	/** @type {ShortUserDTO | null} @readonly */ user;
 	/** @type {OrderProductItem[]} @readonly */ products;
 	/** @type {number} @readonly */ totalAmount;
+	/** @type {keyof OrderStatus} @readonly */ status;
 	/** @type {string | undefined} @readonly */ paymentSessionId;
 	/** @type {string} @readonly */ orderNumber;
 	/** @type {Date} @readonly */ createdAt;
@@ -112,6 +116,7 @@ export class OrderDTO {
 		this.user = userShortDTO;
 		this.products = Object.freeze([...entity.products]);
 		this.totalAmount = entity.totalAmount;
+		this.status = entity.status;
 		this.paymentSessionId = entity.paymentSessionId;
 		this.orderNumber = entity.orderNumber;
 		this.createdAt = entity.createdAt;

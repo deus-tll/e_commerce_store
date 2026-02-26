@@ -5,9 +5,19 @@ import {IOrderRepository} from "../../interfaces/repositories/IOrderRepository.j
 import {SalesSummaryDTO, DailySalesSummaryDTO, RepositoryPaginationResult} from "../../domain/index.js";
 import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
-import {EntityAlreadyExistsError, SystemError} from "../../errors/index.js";
+import {EntityAlreadyExistsError, EntityNotFoundError, SystemError} from "../../errors/index.js";
+import {determineSort, toObjectId} from "./utils.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
+	#buildMongooseQuery(query) {
+		const mongooseQuery = {};
+
+		if (query.userId) mongooseQuery.user = toObjectId(query.userId, "Order")
+		if (query.status) mongooseQuery.status = query.status;
+
+		return mongooseQuery;
+	}
+
 	async create(userId, data) {
 		let newOrderNumber;
 
@@ -60,9 +70,28 @@ export class OrderMongooseRepository extends IOrderRepository {
 		}
 	}
 
+	async updateStatus(id, status) {
+		const updatedDoc = await Order.findByIdAndUpdate(
+			id,
+			{ $set: { status } },
+			{ new: true }
+		).lean();
+
+		if (!updatedDoc) {
+			throw new EntityNotFoundError("Order", { id });
+		}
+
+		return MongooseAdapter.toOrderEntity(updatedDoc);
+	}
+
 	async findById(id) {
 		const foundDoc = await Order.findById(id).lean();
 		return MongooseAdapter.toOrderEntity(foundDoc);
+	}
+
+	async findByIdAndUser(id, userId) {
+		const foundDoc = await Order.findOne({ _id: id, user: userId }).lean();
+		return foundDoc ? MongooseAdapter.toOrderEntity(foundDoc) : null;
 	}
 
 	async findByPaymentSessionId(sessionId) {
@@ -70,21 +99,31 @@ export class OrderMongooseRepository extends IOrderRepository {
 		return MongooseAdapter.toOrderEntity(foundDoc);
 	}
 
-	async findAndCountByUser(userId, skip, limit) {
-		const query = { user: userId };
+	async findByOrderNumber(orderNumber) {
+		const foundDoc = await Order.findOne({ orderNumber }).lean();
+		return MongooseAdapter.toOrderEntity(foundDoc);
+	}
 
-		const [foundDocs, total] = await Promise.all([
-			Order.find(query)
-				.sort({ createdAt: -1 })
-				.skip(skip)
-				.limit(limit)
-				.lean(),
-			Order.countDocuments(query),
+	async findAndCount(query, skip, limit, options = {}) {
+		const mongooseQuery = this.#buildMongooseQuery(query);
+		const sort = determineSort(options.sortBy, options.order);
+
+		const result = await Order.aggregate([
+			{ $match: mongooseQuery },
+			{ $sort: sort },
+			{
+				$facet: {
+					metadata: [{ $count: "total" }],
+					data: [{ $skip: skip }, { $limit: limit }]
+				}
+			}
 		]);
 
-		const orderEntities = foundDocs.map(doc => MongooseAdapter.toOrderEntity(doc));
+		const total = result[0].metadata[0]?.total || 0;
+		const foundDocs = result[0].data;
 
-		return new RepositoryPaginationResult(orderEntities, total);
+		const entities = foundDocs.map(doc => MongooseAdapter.toOrderEntity(doc));
+		return new RepositoryPaginationResult(entities, total);
 	}
 
 	async getSalesSummary() {

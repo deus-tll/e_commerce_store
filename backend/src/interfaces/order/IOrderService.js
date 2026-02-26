@@ -18,6 +18,14 @@ export class IOrderService {
 	async create(userId, data) { throw new Error("Method not implemented."); }
 
 	/**
+	 * Updates the status of an existing order.
+	 * @param {string} id - The order ID.
+	 * @param {keyof OrderStatus} status - The new status.
+	 * @returns {Promise<OrderDTO>} - The updated order DTO.
+	 */
+	async updateStatus(id, status) { throw new Error("Method not implemented."); }
+
+	/**
 	 * Finds an order by its ID.
 	 * @param {string} id - The order ID.
 	 * @returns {Promise<OrderDTO | null>} - The found order DTO.
@@ -30,6 +38,22 @@ export class IOrderService {
 	 * @returns {Promise<OrderDTO>} - The found order DTO.
 	 */
 	async getByIdOrFail(id) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Finds an order by its ID and owner User ID.
+	 * @param {string} id - The order ID.
+	 * @param {string} userId - The user ID.
+	 * @returns {Promise<OrderDTO | null>} - The found order DTO.
+	 */
+	async getByIdAndUser(id, userId) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Finds an order by its ID and owner User ID, throwing an error if not found.
+	 * @param {string} id - The order ID.
+	 * @param {string} userId - The user ID.
+	 * @returns {Promise<OrderDTO>} - The found order DTO.
+	 */
+	async getByIdAndUserOrFail(id, userId) { throw new Error("Method not implemented."); }
 
 	/**
 	 * Finds an order by its payment session ID.
@@ -46,11 +70,25 @@ export class IOrderService {
 	async getByPaymentSessionIdOrFail(sessionId) { throw new Error("Method not implemented."); }
 
 	/**
-	 * Gets a paginated list of orders for a specific user.
-	 * @param {string} userId - The user ID.
+	 * Finds an order by its order number.
+	 * @param {string} orderNumber - The order number.
+	 * @returns {Promise<OrderDTO | null>} - The found order DTO.
+	 */
+	async getByOrderNumber(orderNumber) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Finds an order by its order number.
+	 * @param {string} orderNumber - The order number.
+	 * @returns {Promise<OrderDTO>} - The found order DTO.
+	 */
+	async getByOrderNumberOrFail(orderNumber) { throw new Error("Method not implemented."); }
+
+	/**
+	 * Gets orders with pagination and filtering.
 	 * @param {number} [page] - The page number.
 	 * @param {number} [limit] - The maximum number of documents per page.
+	 * @param {object} [filters] - The filtering query object.
 	 * @returns {Promise<OrderPaginationResultDTO>} - The paginated list of orders.
 	 */
-	async getAllByUser(userId, page, limit) { throw new Error("Method not implemented."); }
+	async getAll(page, limit, filters) { throw new Error("Method not implemented."); }
 }

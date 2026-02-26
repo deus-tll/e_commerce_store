@@ -54,6 +54,11 @@ export class OrderService extends IOrderService {
 		return await this.#formOrderDTO(createdOrder);
 	}
 
+	async updateStatus(id, status) {
+		const updatedEntity = await this.#orderRepository.updateStatus(id, status);
+		return await this.#formOrderDTO(updatedEntity);
+	}
+
 	async getById(id) {
 		const orderEntity = await this.#orderRepository.findById(id);
 
@@ -66,6 +71,19 @@ export class OrderService extends IOrderService {
 		const orderDTO = await this.getById(id);
 
 		if (!orderDTO) throw new EntityNotFoundError("Order", { id });
+
+		return orderDTO;
+	}
+
+	async getByIdAndUser(id, userId) {
+		const orderEntity = await this.#orderRepository.findByIdAndUser(id, userId);
+		return await this.#formOrderDTO(orderEntity);
+	}
+
+	async getByIdAndUserOrFail(id, userId) {
+		const orderDTO = await this.getByIdAndUser(id, userId);
+
+		if (!orderDTO) throw new EntityNotFoundError("Order", { id, userId });
 
 		return orderDTO;
 	}
@@ -86,12 +104,32 @@ export class OrderService extends IOrderService {
 		return orderDTO;
 	}
 
-	async getAllByUser(userId, page = 1, limit = 10) {
-		await this.#userService.getByIdOrFail(userId);
+	async getByOrderNumber(orderNumber) {
+		const orderEntity = await this.#orderRepository.findByOrderNumber(orderNumber);
 
+		if (!orderEntity) return null;
+
+		return await this.#formOrderDTO(orderEntity);
+	}
+
+	async getByOrderNumberOrFail(orderNumber) {
+		const orderDTO = await this.getByOrderNumber(orderNumber);
+
+		if (!orderDTO) throw new EntityNotFoundError("Order", { orderNumber });
+
+		return orderDTO;
+	}
+
+	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
+		const { sortBy, order } = filters;
 
-		const { results, total } = await this.#orderRepository.findAndCountByUser(userId, skip, limit);
+		const query = {};
+
+		if (filters.userId) query.userId = filters.userId;
+		if (filters.status) query.status = filters.status;
+
+		const { results, total } = await this.#orderRepository.findAndCount(query, skip, limit, { sortBy, order });
 
 		const pages = Math.ceil(total / limit);
 		const orderDTOs = await this.#formOrderDTOs(results);
