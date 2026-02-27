@@ -1,4 +1,5 @@
 import { IOrderService } from "../interfaces/order/IOrderService.js";
+import {UserRoles} from "../constants/app.js";
 
 /**
  * Handles incoming HTTP requests related to orders.
@@ -50,7 +51,11 @@ export class OrderController {
 	 */
 	getById = async (req, res) => {
 		const { id } = req.params;
-		const orderDTO = await this.#orderService.getByIdOrFail(id);
+		const { id: userId, role } = req.user;
+
+		const orderDTO = role === UserRoles.ADMIN
+			? await this.#orderService.getByIdOrFail(id)
+			: await this.#orderService.getByIdAndUserOrFail(id, userId);
 
 		return res.status(200).json(orderDTO);
 	}
@@ -66,19 +71,6 @@ export class OrderController {
 		const paginationResult = await this.#orderService.getAll(page, limit, { ...rest, userId: req.userId });
 
 		return res.status(200).json(paginationResult);
-	}
-
-	/**
-	 * Retrieves a single order's details by ID for the authenticated owner.
-	 * @param {object} req - Express request object.
-	 * @param {object} res - Express response object.
-	 * @returns {Promise<void>} - Responds with status 200 and the requested OrderDTO.
-	 */
-	getMineById = async (req, res) => {
-		const { id } = req.params;
-		const orderDTO = await this.#orderService.getByIdAndUserOrFail(id, req.userId);
-
-		return res.status(200).json(orderDTO);
 	}
 
 	/**
