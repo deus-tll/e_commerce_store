@@ -13,6 +13,7 @@ import {
 /**
  * @param {OrderController} orderController
  * @param {ISessionAuthService} authService
+ * @returns {express.Router | core.Router} - Configured Express router.
  */
 export function createOrdersRouter(orderController, authService) {
 	const router = express.Router();
@@ -55,4 +56,6 @@ export function createOrdersRouter(orderController, authService) {
 		validationMiddleware(updateOrderStatusSchema),
 		orderController.updateStatus
 	);
+
+	return router;
 }
