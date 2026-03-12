@@ -28,7 +28,7 @@ const SearchForm = ({value, onChange, onSubmit, placeholder = "Search...", class
 				onBlur={onBlur}
 			/>
 
-			<IconButton type="button" onClick={handleAction} variant={"primary"} className="hidden lg:flex">
+			<IconButton onClick={handleAction} variant={"primary"} className="hidden lg:flex">
 				<Search className="h-5 w-5" />
 			</IconButton>
 		</div>

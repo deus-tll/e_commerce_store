@@ -1,9 +1,10 @@
 import {Link} from "react-router-dom";
 import {Edit, Star, Trash2, BadgeCheck, BadgeX, LucideUserStar, User} from "lucide-react";
 
-import {formatCurrency, formatDate} from "../../utils/format.js";
+import {formatCurrency, formatDate, formatDateTime} from "../../utils/format.js";
 
 import IconButton from "../ui/IconButton.jsx";
+import OrderStatusSelect from "../order/OrderStatusSelect.jsx";
 
 const editButtonClasses = "text-blue-400 hover:text-blue-300";
 const deleteButtonClasses = "text-red-400 hover:text-red-300";
@@ -227,4 +228,65 @@ export const createUserColumns = ({ startEdit, deleteUser }) => [
 			</div>
 		)
 	}
+];
+
+export const createOrderColumns = ({ loading, updateOrderStatus }) => [
+	{
+		key: "order",
+		title: "Order",
+		dataIndex: "orderNumber",
+		render: (_, order) => (
+			<Link to={`/order/${order.id}`} className="text-sm font-medium text-white hover:underline">
+				<span>#{order.orderNumber}</span>
+			</Link>
+		)
+	},
+	{
+		key: "buyer",
+		title: "Buyer's email",
+		dataIndex: "user",
+		render: (user) => (
+			<span>{user?.email ?? "Deleted"}</span>
+		)
+	},
+	{
+		key: "totalAmount",
+		title: "Total Cost",
+		dataIndex: "totalAmount",
+		render: (totalAmount) => (
+			<div className={simpleValueClasses}>
+				{formatCurrency(totalAmount)}
+			</div>
+		)
+	},
+	{
+		key: "productCount",
+		title: "Products",
+		dataIndex: "products",
+		render: (products) => (
+			<span>{products?.length || 0}</span>
+		)
+	},
+	{
+		key: "status",
+		title: "Status",
+		dataIndex: "status",
+		render: (status, order) => (
+			<OrderStatusSelect
+				status={status}
+				orderId={order.id}
+				orderNumber={order.orderNumber}
+				disabled={loading}
+				onStatusChange={(id, newStatus) => updateOrderStatus(id, newStatus, { refreshList: true })}
+			/>
+		)
+	},
+	{
+		key: "creationDate",
+		title: "Creation Date",
+		dataIndex: "createdAt",
+		render: (createdAt) => (
+			<span className="text-sm text-gray-300">{createdAt ? formatDateTime(createdAt) : "Unknown"}</span>
+		)
+	},
 ];

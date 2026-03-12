@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {OrderStatus, OrderStatusValues} from "../../constants/domain.js";
 
 /**
  * Defines the schema for a single product item within an order.
@@ -44,6 +45,12 @@ const orderSchema = new mongoose.Schema({
 		type: Number,
 		required: true,
 		min: 0,
+	},
+	status: {
+		type: String,
+		enum: OrderStatusValues,
+		default: OrderStatus.PENDING,
+		index: true
 	},
 	paymentSessionId: {
 		type: String,

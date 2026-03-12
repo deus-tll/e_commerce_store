@@ -6,6 +6,7 @@ import ProfilePage from "../pages/ProfilePage.jsx";
 import CartPage from "../pages/cart/CartPage.jsx";
 import PurchaseSuccessPage from "../pages/cart/PurchaseSuccessPage.jsx";
 import PurchaseCancelPage from "../pages/cart/PurchaseCancelPage.jsx";
+import OrderDetailsPage from "../pages/OrderDetailsPage.jsx";
 
 export const ProtectedRoutes = (
 	<>
@@ -27,6 +28,11 @@ export const ProtectedRoutes = (
 		<Route path="/purchase-cancel" element={
 			<ProtectedRoute>
 				<PurchaseCancelPage />
+			</ProtectedRoute>
+		} />
+		<Route path="/order/:id" element={
+			<ProtectedRoute>
+				<OrderDetailsPage />
 			</ProtectedRoute>
 		} />
 	</>

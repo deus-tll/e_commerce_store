@@ -8,6 +8,7 @@ export const RouteTypes = Object.freeze({
 	CART: `${API_BASE}/cart`,
 	CATEGORY: `${API_BASE}/categories`,
 	COUPON: `${API_BASE}/coupons`,
+	ORDER: `${API_BASE}/orders`,
 	PAYMENT: `${API_BASE}/payments`,
 	PRODUCT: `${API_BASE}/products`,
 	REVIEW: `${API_BASE}/reviews`,

@@ -70,6 +70,7 @@ export class AppServer {
 		this.#app.use(RouteTypes.CART, this.#container.get(RouterTypes.CART));
 		this.#app.use(RouteTypes.CATEGORY, this.#container.get(RouterTypes.CATEGORY));
 		this.#app.use(RouteTypes.COUPON, this.#container.get(RouterTypes.COUPON));
+		this.#app.use(RouteTypes.ORDER, this.#container.get(RouterTypes.ORDER));
 		this.#app.use(RouteTypes.PAYMENT, this.#container.get(RouterTypes.PAYMENT));
 		this.#app.use(RouteTypes.PRODUCT, this.#container.get(RouterTypes.PRODUCT));
 		this.#app.use(RouteTypes.REVIEW, this.#container.get(RouterTypes.REVIEW));
