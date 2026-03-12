@@ -1,10 +1,10 @@
-const PaginationInfo = ({ pagination, page, resourceName }) => {
+const PaginationInfo = ({ pagination, resourceName }) => {
 	if (!pagination) {
 		return null;
 	}
 
-	const startItem = ((page - 1) * pagination.limit) + 1;
-	const endItem = Math.min(page * pagination.limit, pagination.total);
+	const startItem = ((pagination.page - 1) * pagination.limit) + 1;
+	const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
 
 	return (
 		<div className="text-gray-300 text-sm">

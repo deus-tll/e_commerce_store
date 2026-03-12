@@ -1,13 +1,14 @@
 import {useSearchParams} from "react-router-dom";
-import {PlusCircle, ShoppingBasket, BarChart, Users} from "lucide-react";
+import {PlusCircle, ShoppingBasket, BarChart, Users, ClipboardCheck} from "lucide-react";
 
 import {AdminTabs} from "../constants/app.js";
 
-import CategoriesTab from "../components/admin/tabs/CategoriesTab.jsx";
-import AnalyticsTab from "../components/admin/tabs/AnalyticsTab.jsx";
 import ProductsTab from "../components/admin/tabs/ProductsTab.jsx";
+import CategoriesTab from "../components/admin/tabs/CategoriesTab.jsx";
+import OrdersTab from "../components/admin/tabs/OrdersTab.jsx";
 import UsersTab from "../components/admin/tabs/UsersTab.jsx";
 import UserStatsTab from "../components/admin/tabs/UserStatsTab.jsx";
+import AnalyticsTab from "../components/admin/tabs/AnalyticsTab.jsx";
 
 import Container from "../components/ui/Container.jsx";
 import SectionHeader from "../components/ui/SectionHeader.jsx";
@@ -17,6 +18,7 @@ import Button from "../components/ui/Button.jsx";
 const tabs = [
 	{ id: AdminTabs.PRODUCTS, label: "Products", icon: ShoppingBasket },
 	{ id: AdminTabs.CATEGORIES, label: "Categories", icon: PlusCircle },
+	{ id: AdminTabs.ORDERS, label: "Orders", icon: ClipboardCheck },
 	{ id: AdminTabs.USERS, label: "Users", icon: Users },
 	{ id: AdminTabs.ANALYTICS, label: "Analytics", icon: BarChart },
 ];
@@ -61,6 +63,7 @@ const AdminPage = () => {
 
             {activeTab === AdminTabs.PRODUCTS && <ProductsTab />}
             {activeTab === AdminTabs.CATEGORIES && <CategoriesTab />}
+            {activeTab === AdminTabs.ORDERS && <OrdersTab />}
 
 	        {(activeTab === AdminTabs.USERS || activeTab === AdminTabs.USER_STATS) && (
 		        <div className="space-y-6">

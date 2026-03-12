@@ -1,3 +1,4 @@
 export const ApiPaths = Object.freeze({
-	CATEGORIES: "/categories"
+	CATEGORIES: "/categories",
+	ORDERS: "/orders",
 });
