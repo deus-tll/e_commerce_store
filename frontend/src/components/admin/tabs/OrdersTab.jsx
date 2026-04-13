@@ -1,10 +1,11 @@
 import {useEffect, useMemo, useState} from "react";
-import {Filter, FilterX, Delete} from "lucide-react";
+import {Filter, FilterX, Delete, Boxes} from "lucide-react";
 
-import {useOrderStore, OrderFilterKeys} from "../../../stores/useOrderStore.js";
+import {useOrderStore, OrderFilterKeys, OrderStoreScope} from "../../../stores/useOrderStore.js";
+
 import {createOrderColumns} from "../tableColumns.jsx";
 
-import OrdersList from "../lists/OrdersList.jsx";
+import DataList from "../DataList.jsx";
 import OrderStatusFilter from "../../order/OrderStatusFilter.jsx";
 
 import Card from "../../ui/Card.jsx";
@@ -14,6 +15,8 @@ import {Select} from "../../ui/Input.jsx";
 import SearchForm from "../../ui/SearchForm.jsx";
 import IconButton from "../../ui/IconButton.jsx";
 import ErrorMessage from "../../ui/ErrorMessage.jsx";
+
+const ORDER_STORE_SCOPE = OrderStoreScope.ADMIN;
 
 const SEARCH_BY_VALUES = {
 	ORDER_NUMBER: {
@@ -33,7 +36,7 @@ const OrdersTab = () => {
 
 	const {
 		orders, currentOrder, pagination, filters, loading, error: apiError,
-		setPage, updateFilters, clearCurrentOrder, clearFilters, clearError, fetchOrders,
+		setPage, updateFilter, clearFilters, clearFiltersAndFetch, clearCurrentOrder, clearError, fetchOrders,
 		fetchOrderByNumber, fetchOrderByPaymentSessionId, updateOrderStatus
 	} = useOrderStore();
 
@@ -41,15 +44,19 @@ const OrdersTab = () => {
 
 	useEffect(() => {
 		clearError();
-		void fetchOrders();
+		void fetchOrders(ORDER_STORE_SCOPE);
 
-		return () => clearError();
-	}, [fetchOrders, clearError]);
+		return () => {
+			clearError();
+			clearCurrentOrder();
+			void clearFilters(ORDER_STORE_SCOPE);
+		}
+	}, [fetchOrders, clearError, clearCurrentOrder, clearFilters]);
 
-	const handleSearch = async (e) => {
-		e.preventDefault();
+	const handleSearch = async () => {
+		if (!search.trim()) return;
 
-		if (!search) return;
+		clearError();
 
 		switch (searchBy) {
 			case SEARCH_BY_VALUES.ORDER_NUMBER.value:
@@ -60,19 +67,25 @@ const OrdersTab = () => {
 				break;
 			default:
 				console.warn(`Unknown SearchBy value: ${searchBy}`);
-				break;
 		}
 	};
 
 	const handleSearchReset = () => {
+		setSearch("");
 		clearCurrentOrder();
 		clearError();
+
+		void clearFiltersAndFetch(ORDER_STORE_SCOPE);
 	}
 
 	const columns = useMemo(() =>
 		createOrderColumns({ loading, updateOrderStatus }),
 		[loading, updateOrderStatus]
 	);
+
+	const handlePageChange = useMemo(() =>
+			(page) => setPage(page, ORDER_STORE_SCOPE),
+		[setPage]);
 
 	return (
 		<div className="max-w-7xl mx-auto">
@@ -90,7 +103,7 @@ const OrdersTab = () => {
 						<SearchForm
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
-							onSubmit={handleSearch}
+							onSearch={handleSearch}
 							placeholder="Search order..."
 						/>
 
@@ -105,7 +118,7 @@ const OrdersTab = () => {
 						<div className="flex gap-2 items-center">
 							<div className="flex gap-2 ">
 								{hasActiveFilters && (
-									<IconButton variant="danger" onClick={() => clearFilters()}>
+									<IconButton variant="danger" onClick={() => clearFiltersAndFetch(ORDER_STORE_SCOPE)}>
 										<FilterX className="h-4 w-4" />
 									</IconButton>
 								)}
@@ -124,7 +137,7 @@ const OrdersTab = () => {
 						<div className="flex flex-col sm:flex-row gap-4">
 							<OrderStatusFilter
 								value={filters?.status}
-								onChange={(val) => updateFilters(OrderFilterKeys.STATUS, val)}
+								onChange={(val) => updateFilter(OrderFilterKeys.STATUS, val, ORDER_STORE_SCOPE)}
 								label="Status"
 							/>
 						</div>
@@ -134,17 +147,22 @@ const OrdersTab = () => {
 
 			{currentOrder
 				? (
-					<OrdersList
-						orders={[currentOrder]}
+					<DataList
+						data={[currentOrder]}
 						columns={columns}
 					/>
 				)
 				: (
-					<OrdersList
-						orders={orders}
+					<DataList
+						data={orders}
 						columns={columns}
 						pagination={pagination}
-						setPage={setPage}
+						onPageChange={handlePageChange}
+						emptyState={{
+							icon: Boxes,
+							title: "No orders",
+							description: "Orders will show up when customers buy something."
+						}}
 					/>
 				)
 			}

@@ -1,20 +1,12 @@
 import {create} from "zustand";
 
 import axios from "../config/axios.js";
-import {handleError} from "../utils/errorHandler.js";
+import {authApi, AuthPaths, NoRetryUrls} from "../api/authApi.js";
 
-const AUTH_API_PATH = "/auth";
+import {handleAsyncAction} from "../utils/storeHelpers.js";
 
-const NO_RETRY_URLS = [
-	`${AUTH_API_PATH}/login`,
-	`${AUTH_API_PATH}/signup`,
-	`${AUTH_API_PATH}/forgot-password`,
-	`${AUTH_API_PATH}/refresh-token`,
-	`${AUTH_API_PATH}/verify-email`,
-	`${AUTH_API_PATH}/reset-password`
-];
 const PUBLIC_PATHS = [
-	"/", "/signup", "/login", "/forgot-password", "/reset-password", "/verify-email"
+	"/", AuthPaths.SIGNUP, AuthPaths.LOGIN, AuthPaths.FORGOT_PASSWORD, AuthPaths.RESET_PASSWORD, AuthPaths.VERIFY_EMAIL
 ];
 
 export const useAuthStore = create((set) => ({
@@ -23,212 +15,72 @@ export const useAuthStore = create((set) => ({
 	checkingAuth: true,
 	error: null,
 
-	signup: async ({ name, email, password }) => {
-		set({ loading: true, error: null });
+	signup: async (data) => await handleAsyncAction(set, {
+		action: () => authApi.signup(data),
+		onSuccess: (res) => set({ user: res.data }),
+		errorMessage: "Signup failed",
+		shouldUpdateStoreError: true
+	}),
 
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/signup`, { name, email, password });
-			set({ user: res.data });
+	login: async (data) => await handleAsyncAction(set, {
+		action: () => authApi.login(data),
+		onSuccess: (res) => set({ user: res.data }),
+		errorMessage: "Login failed",
+		shouldUpdateStoreError: true
+	}),
 
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Signup failed", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
+	logout: async () => await handleAsyncAction(set, {
+		action: () => authApi.logout(),
+		onSuccess: () => set({ user: null }),
+		onError: () => set({ user: null }),
+		errorMessage: "Logout attempt failed, proceeding with local logout."
+	}),
 
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	checkAuth: async () => await handleAsyncAction(set, {
+		action: () => authApi.checkAuth(),
+		onSuccess: (res) => set({ user: res.data }),
+		onError: () => set({ user: null }),
+		setLoading: (val) => set({ checkingAuth: val })
+	}),
 
-	login: async ({ email, password }) => {
-		set({ loading: true, error: null });
+	refreshToken: async () => await handleAsyncAction(set, {
+		action: () => authApi.refreshToken(),
+		onError: () => set({ user: null }),
+		errorMessage: "Session expired or invalid. Please log in again."
+	}),
 
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/login`, { email, password });
-			set({ user: res.data });
+	verifyEmail: async (code) => await handleAsyncAction(set, {
+		action: () => authApi.verifyEmail(code),
+		onSuccess: (res) => set({ user: res.data }),
+		errorMessage: "Verification failed",
+		shouldUpdateStoreError: true
+	}),
 
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Login failed", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
+	resendVerification: async () => await handleAsyncAction(set, {
+		action: () => authApi.resendVerification(),
+		errorMessage: "Failed to resend verification code.",
+		shouldUpdateStoreError: true
+	}),
 
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	forgotPassword: async (email) => await handleAsyncAction(set, {
+		action: () => authApi.forgotPassword(email),
+		errorMessage: "Failed to send reset link",
+		shouldUpdateStoreError: true
+	}),
 
-	logout: async () => {
-		try {
-			await axios.post(`${AUTH_API_PATH}/logout`);
-			set({ user: null });
+	resetPassword: async (token, password) => await handleAsyncAction(set, {
+		action: () => authApi.resetPassword(token, password),
+		onSuccess: (res) => set({ user: res.data }),
+		errorMessage: "Failed to reset password.",
+		shouldUpdateStoreError: true
+	}),
 
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Logout attempt failed, proceeding with local logout.", {
-				isGlobal: false, showToast: false
-			});
-
-			return false;
-		}
-		finally {
-			set({ user: null });
-		}
-	},
-
-	checkAuth: async () => {
-		set({ checkingAuth: true });
-
-		try {
-			const res = await axios.get(`${AUTH_API_PATH}/profile`);
-			set({ user: res.data });
-
-			return true;
-		}
-		// eslint-disable-next-line no-unused-vars
-		catch (error) {
-			set({ user: null });
-			return false;
-		}
-		finally {
-			set({ checkingAuth: false });
-		}
-	},
-
-	refreshToken: async () => {
-		try {
-			await axios.post(`${AUTH_API_PATH}/refresh-token`);
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Session expired or invalid. Please log in again.", {
-				isGlobal: true, showToast: false
-			});
-			set({ user: null });
-
-			return false;
-		}
-	},
-
-	verifyEmail: async (code) => {
-		set({ loading: true, error: null });
-
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/verify-email`, { code });
-			set({ user: res.data });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Verification failed", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	resendVerification: async () => {
-		set({ loading: true, error: null });
-
-		try {
-			await axios.post(`${AUTH_API_PATH}/resend-verification`);
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Failed to resend verification code.", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	forgotPassword: async (email) => {
-		set({ loading: true, error: null });
-
-		try {
-			await axios.post(`${AUTH_API_PATH}/forgot-password`, { email });
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Failed to send reset link", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	resetPassword: async ({token, password}) => {
-		set({ loading: true, error: null });
-
-		try {
-			const res = await axios.post(`${AUTH_API_PATH}/reset-password/${token}`, { password });
-			set({ user: res.data });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Password reset failed", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	changePassword: async ({ currentPassword, newPassword }) => {
-		set({ loading: true, error: null });
-
-		try {
-			await axios.post(`${AUTH_API_PATH}/change-password`, {
-				currentPassword,
-				newPassword
-			});
-
-			set({ user: null });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Failed to change password.", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	changePassword: async (currentPassword, newPassword) => await handleAsyncAction(set, {
+		action: () => authApi.changePassword(currentPassword, newPassword),
+		onSuccess: () => set({ user: null }),
+		errorMessage: "Failed to change password.",
+		shouldUpdateStoreError: true
+	}),
 
 	clearError: () => set({ error: null })
 }));
@@ -251,7 +103,7 @@ function canRetryRequest(error, originalRequest) {
 	if (originalRequest._retry) return false;
 
 	const url = originalRequest.url || "";
-	if (NO_RETRY_URLS.some(noRetryUrl => url.includes(noRetryUrl))) return false;
+	if (NoRetryUrls.some(noRetryUrl => url.includes(noRetryUrl))) return false;
 
 	const errorCode = error.response?.data?.code;
 

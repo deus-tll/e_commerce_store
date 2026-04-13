@@ -1,17 +1,16 @@
 import {create} from "zustand";
-import {toast} from "react-hot-toast";
 import {loadStripe} from "@stripe/stripe-js";
+import {toast} from "react-hot-toast";
 
-import axios from "../config/axios.js";
+import couponApi from "../api/couponApi.js";
+import cartApi from "../api/cartApi.js";
+import paymentApi from "../api/paymentApi.js";
 
-import {handleError} from "../utils/errorHandler.js";
 import {Currency} from "../utils/currency.js";
+import {handleError} from "../utils/errorHandler.js";
+import {handleAsyncAction} from "../utils/storeHelpers.js";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
-const COUPONS_API_PATH = "/coupons";
-const CART_API_PATH = "/cart";
-const PAYMENTS_API_PATH = "/payments";
 
 const normalizeProduct = (product, quantity = 1) => ({
 	id: product.id,
@@ -56,38 +55,21 @@ export const useCartStore = create((set, get) => ({
 		};
 	},
 
-	getMyCoupon: async () => {
-		try {
-			const res = await axios.get(COUPONS_API_PATH);
-			set({ coupon: res.data });
-		}
-		catch (error) {
-			handleError(error, "Error fetching coupon", {
-				isGlobal: false, showToast: false
-			});
-		}
-	},
+	getMyCoupon: async () => await handleAsyncAction(set, {
+		action: () => couponApi.get(),
+		onSuccess: (res) => set({ coupon: res.data }),
+		errorMessage: "Error fetching coupon"
+	}),
 
-	applyCoupon: async (code) => {
-		set({ couponLoading: true });
-
-		try {
-			const res = await axios.post(`${COUPONS_API_PATH}/validate`, { code });
-
+	applyCoupon: async (code) => await handleAsyncAction(set, {
+		action: () => couponApi.apply(code),
+		onSuccess: (res) => {
 			set({ coupon: res.data, isCouponApplied: true });
-
 			toast.success("Coupon applied successfully");
-		}
-		catch (error) {
-			const msg = handleError(error, "Error applying coupon", {
-				isGlobal: false, showToast: false
-			});
-			throw new Error(msg);
-		}
-		finally {
-			set({ couponLoading: false });
-		}
-	},
+		},
+		setLoading: (val) => set({ couponLoading: val }),
+		errorMessage: "Error applying coupon"
+	}),
 
 	unapplyCoupon: () => {
 		set({ isCouponApplied: false });
@@ -102,33 +84,26 @@ export const useCartStore = create((set, get) => ({
 		});
 	},
 
-	getCartItems: async () => {
-		try {
-			const res = await axios.get(CART_API_PATH);
-
+	getCartItems: async () => await handleAsyncAction(set, {
+		action: () => cartApi.get(),
+		onSuccess: (res) => {
 			const normalized = Array.isArray(res.data)
 				? res.data
 					.map((item) => item?.product ? normalizeProduct(item.product, item.quantity) : null)
 					.filter(item => item !== null)
 				: [];
-
 			set({ cart: normalized });
-		}
-		catch (error) {
-			set({ cart: [] });
-			handleError(error, "Error getting cart items");
-		}
-	},
+		},
+		onError: () => set({ cart: [] }),
+		errorMessage: "Error getting cart items",
+		handleErrorOptions: { showToast: true }
+	}),
 
-	addToCart: async (product) => {
-		set({ itemLoadingId: product.id });
-
-		try {
-			await axios.post(CART_API_PATH, { productId: product.id });
-
+	addToCart: async (product) => await handleAsyncAction(set, {
+		action: () => cartApi.addToCart(product.id),
+		onSuccess: () => {
 			set((prevState) => {
 				const existingItem = prevState.cart.find((item) => item.id === product.id);
-
 				if (existingItem) {
 					return {
 						cart: prevState.cart.map((item) =>
@@ -136,119 +111,72 @@ export const useCartStore = create((set, get) => ({
 						),
 					};
 				}
-
-				return {
-					cart: [...prevState.cart, normalizeProduct(product, 1)]
-				};
+				return { cart: [...prevState.cart, normalizeProduct(product, 1)] };
 			});
 
 			toast.success("Product added to your cart");
-		}
-		catch (error) {
-			handleError(error, "Error adding item to cart", {
-				isGlobal: false,
-				showToast: true
-			});
-		}
-		finally {
-			set({ itemLoadingId: null });
-		}
-	},
+		},
+		setLoading: (val) => set({ itemLoadingId: val ? product.id : null }),
+		errorMessage: "Error adding item to cart",
+		handleErrorOptions: { showToast: true }
+	}),
 
-	removeFromCart: async (productId) => {
-		set({ itemLoadingId: productId });
+	removeFromCart: async (productId) => await handleAsyncAction(set, {
+		action: () => cartApi.removeFromCart(productId),
+		onSuccess: () => set((state) => ({
+			cart: state.cart.filter((item) => item.id !== productId)
+		})),
+		setLoading: (val) => set({ itemLoadingId: val ? productId : null }),
+		errorMessage: "Error removing item from cart",
+		handleErrorOptions: { showToast: true }
+	}),
 
-		try {
-			await axios.delete(`${CART_API_PATH}/${productId}`);
-
-			set((prevState) => ({ cart: prevState.cart.filter((item) => item.id !== productId) }));
-		}
-		catch (error) {
-			handleError(error, "Error removing item from cart", {
-				isGlobal: false,
-				showToast: true
-			});
-		}
-		finally {
-			set({ itemLoadingId: null });
-		}
-	},
-
-	clearCart: async () => {
-		set({ clearingCart: true });
-
-		try {
-			await axios.delete(CART_API_PATH);
-
+	clearCart: async () => await handleAsyncAction(set, {
+		action: () => cartApi.clear(),
+		onSuccess: () => {
 			get().clear();
-
 			toast.success("Your cart has been cleared.");
-		}
-		catch (error) {
-			handleError(error, "Error clearing cart", {
-				isGlobal: false,
-				showToast: true
-			});
-		}
-		finally {
-			set({ clearingCart: false });
-		}
-	},
+		},
+		setLoading: (val) => set({ clearingCart: val }),
+		errorMessage: "Error clearing cart",
+		handleErrorOptions: { showToast: true }
+	}),
 
-	updateQuantity: async (productId, quantity) => {
-		set({ itemLoadingId: productId });
+	updateQuantity: async (productId, quantity) => await handleAsyncAction(set, {
+		action: () => cartApi.updateQuantity(productId, quantity),
+		onSuccess: () => set((state) => ({
+			cart: state.cart.map((item) => (item.id === productId ? { ...item, quantity } : item)),
+		})),
+		setLoading: (val) => set({ itemLoadingId: val ? productId : null }),
+		errorMessage: "Error updating item quantity",
+		handleErrorOptions: { showToast: true }
+	}),
 
-		try {
-			await axios.patch(`${CART_API_PATH}/${productId}`, { quantity });
-
-			set((prevState) => ({
-				cart: prevState.cart.map((item) => (item.id === productId ? { ...item, quantity } : item)),
-			}));
-		}
-		catch (error) {
-			handleError(error, "Error updating item quantity in the cart", {
-				isGlobal: false,
-				showToast: true
-			});
-		}
-		finally {
-			set({ itemLoadingId: null });
-		}
-	},
-
-	createCheckoutSession: async () => {
-		const { cart, coupon, isCouponApplied } = get();
-		set({ paymentLoading: true });
-
-		try {
+	createCheckoutSession: async () => await handleAsyncAction(set, {
+		action: async () => {
+			const { cart, coupon, isCouponApplied } = get();
 			const stripe = await stripePromise;
+			const couponCode = (coupon && isCouponApplied) ? coupon.code : null;
 
-			const simplifiedProducts = cart.map(p => ({
-				id: p.id,
-				quantity: p.quantity || 1
-			}));
+			const apiResult = await paymentApi.createCheckoutSession(
+				cart.map(p => ({ id: p.id, quantity: p.quantity || 1 })),
+				couponCode
+			);
 
-			const res = await axios.post(`${PAYMENTS_API_PATH}/create-checkout-session`, {
-				products: simplifiedProducts,
-				couponCode: (coupon && isCouponApplied) ? coupon.code : null,
-			});
+			const stripeResult = await stripe.redirectToCheckout({ sessionId: apiResult?.data.id });
 
-			const session = res?.data;
-			const result = await stripe.redirectToCheckout({
-				sessionId: session.id,
-			});
+			if (stripeResult.error) throw stripeResult.error;
 
-			if (result.error) {
-				throw result.error;
-			}
-		}
-		catch (error) {
-			const criticalOptions = { isGlobal: true, showToast: false };
+			return apiResult;
+		},
+		setLoading: (val) => set({ paymentLoading: val }),
+		onError: (error, preventDefault) => {
+			preventDefault();
 
-			if (error && error.type === 'StripeError' || (error.message && !error.response)) {
-				const userMessage = "Payment checkout could not be initiated. Please try again or contact support.";
+			const criticalOptions = { isGlobal: true };
 
-				handleError(error, userMessage, {
+			if (error?.type === "StripeError" || (error?.message && !error?.response)) {
+				handleError(error, "Payment checkout could not be initiated...", {
 					...criticalOptions,
 					forceUserMessage: true
 				});
@@ -257,36 +185,32 @@ export const useCartStore = create((set, get) => ({
 
 			handleError(error, "An error occurred during payment", criticalOptions);
 		}
-		finally {
-			set({ paymentLoading: false });
-		}
-	},
+	}),
 
 	finalizeCheckout: async (sessionId) => {
-		set({ processingCheckout: true, checkoutError: null, lastOrderNumber: null });
+		set({ lastOrderNumber: null });
 
 		if (!sessionId) {
-			set({ processingCheckout: false, checkoutError: "No session ID found in the URL." });
-			return;
+			set({ checkoutError: "No session ID found in the URL." });
+			return false;
 		}
 
-		try {
-			const res = await axios.post(`${PAYMENTS_API_PATH}/checkout-success`, { sessionId });
-			const orderData = res.data;
+		return await handleAsyncAction(set, {
+			action: () => paymentApi.checkoutSuccess(sessionId),
+			onSuccess: (res) => {
+				get().clear();
+				set({ lastOrderNumber: res.data.orderNumber });
+			},
+			onError: (error, preventDefault) => {
+				preventDefault();
 
-			get().clear();
+				const userMessage = "Failed to finalize the order. Please contact support.";
 
-			set({ lastOrderNumber: orderData.orderNumber });
-		}
-		catch (error) {
-			set({ checkoutError: "Failed to finalize the order. Please contact support." });
-			handleError(error, "Failed to finalize the order. Please contact support.", {
-				isGlobal: true,
-				showToast: false
-			});
-		}
-		finally {
-			set({ processingCheckout: false });
-		}
+				handleError(error, userMessage, { isGlobal: true });
+
+				set({ checkoutError: userMessage });
+			},
+			setLoading: (val) => set({ processingCheckout: val }),
+		});
 	}
 }));

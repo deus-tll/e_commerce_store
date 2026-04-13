@@ -8,7 +8,6 @@ import {formatCurrency} from "../utils/format.js";
 import {useProductStore} from "../stores/useProductStore.js";
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useCartStore} from "../stores/useCartStore.js";
-import {useReviewStore} from "../stores/useReviewStore.js";
 
 import StockStatus from "../components/product/StockStatus.jsx";
 import ReviewsList from "../components/review/ReviewsList.jsx";
@@ -31,17 +30,13 @@ const ProductDetailsPage = () => {
     const { user } = useAuthStore();
     const { itemLoadingId, addToCart } = useCartStore();
     const { currentProduct, loading, error, fetchProductById, clearCurrentProduct } = useProductStore();
-    const { clearReviews } = useReviewStore();
 
     useEffect(() => {
         setSelectedImageIndex(0);
         void fetchProductById(id);
 
-        return () => {
-            clearCurrentProduct();
-            clearReviews();
-        };
-    }, [id, fetchProductById, clearCurrentProduct, clearReviews]);
+        return () => clearCurrentProduct();
+    }, [id, fetchProductById, clearCurrentProduct]);
 
     const productImages = useMemo(() => {
         const images = currentProduct?.images;

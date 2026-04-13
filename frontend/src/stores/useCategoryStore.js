@@ -1,161 +1,116 @@
 import {create} from "zustand";
 
-import axios from "../config/axios.js";
+import categoryApi from "../api/categoryApi.js";
 
-import {handleError} from "../utils/errorHandler.js";
+import {PaginationLimits, PaginationMaxLimits} from "../constants/app.js";
 
-import {ApiPaths} from "../constants/api.js";
-import {PaginationLimits} from "../constants/app.js";
-import toast from "react-hot-toast";
+import {
+	getInitialPagination,
+	handleAsyncAction, handleClearFilters,
+	handleDeletionNavigation,
+	handlePaginatedFetch,
+	handleSetPage, handleUpdateFilter
+} from "../utils/storeHelpers.js";
+
+export const CategoryFilterKeys = Object.freeze({
+	SEARCH: "search",
+});
+
+const INITIAL_CATEGORY_FILTERS = Object.freeze({
+	search: ""
+});
 
 export const useCategoryStore = create((set, get) => ({
 	categories: [],
+	pagination: getInitialPagination(PaginationLimits.CATEGORIES),
+	filters: INITIAL_CATEGORY_FILTERS,
+
+	searchResults: [],
+	searchLoading: false,
+
 	currentCategory: null,
-	pagination: null,
+
 	loading: false,
 	error: null,
 
 	fetchCategories: async (options = {}) => {
-		const {
-			page = 1,
-			limit = PaginationLimits.CATEGORIES,
-			append = true,
-			filters = {}
-		} = options;
+		const { append = false } = options;
 
-		set({ loading: true });
+		return await handlePaginatedFetch(
+			set, get,
+			categoryApi.getAll,
+			(data) => {
+				const { categories: newCategories, pagination: newPagination } = data;
 
-		try {
-			const params = new URLSearchParams({
-				page: String(page),
-				limit: String(limit),
-				...filters
-			});
-
-			const requestPath = `${ApiPaths.CATEGORIES}?${params}`;
-
-			const res = await axios.get(requestPath);
-
-			const { categories: newCategories, pagination: newPagination } = res.data;
-
-			set((prev) => ({
-				categories: (append && page !== 1) ? [...prev.categories, ...newCategories] : newCategories,
-				pagination: newPagination
-			}));
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to load categories. Please refresh.", {
-				isGlobal: true,
-				showToast: false,
-				forceUserMessage: true
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
+				set((prev) => ({
+					categories: (append && prev.pagination.page !== 1) ? [...prev.categories, ...newCategories] : newCategories,
+					pagination: newPagination
+				}));
+			},
+			"Failed to load categories. Please refresh."
+		);
 	},
+	setPage: async (newPage = 1, options = {}) => await handleSetPage(set, get, newPage, () => get().fetchCategories(options)),
 
-	fetchCategoryBySlug: async (slug) => {
-		set({ loading: true, error: null });
+	searchCategories: async (term) => await handleAsyncAction(set, {
+		action: () => categoryApi.getAll({
+			page: 1,
+			limit: PaginationMaxLimits.CATEGORIES,
+			search: term
+		}),
+		onSuccess: (res) => set({ searchResults: res.data.categories }),
+		onError: () => set({ searchResults: [] }),
+		setLoading: (val) => set({ searchLoading: val }),
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { showToast: true }
+	}),
 
-		try {
-			const res = await axios.get(`${ApiPaths.CATEGORIES}/slug/${slug}`);
-			set({ currentCategory: res.data });
+	fetchCategoryBySlug: async (slug) => await handleAsyncAction(set, {
+		action: () => categoryApi.getBySlug(slug),
+		onSuccess: (res) => set({ currentCategory: res.data }),
+		onError: () => set({ currentCategory: null }),
+		errorMessage: "Failed to load category details.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
 
-			return true;
-		} catch (error) {
-			handleError(error, "Failed to load category details.", {
-				isGlobal: true, showToast: false
-			});
-			set({ currentCategory: null });
+	createCategory: async (categoryData) => await handleAsyncAction(set, {
+		action: () => categoryApi.create(categoryData),
+		onSuccess: () => get().setPage(1),
+		errorMessage: "Category creation failed.",
+		shouldUpdateStoreError: true
+	}),
 
-			return false;
-		} finally {
-			set({ loading: false });
-		}
-	},
+	updateCategory: async (categoryId, categoryData) => await handleAsyncAction(set, {
+		action: () => categoryApi.update(categoryId, categoryData),
+		onSuccess: () => get().fetchCategories(),
+		errorMessage: "Category update failed.",
+		shouldUpdateStoreError: true
+	}),
 
-	createCategory: async ({ name, image, allowedAttributes }) => {
-		set({ loading: true });
-		try {
-			await axios.post(ApiPaths.CATEGORIES, { name, image, allowedAttributes });
-			await get().fetchCategories({ page: 1, append: false });
+	deleteCategory: async (categoryId) => await handleAsyncAction(set, {
+		action: () => categoryApi.delete(categoryId),
+		onSuccess: () => handleDeletionNavigation(get, get().setPage, get().fetchCategories),
+		errorMessage: "Category deletion failed.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
 
-			toast.success("Category added successfully.");
+	updateFilter: async (key, value) => await handleUpdateFilter(set, get().fetchCategories, key, value),
 
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Category creation failed.", {
-				isGlobal: false, showToast: false
-			});
+	clearFilters: () => handleClearFilters(
+		set, get().fetchCategories,
+		INITIAL_CATEGORY_FILTERS, false,
+		{ limit: PaginationLimits.CATEGORIES }
+	),
+	clearFiltersAndFetch: () => handleClearFilters(
+		set, get().fetchCategories,
+		INITIAL_CATEGORY_FILTERS, true,
+		{ limit: PaginationLimits.CATEGORIES }
+	),
 
-			set({ error: msg });
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	updateCategory: async (id, { name, image, allowedAttributes }) => {
-		set({ loading: true });
-
-		const currentPage = get().pagination?.page || 1;
-
-		try {
-			await axios.patch(`${ApiPaths.CATEGORIES}/${id}`, { name, image, allowedAttributes });
-			await get().fetchCategories({ page: currentPage, append: false });
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Category update failed.", {
-				isGlobal: false, showToast: false
-			});
-
-			set({ error: msg });
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	deleteCategory: async (id) => {
-		set({ loading: true });
-
-		const state = get();
-		const currentPage = state.pagination?.page || 1;
-		const limit = state.pagination?.limit || PaginationLimits.CATEGORIES;
-		const oldTotal = state.pagination?.totalPrice || 0;
-
-		try {
-			await axios.delete(`${ApiPaths.CATEGORIES}/${id}`);
-
-			const newTotal = oldTotal > 0 ? oldTotal - 1 : 0;
-			const maxPage = Math.ceil(newTotal / limit) || 1;
-			const pageToFetch = currentPage > maxPage ? maxPage : currentPage;
-
-			await get().fetchCategories({ page: pageToFetch, append: false });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Category deletion failed.", {
-				isGlobal: true, showToast: false
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
+	clearCategories: () => set({ categories: [] }),
+	clearSearchResults: () => set({ searchResults: [], searchLoading: false }),
 	clearCurrentCategory: () => set({ currentCategory: null }),
 	clearError: () => set({ error: null })
 }));

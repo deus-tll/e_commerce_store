@@ -4,7 +4,7 @@ import {Save, User, Mail, Shield, CheckCircle, Lock, UserPlus} from "lucide-reac
 import useFormData from "../../../hooks/useFormData.js";
 import {validateEmail, validatePassword, validateRequired} from "../../../utils/validators.js";
 import {getFormDataPayloadForEdit} from "../../../utils/helpers.js";
-import {UserRoles} from "../../../constants/app.js";
+import {UserRoles} from "../../../constants/domain.js";
 
 import {useUserStore} from "../../../stores/useUserStore.js";
 

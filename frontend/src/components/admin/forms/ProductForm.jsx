@@ -129,6 +129,7 @@ const ProductForm = ({ initialData = null, onSuccess }) => {
 
 	const handleDeselectCategory = useCallback(() => {
 		setFormField("categoryId", "");
+		setSelectedCategory(null);
 		setErrors(prev => ({ ...prev, categoryId: "Category selection is required." }));
 	}, [setFormField, setErrors]);
 
@@ -141,7 +142,6 @@ const ProductForm = ({ initialData = null, onSuccess }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
 		clearError();
 
 		if (!validate(validationRules)) return;

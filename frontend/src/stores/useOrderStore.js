@@ -1,17 +1,22 @@
 import {create} from "zustand";
 
-import axios from "../config/axios.js";
-import {handleError} from "../utils/errorHandler.js";
-import {ApiPaths} from "../constants/api.js";
+import orderApi from "../api/orderApi.js";
+
 import {PaginationLimits} from "../constants/app.js";
 import {OrderStatusValues} from "../constants/domain.js";
 
-const INITIAL_PAGINATION = Object.freeze({
-	page: 1,
-	limit: PaginationLimits.ORDERS,
-	total: 0,
-	pages: 1
+import {
+	getInitialPagination,
+	handleAsyncAction,
+	handlePaginatedFetch, handleSetPage,
+	handleUpdateFilter, handleClearFilters,
+} from "../utils/storeHelpers.js";
+
+export const OrderStoreScope = Object.freeze({
+	ADMIN: "admin",
+	PROFILE: "profile"
 });
+
 export const OrderFilterKeys = Object.freeze({
 	STATUS: "status",
 });
@@ -19,191 +24,121 @@ const INITIAL_ORDER_FILTERS = Object.freeze({
 	status: "",
 });
 
+const  SCOPE_CONFIG = {
+	[OrderStoreScope.ADMIN]: {
+		pagination: "pagination",
+		filters: "filters",
+		data: "orders"
+	},
+	[OrderStoreScope.PROFILE]: {
+		pagination: "myOrdersPagination",
+		filters: "myOrdersFilters",
+		data: "myOrders"
+	}
+};
+
 export const useOrderStore = create((set, get) => ({
-	orders: [],
 	currentOrder: null,
-	pagination: INITIAL_PAGINATION,
-	filters: INITIAL_ORDER_FILTERS,
 	loading: false,
 	error: null,
 
-	/**
-	 * Internal helper to clean filters state from empty or invalid values.
-	 * @private
-	 */
-	_filtersCleanup: (currentFilters) => {
-		const cleanFilters = { ...currentFilters };
+	orders: [],
+	pagination: getInitialPagination(PaginationLimits.ORDERS),
+	filters: INITIAL_ORDER_FILTERS,
 
-		Object.keys(cleanFilters).forEach(key => {
-			if (cleanFilters[key] === "") delete cleanFilters[key];
-		});
+	myOrders: [],
+	myOrdersPagination: getInitialPagination(PaginationLimits.ORDERS),
+	myOrdersFilters: INITIAL_ORDER_FILTERS,
 
-		return cleanFilters;
-	},
+	fetchOrders: async (scope = OrderStoreScope.ADMIN) => {
+		const config = SCOPE_CONFIG[scope];
+		const { pagination, filters, data: dataKey } = config;
 
-	/**
-	 * Internal helper to handle all paginated order fetching logic.
-	 * @private
-	 */
-	_fetchPaginatedOrders: async (path) => {
-		set({ loading: true });
+		const apiCall = scope === OrderStoreScope.PROFILE
+			? orderApi.getMyAll
+			: orderApi.getAll;
 
-		try {
-			const { page, limit } = get().pagination;
-			const cleanFilters = get()._filtersCleanup(get().filters);
+		const errorMessage = scope === OrderStoreScope.PROFILE
+			? "Failed to load your orders. Please refresh."
+			: "Failed to load orders. Please refresh.";
 
-			const params = new URLSearchParams({
-				page: String(page),
-				limit: String(limit),
-				...cleanFilters
-			});
-
-			const res = await axios.get(`${path}?${params}`);
-
-			set({
-				orders: res.data.orders,
-				pagination: res.data.pagination
-			});
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to load orders. Please refresh.", {
-				isGlobal: true,
-				showToast: false,
-				forceUserMessage: true
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-	/**
-	 * Internal helper to handle single order fetching logic.
-	 * @private
-	 */
-	_fetchOrder: async (path, errorMessage, isGlobal, showToast) => {
-		set({ loading: true, error: null });
-
-		try {
-			const res = await axios.get(path);
-			set({ currentOrder: res.data });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, errorMessage, {
-				isGlobal, showToast
-			});
-			set({ currentOrder: null, error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	fetchOrders: async () => get()._fetchPaginatedOrders(ApiPaths.ORDERS),
-	fetchMyOrders: async () => get()._fetchPaginatedOrders(`${ApiPaths.ORDERS}/mine`),
-	fetchOrderById: async (id) => {
-		return await get()._fetchOrder(
-			`${ApiPaths.ORDERS}/${id}`,
-			"Failed to load order details.",
-			true,
-			false
+		return await handlePaginatedFetch(
+			set, get, apiCall,
+			(resData) => set({ [dataKey]: resData.orders, [pagination]: resData.pagination }),
+			errorMessage,
+			{ pagination, filters }
 		);
 	},
-	fetchOrderByNumber: async (orderNumber) => {
-		return await get()._fetchOrder(
-			`${ApiPaths.ORDERS}/number/${orderNumber}`,
-			"Order not found.",
-			false,
-			true
-			);
-	},
-	fetchOrderByPaymentSessionId: async (paymentSessionId) => {
-		return await get()._fetchOrder(
-			`${ApiPaths.ORDERS}/payment-session/${paymentSessionId}`,
-			"Order not found.",
-			false,
-			true
-		);
-	},
-	updateOrderStatus: async (id, status, options = { refreshList: false }) => {
-		const { refreshList } = options;
 
-		set({ loading: true, error: null });
+	setPage: async (newPage = 1, scope = OrderStoreScope.ADMIN) => {
+		const { pagination, filters } = SCOPE_CONFIG[scope];
+		await handleSetPage(set, get, newPage, () => get().fetchOrders(scope),{ pagination, filters })
+	},
 
-		try {
-			const res = await axios.patch(`${ApiPaths.ORDERS}/${id}/status`, { status });
+	fetchOrderById: async (orderId) => await handleAsyncAction(set, {
+		action: () => orderApi.getById(orderId),
+		onSuccess: (res) => set({ currentOrder: res.data }),
+		onError: () => set({ currentOrder: null }),
+		errorMessage: "Order not found.",
+		shouldUpdateStoreError: true
+	}),
+	fetchOrderByNumber: async (orderNumber) => await handleAsyncAction(set, {
+		action: () => orderApi.getByNumber(orderNumber),
+		onSuccess: (res) => set({ currentOrder: res.data }),
+		onError: () => set({ currentOrder: null }),
+		errorMessage: "Order not found.",
+		shouldUpdateStoreError: true,
+		handleErrorOptions: { showToast: true }
+	}),
+	fetchOrderByPaymentSessionId: async (paymentSessionId) => await handleAsyncAction(set, {
+		action: () => orderApi.getByPaymentSessionId(paymentSessionId),
+		onSuccess: (res) => set({ currentOrder: res.data }),
+		onError: () => set({ currentOrder: null }),
+		errorMessage: "Order not found.",
+		shouldUpdateStoreError: true,
+		handleErrorOptions: { showToast: true }
+	}),
+
+	updateOrderStatus: async (orderId, status, options = { refreshList: false }) => await handleAsyncAction(set, {
+		action: () => orderApi.updateStatus(orderId, status),
+		onSuccess: async (res) => {
 			const updatedOrder = res.data;
 
 			set((state) => ({
-				currentOrder: state.currentOrder?.id === id ? updatedOrder : state.currentOrder,
+				currentOrder: state.currentOrder?.id === orderId ? updatedOrder : state.currentOrder,
 			}));
 
-			if (refreshList) {
-				await get().fetchOrders();
-			}
+			if (options.refreshList) await get().fetchOrders();
+		},
+		errorMessage: "Failed to update order status.",
+		shouldUpdateStoreError: true
+	}),
 
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Failed to update order status", {
-				isGlobal: false,
-				showToast: false,
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	setPage: async (newPage = 1) => {
-		const { pages, total } = get().pagination;
-
-		const isInitialLoad = total === 0;
-		const isWithinBounds = newPage > 0 && newPage <= pages;
-
-		if (!isInitialLoad && !isWithinBounds) {
-			return;
-		}
-
-		set((state) => ({
-			pagination: { ...state.pagination, page: newPage },
-			error: null
-		}));
-
-		await get().fetchOrders();
-	},
-	updateFilters: async (key, value) => {
+	updateFilter: async (key, value, scope = OrderStoreScope.ADMIN) => {
 		if(key === OrderFilterKeys.STATUS && value !== "" && !OrderStatusValues.includes(value)) {
 			set({ error: "Invalid status selected." });
 			return;
 		}
 
-		set((state) => ({
-			filters: { ...state.filters, [key]: value },
-			pagination: { ...state.pagination, page: 1 },
-			error: null
-		}));
+		const { pagination, filters } = SCOPE_CONFIG[scope];
 
-		await get().fetchOrders();
+		await handleUpdateFilter(set, () => get().fetchOrders(scope), key, value, { pagination, filters });
 	},
-	clearFilters: async () => {
-		set((state) => ({
-			filters: INITIAL_ORDER_FILTERS,
-			pagination: { ...state.pagination, page: 1 },
-			error: null
-		}));
-
-		await get().fetchOrders();
+	clearFilters: async (scope = OrderStoreScope.ADMIN) => {
+		const { pagination, filters } = SCOPE_CONFIG[scope];
+		await handleClearFilters(
+			set, () => get().fetchOrders(scope),
+			INITIAL_ORDER_FILTERS, false,
+			{ limit: PaginationLimits.ORDERS, stateKeys: { pagination, filters } }
+		);
+	},
+	clearFiltersAndFetch: async (scope = OrderStoreScope.ADMIN) => {
+		const { pagination, filters } = SCOPE_CONFIG[scope];
+		await handleClearFilters(
+			set, () => get().fetchOrders(scope),
+			INITIAL_ORDER_FILTERS, true,
+			{ limit: PaginationLimits.ORDERS, stateKeys: { pagination, filters } }
+		);
 	},
 
 	clearCurrentOrder: () => set({ currentOrder: null }),

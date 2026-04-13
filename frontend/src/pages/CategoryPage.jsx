@@ -1,11 +1,10 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import {useParams} from "react-router-dom";
 
-import {useProductStore} from "../stores/useProductStore.js";
+import {ProductFilterKeys, useProductStore} from "../stores/useProductStore.js";
 import {useCategoryStore} from "../stores/useCategoryStore.js";
 
 import ProductGrid from "../components/product/ProductGrid.jsx";
-import SortSelector from "../components/product/SortSelector.jsx";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import Container from "../components/ui/Container.jsx";
@@ -13,23 +12,31 @@ import SectionHeader from "../components/ui/SectionHeader.jsx";
 import Pagination from "../components/ui/Pagination.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import Button from "../components/ui/Button.jsx";
+import SortSelector from "../components/ui/SortSelector.jsx";
+
+const PRODUCT_SORT_OPTIONS = [
+	{ label: "Newest First", value: "createdAt-desc" },
+	{ label: "Price: Low to High", value: "price-asc" },
+	{ label: "Price: High to Low", value: "price-desc" },
+	{ label: "Top Rated", value: "ratingStats.averageRating-desc" },
+];
 
 const CategoryPage = () => {
 	const { category: categorySlug } = useParams();
-
-	const [page, setPage] = useState(1);
-	const [selectedAttributes, setSelectedAttributes] = useState({});
-	const [sortConfig, setSortConfig] = useState({ sortBy: 'createdAt', order: 'desc' });
-
 	const lastSlug = useRef(categorySlug);
 
 	const {
 		products,
 		pagination,
+		filters,
 		facets,
 		loading: productsLoading,
-		fetchProducts,
-		fetchFacets
+		facetsLoading,
+		setPage,
+		fetchFacets,
+		updateFilter,
+		clearFilters,
+		clearFiltersAndFetch
 	} = useProductStore();
 	const {
 		currentCategory,
@@ -43,8 +50,8 @@ const CategoryPage = () => {
 			if (!categorySlug) return;
 
 			if (categorySlug !== lastSlug.current) {
-				setPage(1);
-				setSelectedAttributes({});
+				void clearFilters();
+				lastSlug.current = categorySlug;
 			}
 
 			const success = await fetchCategoryBySlug(categorySlug);
@@ -53,51 +60,24 @@ const CategoryPage = () => {
 			if (success && categoryId) {
 				void fetchFacets(categoryId);
 			}
+
+			void updateFilter(ProductFilterKeys.CATEGORY_SLUG, categorySlug);
 		};
 
 		void loadData();
 
-		return () => clearCurrentCategory();
-	}, [categorySlug, fetchCategoryBySlug, fetchFacets, clearCurrentCategory]);
+		return () => {
+			clearCurrentCategory();
+			void clearFilters();
+		};
+	}, [categorySlug, fetchCategoryBySlug, fetchFacets, updateFilter, clearFilters, clearCurrentCategory]);
 
-	useEffect(() => {
-		if (!categorySlug) return;
-
-		const isMidReset = categorySlug !== lastSlug.current && page !== 1;
-
-		if (!isMidReset) {
-			void fetchProducts({
-				page: page,
-				filters: {
-					categorySlug,
-					attributes: selectedAttributes,
-					...sortConfig
-				}
-			});
-
-			lastSlug.current = categorySlug;
-		}
-	}, [categorySlug, page, selectedAttributes, sortConfig, fetchProducts]);
-
-	const handleFilterChange = useCallback((name, value) => {
-		setPage(1);
-
-		setSelectedAttributes(prev => {
-			const current = prev[name] || [];
-			const isSelected = current.includes(value);
-
-			const nextValues = isSelected
-				? current.filter(v => v !== value)
-				: [...current, value];
-
-			const nextState = {...prev, [name]: nextValues };
-			if (nextValues.length === 0) delete nextState[name];
-
-			return nextState;
-		});
-	}, []);
+	const handleAttributeToggle = useCallback((name, value) => {
+		void updateFilter(ProductFilterKeys.ATTRIBUTES, { name, value });
+	}, [updateFilter]);
 
 	const isLoading = productsLoading || categoryLoading;
+	const selectedAttributes = filters.attributes;
 
     return (
         <Container size="lg">
@@ -108,11 +88,10 @@ const CategoryPage = () => {
 		        />
 
 		        <SortSelector
-			        sortConfig={sortConfig}
-			        onSortChange={(newSort) => {
-				        setSortConfig(newSort);
-				        setPage(1);
-			        }}
+			        sortBy={filters.sort.sortBy}
+			        order={filters.sort.order}
+			        options={PRODUCT_SORT_OPTIONS}
+			        onSortChange={(newSort) => void updateFilter(ProductFilterKeys.SORT, newSort)}
 		        />
 	        </div>
 
@@ -123,40 +102,51 @@ const CategoryPage = () => {
 					        Filters
 						</h3>
 
-				        {facets?.map(facet => (
-					        <div key={facet.name} className="space-y-3">
-						        <label className="text-xs font-semibold text-gray-500 uppercase tracking-tight">
-							        {facet.name}
-						        </label>
-						        <div className="flex flex-wrap gap-2">
-							        {facet.values?.map(val => {
-								        const isSelected = selectedAttributes[facet.name]?.includes(val);
-								        return (
-									        <button
-										        key={val}
-										        onClick={() => handleFilterChange(facet.name, val)}
-										        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-											        isSelected
-												        ? "bg-emerald-500 border-emerald-500 text-white"
-												        : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"
-										        }`}
-									        >
-										        {val}
-									        </button>
-								        );
-							        })}
-						        </div>
-					        </div>
-				        ))}
+				        {facetsLoading
+					        ? (
+								<div className="flex justify-center py-10">
+									<LoadingSpinner fullscreen={false} />
+								</div>
+					        )
+					        : (
+								<>
+									{facets?.map(facet => (
+										<div key={facet.name} className="space-y-3">
+											<label className="text-xs font-semibold text-gray-500 uppercase tracking-tight">
+												{facet.name}
+											</label>
+											<div className="flex flex-wrap gap-2">
+												{facet.values?.map(val => {
+													const isSelected = selectedAttributes[facet.name]?.includes(val);
+													return (
+														<button
+															key={val}
+															onClick={() => handleAttributeToggle(facet.name, val)}
+															className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+																isSelected
+																	? "bg-emerald-500 border-emerald-500 text-white"
+																	: "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"
+															}`}
+														>
+															{val}
+														</button>
+													);
+												})}
+											</div>
+										</div>
+									))}
 
-				        {Object.keys(selectedAttributes).length > 0 && (
-					        <button
-						        onClick={() => { setSelectedAttributes({}); setPage(1); }}
-						        className="w-full py-2 text-xs font-semibold text-red-400 hover:bg-red-400/10 rounded-lg border border-red-400/20 transition-colors"
-					        >
-						        Clear All Filters
-					        </button>
-				        )}
+									{Object.keys(selectedAttributes).length > 0 && (
+										<button
+											onClick={clearFiltersAndFetch}
+											className="w-full py-2 text-xs font-semibold text-red-400 hover:bg-red-400/10 rounded-lg border border-red-400/20 transition-colors"
+										>
+											Clear All Filters
+										</button>
+									)}
+								</>
+					        )
+						}
 			        </div>
 		        </aside>
 
@@ -166,9 +156,9 @@ const CategoryPage = () => {
 			        ) : products.length === 0 ? (
 				        <EmptyState
 					        title="No matches found"
-					        description="Try changing your filters or sorting order."
+					        description="Try changing your filters."
 					        action={(
-						        <Button variant="secondary" onClick={() => { setSelectedAttributes({}); setPage(1); }}>
+						        <Button variant="secondary" onClick={clearFiltersAndFetch}>
 							        Clear All Filters
 						        </Button>
 					        )}
@@ -179,7 +169,7 @@ const CategoryPage = () => {
 					        {pagination?.pages > 1 && (
 						        <div className="flex justify-center pt-10">
 							        <Pagination
-								        page={page}
+								        page={pagination.page}
 								        pages={pagination.pages}
 								        onChange={setPage}
 							        />

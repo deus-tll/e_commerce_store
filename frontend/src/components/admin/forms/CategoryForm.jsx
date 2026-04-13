@@ -38,7 +38,10 @@ const CategoryForm = ({ initialData = null, onSuccess }) => {
 		validate
 	} = useFormData(getInitialState(initialData));
 
-	const { loading, error: categoryApiError, createCategory, updateCategory, clearError } = useCategoryStore();
+	const {
+		loading, error: categoryApiError,
+		createCategory, updateCategory, clearError
+	} = useCategoryStore();
 
 	useEffect(() => {
 		setFormData(getInitialState(initialData));

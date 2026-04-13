@@ -1,8 +1,3 @@
-export const UserRoles = Object.freeze({
-	CUSTOMER: "customer",
-	ADMIN: "admin"
-});
-
 export const AdminTabs = Object.freeze({
 	CATEGORIES: "categories",
 	PRODUCTS: "products",
