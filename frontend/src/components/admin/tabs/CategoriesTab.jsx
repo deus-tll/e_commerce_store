@@ -1,11 +1,11 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
-import {PlusCircle} from "lucide-react";
+import {useEffect, useMemo, useState} from "react";
+import {PlusCircle, Layers} from "lucide-react";
 
-import {useCategoryStore} from "../../../stores/useCategoryStore.js";
+import {CategoryFilterKeys, useCategoryStore} from "../../../stores/useCategoryStore.js";
 
 import {createCategoryColumns} from "../tableColumns.jsx";
 
-import CategoriesList from "../lists/CategoriesList.jsx";
+import DataList from "../DataList.jsx";
 import CategoryForm from "../forms/CategoryForm.jsx";
 
 import Modal from "../../ui/Modal.jsx";
@@ -16,40 +16,31 @@ import SearchForm from "../../ui/SearchForm.jsx";
 import PaginationInfo from "../../ui/PaginationInfo.jsx";
 
 const CategoriesTab = () => {
-    const [page, setPage] = useState(1);
-    const [showCreate, setShowCreate] = useState(false);
-    const [editing, setEditing] = useState(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState(null);
     const [search, setSearch] = useState("");
-    const [searchTerm, setSearchTerm] = useState("");
 
-    const { categories, pagination, fetchCategories, deleteCategory } = useCategoryStore();
-
-    const handleFetchCategories = useCallback((currentPage, currentSearchTerm) => {
-        const filters = currentSearchTerm ? { search: currentSearchTerm } : {};
-
-        void fetchCategories({
-            page: currentPage,
-            append: false,
-            filters: filters
-        });
-    }, [fetchCategories]);
+    const {
+        categories, pagination,
+        fetchCategories, setPage, updateFilter, clearFilters, deleteCategory
+    } = useCategoryStore();
 
     useEffect(() => {
-        handleFetchCategories(page, searchTerm);
-    }, [page, searchTerm, handleFetchCategories]);
+        void fetchCategories();
+        return () => void clearFilters();
+    }, [fetchCategories, clearFilters]);
 
-    const handleCloseCreate = () => setShowCreate(false);
-    const handleCloseEdit = () => setEditing(null);
+    const handleCloseCreate = () => setIsCreateModalOpen(false);
+    const handleCloseEdit = () => setEditingCategory(null);
 
-    const handleSearch = useCallback((e) => {
-        e.preventDefault();
-        setPage(1);
-        setSearchTerm(search);
-    }, [search]);
+    const handleSearch = (e) => {
+        if (e) e.preventDefault();
+        void updateFilter(CategoryFilterKeys.SEARCH, search);
+    };
 
     const columns = useMemo(() =>
-            createCategoryColumns({ startEdit: setEditing, deleteCategory }),
-        [setEditing, deleteCategory]
+            createCategoryColumns({ setEditingCategory, deleteCategory }),
+        [setEditingCategory, deleteCategory]
     );
 
     return (
@@ -59,37 +50,40 @@ const CategoriesTab = () => {
                     <SearchForm
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        onSubmit={handleSearch}
+                        onSearch={handleSearch}
                         placeholder="Search categories..."
                     />
 
-                    <Button onClick={() => setShowCreate(true)} className="flex items-center gap-2">
+                    <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
                         <PlusCircle className="h-4 w-4" /> Create Category
                     </Button>
 
                     <PaginationInfo
                         pagination={pagination}
-                        page={page}
                         resourceName="categories"
                     />
                 </Toolbar>
             </Card>
 
             <Card className="overflow-hidden">
-                <CategoriesList
-                    categories={categories}
+                <DataList
+                    data={categories}
                     columns={columns}
                     pagination={pagination}
-                    page={page}
-                    setPage={setPage}
+                    onPageChange={setPage}
+                    emptyState={{
+                        icon: Layers,
+                        title: "No categories found",
+                        description: "Create a category to organize your products."
+                    }}
                 />
 
-                <Modal title="Create Category" open={showCreate} onClose={handleCloseCreate}>
-                    {showCreate && <CategoryForm />}
+                <Modal title="Create Category" open={isCreateModalOpen} onClose={handleCloseCreate}>
+                    {isCreateModalOpen && <CategoryForm onSuccess={handleCloseEdit} />}
                 </Modal>
 
-                <Modal title="Edit Category" open={!!editing} onClose={handleCloseEdit}>
-                    {editing && <CategoryForm initialData={editing} onSuccess={handleCloseEdit} />}
+                <Modal title="Edit Category" open={!!editingCategory} onClose={handleCloseEdit}>
+                    {editingCategory && <CategoryForm initialData={editingCategory} onSuccess={handleCloseEdit} />}
                 </Modal>
             </Card>
         </div>

@@ -5,8 +5,9 @@ import {AlertCircle} from "lucide-react";
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useOrderStore} from "../stores/useOrderStore.js";
 
-import {UserRoles} from "../constants/app.js";
+import {UserRoles} from "../constants/domain.js";
 import {OrderStatusStyles} from "../constants/domain.js";
+
 import {formatCurrency, formatDate} from "../utils/format.js";
 
 import OrderStatusSelect from "../components/order/OrderStatusSelect.jsx";

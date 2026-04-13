@@ -84,7 +84,7 @@ export const getAllProductsPublicSchema = Joi.object({
 			)
 		).optional(),
 		sortBy: Joi.string()
-			.valid('price', 'createdAt', 'ratingStats.averageRating')
+			.valid('price', 'createdAt', 'name', 'ratingStats.averageRating')
 			.default('createdAt')
 			.optional(),
 		order: Joi.string().valid('asc', 'desc').default('desc').optional()

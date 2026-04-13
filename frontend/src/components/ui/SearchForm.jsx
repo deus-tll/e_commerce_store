@@ -3,10 +3,10 @@ import {Search} from "lucide-react";
 import IconButton from "./IconButton.jsx";
 import {Input} from "./Input.jsx";
 
-const SearchForm = ({value, onChange, onSubmit, placeholder = "Search...", className = "", onFocus, onBlur }) => {
+const SearchForm = ({value, onChange, onSearch, placeholder = "Search...", className = "", onFocus, onBlur }) => {
 	const handleAction = (e) => {
-		e.preventDefault();
-		onSubmit(e);
+		if (e) e.preventDefault();
+		onSearch();
 	}
 
 	const handleKeyDown = (e) => {
@@ -16,7 +16,7 @@ const SearchForm = ({value, onChange, onSubmit, placeholder = "Search...", class
 	};
 
 	return (
-		<div onSubmit={onSubmit} className={`flex flex-1 items-center gap-2 ${className}`}>
+		<div className={`flex flex-1 items-center gap-2 ${className}`}>
 			<Input
 				leftIcon={Search}
 				type="text"

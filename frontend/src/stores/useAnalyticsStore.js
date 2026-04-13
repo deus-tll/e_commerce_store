@@ -1,10 +1,8 @@
-import { create } from "zustand";
+import {create} from "zustand";
 
-import axios from "../config/axios.js";
+import analyticsApi from "../api/analyticsApi.js";
 
-import {handleError} from "../utils/errorHandler.js";
-
-const ANALYTICS_API_PATH = "/analytics";
+import {handleAsyncAction} from "../utils/storeHelpers.js";
 
 export const useAnalyticsStore = create((set) => ({
 	analyticsData: {
@@ -14,32 +12,22 @@ export const useAnalyticsStore = create((set) => ({
 		totalRevenue: 0,
 	},
 	dailySalesData: [],
-	loading: true,
+	loading: false,
+	error: null,
 
-	fetchAnalytics: async () => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.get(ANALYTICS_API_PATH);
-
-			set({
-				analyticsData: res.data.analyticsData,
-				dailySalesData: res.data.dailySalesData
-			});
-
-			return true;
+	fetchAnalytics: async () => await handleAsyncAction(set, {
+		action: () => analyticsApi.get(),
+		onSuccess: (res) => set({
+			analyticsData: res.data.analyticsData,
+			dailySalesData: res.data.dailySalesData
+		}),
+		errorMessage: "Failed to fetch analytics data.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: {
+			isGlobal: true,
+			forceUserMessage: true
 		}
-		catch (error) {
-			handleError(error, "Failed to fetch analytics data.", {
-				isGlobal: true,
-				showToast: false,
-				forceUserMessage: true
-			});
+	}),
 
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	clearError: () => set({ error: null })
 }));

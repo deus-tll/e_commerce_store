@@ -10,20 +10,31 @@ import FeaturedProducts from "../components/product/FeaturedProducts.jsx";
 import Button from "../components/ui/Button.jsx";
 
 const HomePage = () => {
-	const { featuredProducts, loading: productsLoading, fetchFeaturedProducts } = useProductStore();
-	const { categories, pagination, loading: categoriesLoading, fetchCategories } = useCategoryStore();
+	const {
+		featuredProducts, loading: productsLoading,
+		fetchFeaturedProducts
+	} = useProductStore();
+	const {
+		categories, pagination, loading: categoriesLoading,
+		fetchCategories, setPage, clearFilters, clearCategories
+	} = useCategoryStore();
 
 	useEffect(() => {
 		void fetchFeaturedProducts();
-		void fetchCategories({ append: true });
-	}, [fetchFeaturedProducts, fetchCategories]);
+		void fetchCategories();
+
+		return () => {
+			clearCategories();
+			void clearFilters();
+		};
+	}, [fetchFeaturedProducts, fetchCategories, clearCategories, clearFilters]);
 
 	const hasMore = pagination && pagination.page < pagination.pages;
 
 	const loadNextPage = () => {
 		if (hasMore && !categoriesLoading) {
 			const nextPage = pagination.page + 1;
-			void fetchCategories({ page: nextPage, append: true });
+			void setPage(nextPage, { append: true });
 		}
 	};
 

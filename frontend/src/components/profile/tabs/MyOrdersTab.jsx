@@ -1,8 +1,8 @@
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {Link} from "react-router-dom";
 import {ShoppingBag, Package, FilterX} from "lucide-react";
 
-import {OrderFilterKeys, useOrderStore} from "../../../stores/useOrderStore.js";
+import {OrderFilterKeys, OrderStoreScope, useOrderStore} from "../../../stores/useOrderStore.js";
 
 import MyOrdersList from "../../order/MyOrdersList.jsx";
 import OrderStatusFilter from "../../order/OrderStatusFilter.jsx";
@@ -13,23 +13,33 @@ import IconButton from "../../ui/IconButton.jsx";
 import EmptyState from "../../ui/EmptyState.jsx";
 import Button from "../../ui/Button.jsx";
 
+const ORDER_STORE_SCOPE = OrderStoreScope.PROFILE;
+
 const MyOrdersTab = () => {
 	const {
-		orders, filters, loading, error: apiError,
-		fetchMyOrders, updateFilters, clearFilters, clearError
+		myOrders, myOrdersFilters, myOrdersPagination, loading, error: apiError,
+		fetchOrders, setPage, updateFilter, clearFilters, clearFiltersAndFetch, clearError
 	} = useOrderStore();
 
 	useEffect(() => {
-		void fetchMyOrders();
+		void fetchOrders(ORDER_STORE_SCOPE);
 
-		return () => clearError();
-	}, [fetchMyOrders, clearError]);
+		return () => {
+			clearError();
+			void clearFilters(ORDER_STORE_SCOPE);
+		};
+	}, [fetchOrders, clearError, clearFilters]);
+
+	const handlePageChange = useMemo(() =>
+			(page) => setPage(page, ORDER_STORE_SCOPE),
+		[setPage]);
 
 	if (loading) return <LoadingSpinner />;
-	if (apiError) return <ErrorMessage message={apiError} />;
 
 	return (
 		<div className="space-y-6">
+			<ErrorMessage message={apiError} />
+
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 				<h2 className="text-xl font-bold text-white flex items-center gap-2">
 					<Package className="text-emerald-500" />
@@ -38,23 +48,23 @@ const MyOrdersTab = () => {
 
 				<div className="flex items-end gap-2">
 					<OrderStatusFilter
-						value={filters.status}
-						onChange={(val) => updateFilters(OrderFilterKeys.STATUS, val)}
+						value={myOrdersFilters.status}
+						onChange={(val) => updateFilter(OrderFilterKeys.STATUS, val, ORDER_STORE_SCOPE)}
 					/>
-					{filters.status && (
-						<IconButton variant="danger" onClick={() => clearFilters()} className="mb-[1px]">
+					{myOrdersFilters.status && (
+						<IconButton variant="danger" onClick={() => clearFiltersAndFetch(ORDER_STORE_SCOPE)} className="mb-[1px]">
 							<FilterX className="h-4 w-4" />
 						</IconButton>
 					)}
 				</div>
 			</div>
 
-			{orders.length === 0
+			{myOrders.length === 0
 				? (
 					<EmptyState
 						title="No orders yet"
-						description={filters.status
-							? `You don't have any orders with status "${filters.status}".`
+						description={myOrdersFilters.status
+							? `You don't have any orders with status "${myOrdersFilters.status}".`
 							: "You haven't placed any orders yet. Start exploring our amazing products!"}
 						icon={ShoppingBag}
 						action={
@@ -65,7 +75,11 @@ const MyOrdersTab = () => {
 					/>
 				)
 				: (
-					<MyOrdersList orders={orders} />
+					<MyOrdersList
+						orders={myOrders}
+						pagination={myOrdersPagination}
+						onPageChange={handlePageChange}
+					/>
 				)
 			}
 		</div>

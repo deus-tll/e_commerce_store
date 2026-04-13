@@ -1,8 +1,7 @@
-import {useCallback, useState} from "react";
-import {X} from "lucide-react";
+import {useCallback, useEffect, useState} from "react";
+import {FilterX, X} from "lucide-react";
 
 import {useCategoryStore} from "../../../stores/useCategoryStore.js";
-import {PaginationMaxLimits} from "../../../constants/app.js";
 
 import FormField from "../../ui/FormField.jsx";
 import IconButton from "../../ui/IconButton.jsx";
@@ -14,48 +13,65 @@ const CategorySearchField = ({ selectedCategory, onSelectCategory, onDeselectCat
 	const [hasSearched, setHasSearched] = useState(false);
 	const [searchError, setSearchError] = useState(undefined);
 
-	const { categories, loading: categoryLoading, fetchCategories } = useCategoryStore();
+	const {
+		searchResults, searchLoading,
+		searchCategories, clearSearchResults
+	} = useCategoryStore();
+
+	useEffect(() => {
+		return () => clearSearchResults();
+	}, [clearSearchResults]);
 
 	const handleSearchCategory = useCallback(async (e) => {
-		e.preventDefault();
+		if (e) e.preventDefault();
 
 		const term = categorySearchInput.trim();
+		if (!term) return;
 
 		setSearchError(undefined);
 		setHasSearched(false);
 
-		try {
-			await fetchCategories({
-				limit: PaginationMaxLimits.CATEGORIES,
-				append: false,
-				filters: term ? { search: term } : {}
-			});
-			setHasSearched(true);
-		}
-		// eslint-disable-next-line no-unused-vars
-		catch (_) {
-			setSearchError("Failed to search categories.");
-		}
-	}, [categorySearchInput, fetchCategories]);
+		await searchCategories(term);
+		setHasSearched(true);
+	}, [categorySearchInput, searchCategories]);
 
-	const selectCategory = useCallback((category) => {
-		onSelectCategory(category);
+	const handleResetSearchResults = useCallback((e = {}) => {
+		if (e) e.preventDefault();
+
 		setCategorySearchInput("");
 		setHasSearched(false);
 		setSearchError(undefined);
-	}, [onSelectCategory]);
+		clearSearchResults();
+	}, [clearSearchResults]);
+
+	const selectCategory = useCallback((category) => {
+		onSelectCategory(category);
+		handleResetSearchResults();
+	}, [onSelectCategory, handleResetSearchResults]);
 
 	const displayError = error || searchError;
 
 	return (
 		<FormField label="Product Category" error={displayError}>
 			<div className="relative">
-				<SearchForm
-					value={categorySearchInput}
-					onChange={(e) => setCategorySearchInput(e.target.value)}
-					onSubmit={handleSearchCategory}
-					placeholder="Search category (e.g., 'shoes')"
-				/>
+				<div className="flex">
+					<SearchForm
+						value={categorySearchInput}
+						onChange={(e) => setCategorySearchInput(e.target.value)}
+						onSearch={handleSearchCategory}
+						placeholder="Search category (e.g., 'shoes')"
+					/>
+
+					<div className="flex items-center gap-2">
+						<IconButton
+							variant="danger"
+							onClick={handleResetSearchResults}
+							title="Clear Search Results"
+						>
+							<FilterX className="h-5 w-5" />
+						</IconButton>
+					</div>
+				</div>
 
 				{/* Display selected category name */}
 				{selectedCategory && (
@@ -73,15 +89,15 @@ const CategorySearchField = ({ selectedCategory, onSelectCategory, onDeselectCat
 				)}
 
 				{/* Display Search Results */}
-				{categoryLoading && (
+				{searchLoading && (
 					<div className="absolute z-20 w-full bg-gray-800 p-3 rounded-b-lg shadow-xl border border-gray-700">
 						<LoadingSpinner fullscreen={false} />
 					</div>
 				)}
 
-				{!categoryLoading && hasSearched && categories?.length > 0 && (
+				{!searchLoading && hasSearched && searchResults.length > 0 && (
 					<div className="absolute z-20 w-full bg-gray-800 p-2 rounded-b-lg shadow-xl border border-gray-700 max-h-48 overflow-y-auto">
-						{categories.map((category) => (
+						{searchResults.map((category) => (
 							<div key={category.id}
 							     onClick={() => selectCategory(category)}
 							     className="p-2 cursor-pointer hover:bg-gray-700 rounded transition-colors text-sm"
@@ -94,7 +110,7 @@ const CategorySearchField = ({ selectedCategory, onSelectCategory, onDeselectCat
 				)}
 
 				{/* Handle No Results */}
-				{!categoryLoading && hasSearched && categories?.length === 0 && (
+				{!searchLoading && hasSearched && searchResults.length === 0 && (
 					<div className="absolute z-20 w-full bg-gray-800 p-3 rounded-b-lg shadow-xl border border-gray-700 text-sm text-gray-400">
 						No results for "{categorySearchInput}"
 					</div>

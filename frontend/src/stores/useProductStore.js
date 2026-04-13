@@ -1,276 +1,164 @@
 import {create} from "zustand";
-import qs from "qs";
 
-import axios from "../config/axios.js";
-
-import {handleError} from "../utils/errorHandler.js";
+import productApi from "../api/productApi.js";
 
 import {PaginationLimits} from "../constants/app.js";
+import {
+	getInitialPagination,
+	handleAsyncAction, handleClearFilters,
+	handleDeletionNavigation,
+	handlePaginatedFetch,
+	handleSetPage, handleUpdateFilter, STORE_SORT_KEY
+} from "../utils/storeHelpers.js";
 
-export const PRODUCTS_API_PATH = "/products";
+export const ProductFilterKeys = Object.freeze({
+	SEARCH: "search",
+	CATEGORY_SLUG: "categorySlug",
+	ATTRIBUTES: "attributes",
+	SORT: STORE_SORT_KEY
+});
+
+const INITIAL_PRODUCT_FILTERS = Object.freeze({
+	search: "",
+	categorySlug: "",
+	attributes: {},
+	sort: {
+		sortBy: "createdAt",
+		order: "desc"
+	}
+});
+
+const _toggleAttributeFilter = (currentAttributes, name, value) => {
+	const attributes = { ...currentAttributes };
+	const values = attributes[name] || [];
+
+	const nextValues =  values.includes(value)
+		? values.filter(v => v !== value)
+		: [...values, value];
+
+	if (nextValues.length === 0) {
+		delete attributes[name];
+	}
+	else {
+		attributes[name] = nextValues;
+	}
+
+	return attributes;
+};
 
 export const useProductStore = create((set, get) => ({
 	products: [],
-	pagination: null,
-	facets: [],
-	currentProduct: null,
+	pagination: getInitialPagination(PaginationLimits.PRODUCTS),
+	filters: INITIAL_PRODUCT_FILTERS,
+
 	featuredProducts: [],
 	recommendations: [],
+
+	currentProduct: null,
+
+	facets: [],
+	facetsLoading: false,
+
 	loading: false,
 	error: null,
 
-	fetchProducts: async (options = {}) => {
-		const {
-			page = 1,
-			limit = PaginationLimits.PRODUCTS,
-			filters = {}
-		} = options;
+	fetchProducts: async () => await handlePaginatedFetch(
+		set, get,
+		productApi.getAll,
+		(data) => set({ products: data.products, pagination: data.pagination }),
+		"Failed to load products. Please refresh."
+	),
+	setPage: async (newPage = 1) => await handleSetPage(set, get, newPage, get().fetchProducts),
 
-		set({ loading: true });
+	fetchProductById: async (productId) => {
+		const isNewProduct = get().currentProduct?.id !== productId;
 
-		try {
-			const queryString = qs.stringify(
-				{
-					page,
-					limit,
-					...filters
-				},
-				{
-					arrayFormat: 'indices',
-					encode: false,
-					skipNulls: true
-				}
-			);
-
-			const res = await axios.get(`${PRODUCTS_API_PATH}?${queryString}`);
-
-			set({ products: res.data.products, pagination: res.data.pagination });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to load products. Please try refreshing the page.", {
-				isGlobal: true,
-				showToast: false,
-				forceUserMessage: true
-			});
-			set({ products: [], pagination: null });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
+		return await handleAsyncAction(set, {
+			action: () => productApi.getById(productId),
+			onSuccess: (res) => set({ currentProduct: res.data }),
+			setLoading: (val) => isNewProduct ? set({ loading: val }) : null,
+			errorMessage: "Failed to load product details.",
+			shouldUpdateStoreError: true
+		});
 	},
+	fetchFeaturedProducts: async () => await handleAsyncAction(set, {
+		action: () => productApi.getFeatured(),
+		onSuccess: (res) => set({ featuredProducts: res.data }),
+		errorMessage: "Failed to load featured products. Please refresh.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
+	fetchRecommendations: async () => await handleAsyncAction(set, {
+		action: () => productApi.getRecommendations(),
+		onSuccess: (res) => set({ recommendations: res.data }),
+		errorMessage: "Failed to load recommendations.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
+	fetchFacets: async (categoryId) => await handleAsyncAction(set, {
+		action: () => productApi.getFacets(categoryId),
+		onSuccess: (res) => set({ facets: res.data }),
+		onError: () => set({ facets: [] }),
+		setLoading: (val) => set({ facetsLoading: val }),
+		shouldUpdateStoreError: false
+	}),
 
-	fetchProductById: async (id) => {
-		if (get().currentProduct?.id !== id) {
-			set({ loading: true });
-		}
-
-		set({ error: null });
-
-		try {
-			const res = await axios.get(`${PRODUCTS_API_PATH}/${id}`);
-			set({ currentProduct: res.data });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Failed to load product details. Please try refreshing.", {
-				isGlobal: false,
-				showToast: false
-			});
-			set({ currentProduct: null, error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	createProduct: async (productData) => {
-		set({ loading: true, error: null });
-
-		const currentPage = get().pagination?.page || 1;
-
-		try {
-			await axios.post(PRODUCTS_API_PATH, productData);
-
-			await get().fetchProducts({ page: currentPage });
-
-			return true;
-		}
-        catch (error) {
-	        const msg = handleError(error, "Product creation failed.", {
-				isGlobal: false, showToast: false
-			});
-	        set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	updateProduct: async (productId, productData) => {
-		set({ loading: true, error: null });
-
-		const currentPage = get().pagination?.page || 1;
-
-		try {
-			await axios.patch(`${PRODUCTS_API_PATH}/${productId}`, productData);
-
-			await get().fetchProducts({ page: currentPage });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "Product update failed.", {
-				isGlobal: false, showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	deleteProduct: async (productId) => {
-		set({ loading: true });
-
-		const state = get();
-		const currentPage = state.pagination?.page || 1;
-		const limit = state.pagination?.limit || PaginationLimits.PRODUCTS;
-		const oldTotal = state.pagination?.totalPrice || 0;
-
-		try {
-			await axios.delete(`${PRODUCTS_API_PATH}/${productId}`);
-
-			const newTotal = oldTotal > 0 ? oldTotal - 1 : 0;
-			const maxPage = Math.ceil(newTotal / limit) || 1;
-			const pageToFetch = currentPage > maxPage ? maxPage : currentPage;
-
-			await get().fetchProducts({ page: pageToFetch });
-
-			return true;
-		}
-        catch (error) {
-	        handleError(error, "Product deletion failed.", {
-				isGlobal: true, showToast: false
-			});
-
-	        return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	toggleFeaturedProduct: async (productId) => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.patch(`${PRODUCTS_API_PATH}/${productId}/featured`);
+	createProduct: async (productData) => await handleAsyncAction(set, {
+		action: () => productApi.create(productData),
+		onSuccess: () => get().setPage(1),
+		errorMessage: "Product creation failed.",
+		shouldUpdateStoreError: true
+	}),
+	updateProduct: async (productId, productData) => await handleAsyncAction(set, {
+		action: () => productApi.update(productId, productData),
+		onSuccess: () => get().fetchProducts(),
+		errorMessage: "Product update failed.",
+		shouldUpdateStoreError: true
+	}),
+	deleteProduct: async (productId) => await handleAsyncAction(set, {
+		action: () => productApi.delete(productId),
+		onSuccess: () => handleDeletionNavigation(get, get().setPage, get().fetchProducts),
+		errorMessage: "Product deletion failed.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
+	toggleFeaturedProduct: async (productId) => await handleAsyncAction(set, {
+		action: () => productApi.toggleFeatured(productId),
+		onSuccess: (res) => {
 			const updatedProduct = res.data;
 
-			set((prevState) => {
+			set((state) => ({
+				products: state.products.map(p => p.id === productId ? updatedProduct : p),
+				featuredProducts: updatedProduct.isFeatured
+					? [...state.featuredProducts.filter(p => p.id !== productId), updatedProduct]
+					: state.featuredProducts.filter(p => p.id !== productId)
+			}));
+		},
+		errorMessage: "Failed to toggle featured status.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
 
-				const updatedProducts = prevState.products.map((product) =>
-					product.id === productId
-						? { ...product, isFeatured: updatedProduct.isFeatured }
-						: product
-				);
+	updateFilter: async (key, value) => {
+		let finalValue = value;
 
-				let updatedFeaturedProducts;
-				if (updatedProduct.isFeatured) {
-					updatedFeaturedProducts = [...prevState.featuredProducts, updatedProduct];
-				} else {
-					updatedFeaturedProducts = prevState.featuredProducts.filter(
-						(product) => product.id !== productId
-					);
-				}
+		if (key === ProductFilterKeys.ATTRIBUTES) {
+			const { name: attrName, value: attrValue } = value;
 
-				return {
-					products: updatedProducts,
-					featuredProducts: updatedFeaturedProducts
-				};
-			});
-
-			return true;
+			if (attrName && attrValue) {
+				finalValue = _toggleAttributeFilter(get().filters.attributes, attrName, attrValue);
+			}
 		}
-        catch (error) {
-	        handleError(error, "Failed to toggle featured status.", {
-				isGlobal: true, showToast: false
-			});
 
-	        return false;
-		}
-		finally {
-			set({ loading: false });
-		}
+		await handleUpdateFilter(set, get().fetchProducts, key, finalValue);
 	},
 
-	fetchFeaturedProducts: async () => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.get(`${PRODUCTS_API_PATH}/featured`);
-			set({ featuredProducts: res.data });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to load featured products.", {
-				isGlobal: true, showToast: false
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	fetchFacets: async (categoryId) => {
-		try {
-			const res = await axios.get(`${PRODUCTS_API_PATH}/categories/${categoryId}/facets`);
-
-			set({ facets: res.data });
-			return true;
-		}
-		// eslint-disable-next-line no-unused-vars
-		catch (error) {
-			set({ facets: [] });
-			return false;
-		}
-	},
-
-	fetchRecommendations: async () => {
-		set({ loading: true });
-
-		try {
-			const res = await axios.get(`${PRODUCTS_API_PATH}/recommended`);
-			set({ recommendations: res.data });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to load recommendations.", {
-				isGlobal: true,
-				showToast: false
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	clearFilters: () => handleClearFilters(
+		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, false, { limit: PaginationLimits.PRODUCTS }
+	),
+	clearFiltersAndFetch: async () => await handleClearFilters(
+		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, true, { limit: PaginationLimits.PRODUCTS }
+	),
 
 	clearCurrentProduct: () => set({ currentProduct: null }),
 	clearError: () => set({ error: null }),

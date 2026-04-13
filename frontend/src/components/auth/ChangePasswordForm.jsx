@@ -43,7 +43,9 @@ const ChangePasswordForm = () => {
 
 		if (!validate(validationRules)) return;
 
-		const success = await changePassword(formData);
+		const { currentPassword, newPassword } = formData;
+
+		const success = await changePassword(currentPassword, newPassword);
 		if (success) {
 			toast.success("Password changed successfully! Please log in with your new password.");
 			setFormData(getInitialState());

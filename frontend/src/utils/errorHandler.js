@@ -14,9 +14,8 @@ import { getErrorMessage } from "./errorParser.js";
  */
 export const handleError = (error, userMessage = "An error occurred", options = {}) => {
 	console.error("Handling error. Response data:", error);
-	//console.error("Handling error. Response data:", error.response.data);
 
-	const { isGlobal = false, showToast = true, forceUserMessage = false } = options;
+	const { isGlobal = false, showToast = false, forceUserMessage = false } = options;
 	const setGlobalError = useGlobalStore.getState().setGlobalError;
 
 	let finalMessage = userMessage;

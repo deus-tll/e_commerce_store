@@ -47,12 +47,10 @@ const ReviewForm = ({ productId, initialData = null, onSuccess }) => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
-		clearError();
-
 		if (!validate(validationRules)) return;
 
 		const success = isEdit
-			? await updateReview(productId, initialData.id, formData)
+			? await updateReview(initialData.id, productId, formData)
 			: await createReview(productId, formData);
 
 		if (success) {

@@ -1,3 +1,5 @@
+// ORDER
+//=====================
 export const OrderStatus = Object.freeze({
 	PENDING: "pending",
 	PROCESSING: "processing",
@@ -15,3 +17,12 @@ export const OrderStatusStyles = Object.freeze({
 });
 
 export const OrderStatusValues = Object.values(OrderStatus);
+
+// USER
+//=====================
+export const UserRoles = Object.freeze({
+	CUSTOMER: "customer",
+	ADMIN: "admin"
+});
+
+export const UserRoleValues = Object.values(UserRoles);

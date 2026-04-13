@@ -11,7 +11,7 @@ const deleteButtonClasses = "text-red-400 hover:text-red-300";
 const iconClasses = "h-5 w-5";
 const simpleValueClasses = "text-sm text-gray-300";
 
-export const createCategoryColumns = ({ startEdit, deleteCategory }) => [
+export const createCategoryColumns = ({ setEditingCategory, deleteCategory }) => [
 	{
 		key: "category",
 		title: "Category",
@@ -46,7 +46,7 @@ export const createCategoryColumns = ({ startEdit, deleteCategory }) => [
 		dataIndex: "actions",
 		render: (_, category) => (
 			<>
-				<IconButton onClick={() => startEdit(category)} className={editButtonClasses}>
+				<IconButton onClick={() => setEditingCategory(category)} className={editButtonClasses}>
 					<Edit className={iconClasses} />
 				</IconButton>
 				<IconButton
@@ -64,7 +64,7 @@ export const createCategoryColumns = ({ startEdit, deleteCategory }) => [
 	}
 ];
 
-export const createProductColumns = ({ loading, toggleFeaturedProduct, startEdit, deleteProduct }) => [
+export const createProductColumns = ({ loading, toggleFeaturedProduct, setEditingProduct, deleteProduct }) => [
 	{
 		key: 'product',
 		title: 'Product',
@@ -133,7 +133,7 @@ export const createProductColumns = ({ loading, toggleFeaturedProduct, startEdit
 		dataIndex: 'actions',
 		render: (_, product) => (
 			<div className="flex gap-2">
-				<IconButton variant="ghost" onClick={() => startEdit(product)} className={editButtonClasses}>
+				<IconButton variant="ghost" onClick={() => setEditingProduct(product)} className={editButtonClasses}>
 					<Edit className={iconClasses} />
 				</IconButton>
 
@@ -154,7 +154,7 @@ export const createProductColumns = ({ loading, toggleFeaturedProduct, startEdit
 	}
 ];
 
-export const createUserColumns = ({ startEdit, deleteUser }) => [
+export const createUserColumns = ({ setEditingUser, deleteUser }) => [
 	{
 		key: 'user',
 		title: 'User',
@@ -178,12 +178,9 @@ export const createUserColumns = ({ startEdit, deleteUser }) => [
 		title: 'Role',
 		dataIndex: 'role',
 		render: (role) => (
-			<>
-				{role === "admin"
-					? (<LucideUserStar color="gold"/>)
-					: (<User color="green"/>)
-				}
-			</>
+			role === "admin"
+				? (<LucideUserStar color="gold"/>)
+				: (<User color="green"/>)
 		)
 	},
 	{
@@ -191,12 +188,9 @@ export const createUserColumns = ({ startEdit, deleteUser }) => [
 		title: 'Status',
 		dataIndex: 'isVerified',
 		render: (isVerified) => (
-			<>
-				{isVerified
-					? (<BadgeCheck color="green"/>)
-					: (<BadgeX color="red"/>)
-				}
-			</>
+			isVerified
+				? (<BadgeCheck color="green"/>)
+				: (<BadgeX color="red"/>)
 		)
 	},
 	{
@@ -211,7 +205,7 @@ export const createUserColumns = ({ startEdit, deleteUser }) => [
 		dataIndex: 'actions',
 		render: (_, user) => (
 			<div className="flex items-center gap-2">
-				<IconButton onClick={() => startEdit(user)} className={editButtonClasses} title="Edit user">
+				<IconButton onClick={() => setEditingUser(user)} className={editButtonClasses} title="Edit user">
 					<Edit className={iconClasses} />
 				</IconButton>
 				<IconButton
@@ -264,7 +258,7 @@ export const createOrderColumns = ({ loading, updateOrderStatus }) => [
 		title: "Products",
 		dataIndex: "products",
 		render: (products) => (
-			<span>{products?.length || 0}</span>
+			<span>{products?.reduce((acc, item) => acc + (item.quantity || 1), 0) || 0}</span>
 		)
 	},
 	{

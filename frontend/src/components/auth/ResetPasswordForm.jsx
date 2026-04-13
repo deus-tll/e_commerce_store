@@ -43,7 +43,9 @@ const ResetPasswordForm = () => {
 
 		if (!validate(validationRules)) return;
 
-		const success = await resetPassword({ token, ...formData });
+		const { password } = formData
+
+		const success = await resetPassword(token, password);
 		if (success) {
 			setSuccessMessage("Password reset successfully. You can now log in with your new password.");
 		}
@@ -51,7 +53,7 @@ const ResetPasswordForm = () => {
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
-			<SuccessMessage message={successMessage} Icon={Lock} />
+			<SuccessMessage message={successMessage} icon={Lock} />
 			<ErrorMessage message={resetPasswordApiError} />
 
 			{!successMessage && (

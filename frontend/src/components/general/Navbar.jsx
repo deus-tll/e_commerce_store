@@ -4,7 +4,7 @@ import {ShoppingCart, UserPlus, LogIn, LogOut, Lock, User, Search} from "lucide-
 import {useAuthStore} from "../../stores/useAuthStore.js";
 import {useCartStore} from "../../stores/useCartStore.js";
 
-import {UserRoles} from "../../constants/app.js";
+import {UserRoles} from "../../constants/domain.js";
 
 import SearchForm from "../ui/SearchForm.jsx";
 import Button from "../ui/Button.jsx";
@@ -24,7 +24,8 @@ const Navbar = () => {
 	const isAdmin = user?.role === UserRoles.ADMIN;
 
 	const handleSearch = (e) => {
-		e.preventDefault();
+		if (e) e.preventDefault();
+
 		if (search.trim()) {
 			navigate(`/products?search=${encodeURIComponent(search.trim())}`);
 			setSearch("");
@@ -45,7 +46,7 @@ const Navbar = () => {
 		                <SearchForm
 			                value={search}
 			                onChange={(e) => setSearch(e.target.value)}
-			                onSubmit={handleSearch}
+			                onSearch={handleSearch}
 		                />
 	                </div>
 
@@ -121,7 +122,7 @@ const Navbar = () => {
 			            <SearchForm
 				            value={search}
 				            onChange={(e) => setSearch(e.target.value)}
-				            onSubmit={handleSearch}
+				            onSearch={handleSearch}
 				            className="max-w-full"
 			            />
 		            </div>

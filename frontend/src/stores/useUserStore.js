@@ -1,152 +1,90 @@
-import { create } from "zustand";
+import {create} from "zustand";
 
-import axios from "../config/axios.js";
-
-import {handleError} from "../utils/errorHandler.js";
+import userApi from "../api/userApi.js";
 
 import {PaginationLimits} from "../constants/app.js";
+import {UserRoleValues} from "../constants/domain.js";
 
-const USERS_API_PATH = "/users";
+import {
+	getInitialPagination,
+	handleAsyncAction,
+	handlePaginatedFetch, handleSetPage,
+	handleUpdateFilter, handleClearFilters,
+	handleDeletionNavigation
+} from "../utils/storeHelpers.js";
+
+export const UserFilterKeys = Object.freeze({
+	SEARCH: "search",
+	ROLE: "role",
+	IS_VERIFIED: "isVerified",
+});
+
+const INITIAL_USER_FILTERS = Object.freeze({
+	search: "",
+	role: "",
+	isVerified: ""
+});
 
 export const useUserStore = create((set, get) => ({
 	users: [],
-	pagination: null,
-	stats: null,
+	pagination: getInitialPagination(PaginationLimits.USERS),
+	filters: INITIAL_USER_FILTERS,
 	loading: false,
 	error: null,
+	stats: null,
 
-	fetchUsers: async (options = {}) => {
-		const {
-			page = 1,
-			limit = PaginationLimits.USERS,
-			filters = {}
-		} = options;
+	fetchUsers: async () => await handlePaginatedFetch(
+		set, get,
+		userApi.getAll,
+		(data) => set({ users: data.users, pagination: data.pagination }),
+		"Failed to load users. Please refresh."
+	),
+	setPage: async (newPage = 1) => await handleSetPage(set, get, newPage, get().fetchUsers),
 
-		set({ loading: true });
+	fetchStats: async () => await handleAsyncAction(set, {
+		action: () => userApi.getStats(),
+		onSuccess: (res) => set({ stats: res.data }),
+		errorMessage: "Failed to fetch user statistics.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { showToast: true }
+	}),
 
-		try {
-			const params = new URLSearchParams({
-				page: page.toString(),
-				limit: limit.toString(),
-				...filters
-			});
+	createUser: async (userData) => await handleAsyncAction(set, {
+		action: () => userApi.create(userData),
+		onSuccess: () => get().setPage(1),
+		errorMessage: "User creation failed.",
+		shouldUpdateStoreError: true
+	}),
 
-			const res = await axios.get(`${USERS_API_PATH}?${params}`);
+	updateUser: async (userId, userData) => await handleAsyncAction(set, {
+		action: () => userApi.update(userId, userData),
+		onSuccess: () => get().fetchUsers(),
+		errorMessage: "User update failed.",
+		shouldUpdateStoreError: true
+	}),
 
-			set({ 
-				users: res.data.users,
-				pagination: res.data.pagination
-			});
+	deleteUser: async (userId) => await handleAsyncAction(set, {
+		action: () => userApi.delete(userId),
+		onSuccess: () => handleDeletionNavigation(get, get().setPage, get().fetchUsers),
+		errorMessage: "User deletion failed.",
+		shouldUpdateStoreError: false,
+		handleErrorOptions: { isGlobal: true }
+	}),
 
-			return true;
+	updateFilter: async (key, value) => {
+		if(key === UserFilterKeys.ROLE && value !== "" && !UserRoleValues.includes(value)) {
+			set({ error: "Invalid role selected." });
+			return;
 		}
-		catch (error) {
-			handleError(error, "Failed to load users. Please refresh.", {
-				isGlobal: true,
-				showToast: false,
-				forceUserMessage: true
-			});
 
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
+		await handleUpdateFilter(set, get().fetchUsers, key, value);
 	},
-
-	fetchStats: async () => {
-		try {
-			const res = await axios.get(`${USERS_API_PATH}/stats`);
-			set({ stats: res.data });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "Failed to fetch user statistics.");
-			return false;
-		}
-	},
-
-	createUser: async (userData) => {
-		set({ loading: true, error: null });
-
-		try {
-			await axios.post(USERS_API_PATH, userData);
-
-			await get().fetchUsers({ page: 1 });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "User creation failed.", {
-				isGlobal: false,
-				showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	updateUser: async (userId, userData) => {
-		set({ loading: true, error: null });
-
-		const currentPage = get().pagination?.page || 1;
-
-		try {
-			await axios.patch(`${USERS_API_PATH}/${userId}`, userData);
-			await get().fetchUsers({ page: currentPage });
-
-			return true;
-		}
-		catch (error) {
-			const msg = handleError(error, "User update failed.", {
-				isGlobal: false,
-				showToast: false
-			});
-			set({ error: msg });
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
-
-	deleteUser: async (userId) => {
-		set({ loading: true, error: null });
-
-		const state = get();
-		const currentPage = state.pagination?.page || 1;
-		const limit = state.pagination?.limit || PaginationLimits.USERS;
-		const oldTotal = state.pagination?.totalPrice || 0;
-
-		try {
-			await axios.delete(`${USERS_API_PATH}/${userId}`);
-
-			const newTotal = oldTotal > 0 ? oldTotal - 1 : 0;
-			const maxPage = Math.ceil(newTotal / limit) || 1;
-			const pageToFetch = currentPage > maxPage ? maxPage : currentPage;
-
-			await get().fetchUsers({ page: pageToFetch });
-
-			return true;
-		}
-		catch (error) {
-			handleError(error, "User deletion failed.", {
-				isGlobal: true,
-				showToast: false
-			});
-
-			return false;
-		}
-		finally {
-			set({ loading: false });
-		}
-	},
+	clearFilters: () => handleClearFilters(
+		set, get().fetchUsers, INITIAL_USER_FILTERS, false, { limit: PaginationLimits.USERS }
+	),
+	clearFiltersAndFetch: async () => await handleClearFilters(
+		set, get().fetchUsers, INITIAL_USER_FILTERS, true, { limit: PaginationLimits.USERS }
+	),
 
 	clearError: () => set({ error: null })
 }));

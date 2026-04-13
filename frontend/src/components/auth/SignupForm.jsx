@@ -44,7 +44,9 @@ const SignupForm = () => {
 
 		if (!validate(validationRules)) return;
 
-		const success = await signup(formData);
+		const { name, email, password } = formData;
+
+		const success = await signup({ name, email, password });
 		if (success) {
 			navigate("/verify-email");
 		}
