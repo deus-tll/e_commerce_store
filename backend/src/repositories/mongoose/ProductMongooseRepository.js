@@ -281,16 +281,24 @@ export class ProductMongooseRepository extends IProductRepository {
 		});
 	}
 
-	async findRecommended(size) {
-		const foundDocs = await Product.aggregate([
-			{$sample: {size: size}},
-			{$project:
-					{
-						_id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1, ratingStats: 1
-					}
-			}
-		]);
+	async findRecommended(size, categoryIds = [], excludedIds = []) {
+		const match = {};
 
+		if (categoryIds.length > 0) {
+			match.category = { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) };
+		}
+
+		if (excludedIds.length > 0) {
+			match._id = { $nin: excludedIds.map(id => new mongoose.Types.ObjectId(id)) };
+		}
+
+		const pipeline = [
+			{ $match: Object.keys(match).length > 0 ? match : { _id: { $exists: true } } },
+			{ $sample: { size: size } },
+			{ $project: { _id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1, ratingStats: 1 } }
+		];
+
+		const foundDocs = await Product.aggregate(pipeline);
 		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
 	}
 }

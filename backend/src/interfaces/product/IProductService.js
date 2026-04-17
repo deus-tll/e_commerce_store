@@ -87,10 +87,14 @@ export class IProductService {
 	async getCategoryFacets(categoryId) { throw new Error("Method not implemented."); }
 
 	/**
-	 * Gets a random sample of recommended products.
+	 * Gets a sample of recommended products.
+	 * @param {string[]} categoryIds
+	 * @param {string[]} excludedIds
 	 * @returns {Promise<ProductDTO[]>} - A list of recommended product DTOs.
 	 */
-	async getRecommended() { throw new Error("Method not implemented."); }
+	async getRecommended(categoryIds, excludedIds) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Finds a minimal set of product details for an array of IDs.

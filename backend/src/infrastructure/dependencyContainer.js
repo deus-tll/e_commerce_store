@@ -314,7 +314,7 @@ container.register(ControllerTypes.CATEGORY, CategoryController, [ServiceTypes.C
 container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
 container.register(ControllerTypes.ORDER, OrderController, [ServiceTypes.ORDER]);
 container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT]);
-container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT]);
+container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT, ServiceTypes.CART]);
 container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
 container.register(ControllerTypes.USER, UserController, [ServiceTypes.USER, ServiceTypes.USER_STATS]);
 // ====================================================================

@@ -119,9 +119,11 @@ export class IProductRepository {
 	/**
 	 * Gets a random sample of products for recommendation purposes.
 	 * @param {number} size - The number of products to return.
+	 * @param {string[]} categoryIds
+	 * @param {string[]} excludedIds
 	 * @returns {Promise<ProductEntity[]>} - A list of recommended product records.
 	 */
-	async findRecommended(size) {
+	async findRecommended(size, categoryIds, excludedIds) {
 		throw new Error("Method not implemented.");
 	}
 }

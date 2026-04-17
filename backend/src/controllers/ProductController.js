@@ -7,12 +7,15 @@ import {CreateProductDTO, ProductAttribute, ProductImage, UpdateProductDTO} from
  */
 export class ProductController {
 	/** @type {IProductService} */ #productService;
+	/** @type {ICartService} */ #cartService;
 
 	/**
 	 * @param {IProductService} productService - An instance of the object that implements IProductService contract.
+	 * @param {ICartService} cartService
 	 */
-	constructor(productService) {
+	constructor(productService, cartService) {
 		this.#productService = productService;
+		this.#cartService = cartService;
 	}
 
 	/**
@@ -143,7 +146,17 @@ export class ProductController {
 	 * @returns {Promise<void>} - Responds with status 200 and an array of ProductDTOs.
 	 */
 	getRecommended = async (req, res) => {
-		const productDTOs = await this.#productService.getRecommended();
+		let categoryIds = [];
+		let excludedIds = [];
+
+		const cartItems = await this.#cartService.getCartItems(req.userId);
+		if (cartItems.length > 0) {
+			categoryIds = [...new Set(cartItems.map(item => item.product.categoryId))];
+			excludedIds = cartItems.map(item => item.product.id);
+		}
+
+		const productDTOs = await this.#productService.getRecommended(categoryIds, excludedIds);
+
 		return res.status(200).json(productDTOs);
 	}
 }

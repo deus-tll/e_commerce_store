@@ -237,6 +237,7 @@ export class ProductDTO {
  */
 export class ShortProductDTO {
 	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ categoryId;
 	/** @type {string} @readonly */ name;
 	/** @type {number} @readonly */ price;
 	/** @type {number} @readonly */ stock;
@@ -247,6 +248,7 @@ export class ShortProductDTO {
 	 */
 	constructor(entity) {
 		this.id = entity.id;
+		this.categoryId = entity.categoryId;
 		this.name = entity.name;
 		this.price = entity.price;
 		this.stock = entity.stock;
