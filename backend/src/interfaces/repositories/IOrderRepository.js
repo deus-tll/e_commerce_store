@@ -37,6 +37,16 @@ export class IOrderRepository {
 	}
 
 	/**
+	 * Updates paymentSessionId of an order.
+	 * @param {string} id - The order ID.
+	 * @param {string} paymentSessionId
+	 * @returns {Promise<OrderEntity>}
+	 */
+	async updatePaymentSessionId(id, paymentSessionId) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Finds an order record by its ID.
 	 * @param {string} id - The order ID.
 	 * @returns {Promise<OrderEntity | null>} - The found order record.

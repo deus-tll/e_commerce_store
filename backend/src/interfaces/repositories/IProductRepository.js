@@ -82,7 +82,7 @@ export class IProductRepository {
 
 	/**
 	 * Counts the total number of product documents matching the query.
-	 * @param {object} [query={}] - The filtering query (e.g., { category: '...' }).
+	 * @param {object} [query={}] - The filtering query (e.g., { category: '...', }).
 	 * @returns {Promise<number>} - The total number of documents found.
 	 */
 	async count(query = {}) {
@@ -122,15 +122,6 @@ export class IProductRepository {
 	 * @returns {Promise<ProductEntity[]>} - A list of recommended product records.
 	 */
 	async findRecommended(size) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
-	 * Checks if a product exists by ID.
-	 * @param {string} id - The product ID.
-	 * @returns {Promise<boolean>}
-	 */
-	async existsById(id) {
 		throw new Error("Method not implemented.");
 	}
 }

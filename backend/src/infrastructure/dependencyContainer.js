@@ -96,6 +96,7 @@ import {
 } from "../constants/ioc.js";
 
 import {config} from "../config.js";
+import {createPaymentsWebhookRouter} from "../http/routers/paymentsWebhookRouterFactory.js";
 
 class Container {
 	constructor() {
@@ -362,6 +363,10 @@ container.register(RouterTypes.PAYMENT, (c) => {
 	const sessionAuthService = c.get(ServiceTypes.SESSION_AUTH);
 
 	return createPaymentsRouter(paymentController, sessionAuthService);
+});
+container.register(RouterTypes.PAYMENT_WEBHOOK, (c) => {
+	const paymentController = c.get(ControllerTypes.PAYMENT);
+	return createPaymentsWebhookRouter(paymentController);
 });
 container.register(RouterTypes.PRODUCT, (c) => {
 	const productController = c.get(ControllerTypes.PRODUCT);

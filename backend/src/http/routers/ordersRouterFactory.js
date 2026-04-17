@@ -34,6 +34,11 @@ export function createOrdersRouter(orderController, authService) {
 		orderController.getByOrderNumber
 	);
 
+	router.get("/payment-status/:sessionId",
+		validationMiddleware(paymentSessionIdSchema),
+		orderController.getPaymentStatus
+	);
+
 	router.get("/payment-session/:sessionId",
 		adminRoute,
 		validationMiddleware(paymentSessionIdSchema),

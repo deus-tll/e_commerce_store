@@ -47,6 +47,7 @@ export const config = {
 			secretKey: process.env.STRIPE_SECRET_KEY,
 			successUrl: process.env.STRIPE_SUCCESS_URL,
 			cancelUrl: process.env.STRIPE_CANCEL_URL,
+			webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
 		},
 		mail: {
 			endpoint: process.env.MAILTRAP_ENDPOINT,

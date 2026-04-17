@@ -12,7 +12,9 @@ export class IStripeService {
 	 * @param {object | null} appliedCoupon - The generic coupon object returned by ICouponHandler.
 	 * @returns {Promise<Array>} - Provider-specific discount array (e.g., [{ coupon: 'ID' }]).
 	 */
-	async prepareDiscountsForProvider(appliedCoupon) { throw new Error("Method not implemented."); }
+	async prepareDiscountsForProvider(appliedCoupon) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Converts a list of domain products into Stripe-specific line items
@@ -20,7 +22,9 @@ export class IStripeService {
 	 * @param {OrderProductItem[]} products - Array of domain product items.
 	 * @returns {{ lineItems: Array, initialTotalAmount: number }}
 	 */
-	processProductsForStripe(products) { throw new Error("Method not implemented."); }
+	processProductsForStripe(products) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Creates a new Stripe Checkout Session.
@@ -28,17 +32,20 @@ export class IStripeService {
 	 * @param {Array} stripeDiscounts - Stripe-specific discount objects (using Coupon IDs).
 	 * @param {string} userId - ID of the user creating the session.
 	 * @param {string} couponCode - The coupon code used (or empty string).
-	 * @param {string} productsSnapshot - JSON string of product metadata.
+	 * @param {string} orderId - Order ID.
 	 * @returns {Promise<object>} The raw Stripe Session object.
 	 */
-	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, productsSnapshot) { throw new Error("Method not implemented."); }
+	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, orderId) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
-	 * Retrieves a session, validates it is paid, and extracts necessary order data.
-	 * This abstracts the need for the caller to know Stripe's field names like 'payment_status'
-	 * or 'amount_total'.
-	 * @param {string} sessionId
-	 * @returns {Promise<{ metadata: object, amountTotal: number }>}
+	 * Verifies the Stripe signature and constructs the event object.
+	 * @param {Buffer} payload
+	 * @param {object} headers
+	 * @returns {object} Verified Stripe event.
 	 */
-	async retrievePaidSessionData(sessionId) { throw new Error("Method not implemented."); }
+	constructEvent(payload, headers) {
+		throw new Error("Method not implemented.");
+	}
 }

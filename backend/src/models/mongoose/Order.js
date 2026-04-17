@@ -31,11 +31,21 @@ const orderProductItemSchema = new mongoose.Schema({
 	},
 }, { _id: false });
 
+const customerDetailsSchema = new mongoose.Schema({
+	fullName: { type: String, required: true },
+	phone: { type: String, required: true },
+	address: { type: String, required: true }
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
 	user: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User",
 		required: true,
+	},
+	customerDetails: {
+		type: customerDetailsSchema,
+		required: true
 	},
 	products: {
 		type: [orderProductItemSchema],
@@ -49,7 +59,7 @@ const orderSchema = new mongoose.Schema({
 	status: {
 		type: String,
 		enum: OrderStatusValues,
-		default: OrderStatus.PENDING,
+		default: OrderStatus.AWAITING_PAYMENT,
 		index: true
 	},
 	paymentSessionId: {

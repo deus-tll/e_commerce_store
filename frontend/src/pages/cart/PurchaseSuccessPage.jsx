@@ -13,7 +13,6 @@ import Button from "../../components/ui/Button.jsx";
 
 const PurchaseSuccessPage = () => {
 	const { lastOrderNumber, processingCheckout, checkoutError, finalizeCheckout } = useCartStore();
-	const displayedOrderNumber = lastOrderNumber || "";
 
 	const [confettiKey, setConfettiKey] = useState(0);
 
@@ -92,7 +91,7 @@ const PurchaseSuccessPage = () => {
 						</span>
 
 			            <span className="text-sm font-semibold text-emerald-400">
-							#{displayedOrderNumber}
+							#{lastOrderNumber}
 						</span>
 		            </div>
 

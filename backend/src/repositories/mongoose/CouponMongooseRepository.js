@@ -37,11 +37,6 @@ export class CouponMongooseRepository extends ICouponRepository {
 		return MongooseAdapter.toCouponEntity(updatedDoc);
 	}
 
-	async deleteByUserId(userId) {
-		const deletedDoc = await Coupon.findOneAndDelete({ userId }).lean();
-		return MongooseAdapter.toCouponEntity(deletedDoc);
-	}
-
 	async findByCodeAndUserId(code, userId) {
 		const foundDoc = await Coupon.findOne({ code, userId }).lean();
 		return MongooseAdapter.toCouponEntity(foundDoc);

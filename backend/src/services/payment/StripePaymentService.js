@@ -8,6 +8,7 @@ import {CheckoutSessionDTO, OrderProductItem} from "../../domain/index.js";
 import {EntityNotFoundError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
+import {StripeEvents} from "../../constants/stripe.js";
 
 export class StripePaymentService extends IPaymentService {
 	/** @type {IStripeService} */ #stripeService;
@@ -29,26 +30,8 @@ export class StripePaymentService extends IPaymentService {
 		this.#couponHandler = couponHandler;
 	}
 
-	/**
-	 * Builds simplified product data for Stripe metadata.
-	 * @param {OrderProductItem[]} products
-	 * @returns {string} JSON string of product snapshots.
-	 */
-	#getProductsMetadataSnapshot(products) {
-		const snapshot = products.map((product) => {
-			return {
-				id: product.id,
-				quantity: product.quantity,
-				price: product.price,
-				name: product.name,
-				image: product.image
-			};
-		});
-
-		return JSON.stringify(snapshot);
-	}
-
-	async createCheckoutSession(products, couponCode, userId) {
+	async createCheckoutSession(products, couponCode, userId, customerDetails) {
+		// 1. Validate and fetch products
 		const productIds = products.map(p => p.id);
 		const shortProductDTOs = await this.#productService.getShortDTOsByIds(productIds);
 
@@ -69,29 +52,34 @@ export class StripePaymentService extends IPaymentService {
 			});
 		});
 
-		// 1. Prepare line items
+		// 2. Calculate totals and discounts
 		const { lineItems, initialTotalAmount } = this.#stripeService.processProductsForStripe(orderItems);
-
-		// 2. Apply coupon discount
 		const { totalAmount, appliedCoupon } = await this.#couponHandler.applyDiscount(
 			initialTotalAmount,
 			couponCode,
 			userId
 		);
 
-		// 4. Prepare Stripe discounts (if coupon applied)
+		// 3. Create order in DB
+		const order = await this.#orderHandler.createInitialOrder(
+			userId,
+			orderItems,
+			Currency.fromCents(totalAmount),
+			customerDetails
+		);
+
+		// 4. Create Provider Session
 		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);
-
-		const productsSnapshot = this.#getProductsMetadataSnapshot(orderItems);
-
-		// 5. Create Stripe session
 		const session = await this.#stripeService.createCheckoutSession(
 			lineItems,
 			stripeDiscounts,
 			userId,
 			couponCode,
-			productsSnapshot
+			order.id
 		);
+
+		// 5. Link Session ID to our Order for future polling
+		await this.#orderHandler.updatePaymentSessionId(order.id, session.id);
 
 		return new CheckoutSessionDTO({
 			id: session.id,
@@ -99,16 +87,21 @@ export class StripePaymentService extends IPaymentService {
 		});
 	}
 
-	async checkoutSuccess(sessionId) {
-		const existingOrder = await this.#orderHandler.checkExistingOrder(sessionId);
-		if (existingOrder) return existingOrder;
+	async processWebhook(payload, headers) {
+		const event = this.#stripeService.constructEvent(payload, headers);
 
-		const sessionData = await this.#stripeService.retrievePaidSessionData(sessionId);
+		if (event.type === StripeEvents.CHECKOUT_SESSION_COMPLETED) {
+			const session = event.data.object;
 
-		return await this.#orderHandler.handleOrderCreation(
-			sessionData.metadata,
-			sessionId,
-			sessionData.amountTotal
-		);
+			const { orderId, userId, couponCode } = session.metadata;
+			const totalAmountCents = session.amount_total;
+
+			await this.#orderHandler.handlePaymentSuccess(
+				orderId,
+				userId,
+				couponCode,
+				totalAmountCents
+			);
+		}
 	}
 }

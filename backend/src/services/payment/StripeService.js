@@ -1,11 +1,11 @@
 import {stripe} from "../../infrastructure/stripe.js";
 import {IStripeService} from "../../interfaces/payment/IStripeService.js";
 
-import {SystemError, DomainValidationError} from "../../errors/index.js";
+import {SystemError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
-import {CheckoutSessionModes, Currencies, PaymentMethodTypes, PaymentStatus} from "../../constants/payment.js";
-import {StripeCouponDurations} from "../../constants/stripe.js";
+import {CheckoutSessionModes, Currencies, PaymentMethodTypes} from "../../constants/payment.js";
+import {IdempotencyPrefixes, StripeCouponDurations, StripeHeaders} from "../../constants/stripe.js";
 import {config} from "../../config.js";
 
 /**
@@ -13,15 +13,6 @@ import {config} from "../../config.js";
  * @description Handles all low-level communication and data translation for the Stripe API.
  */
 export class StripeService extends IStripeService {
-	/**
-	 * Retrieves a Stripe Checkout Session.
-	 * @param {string} sessionId
-	 * @returns {Promise<object>} - The raw Stripe Session object.
-	 */
-	async #retrieveCheckoutSession(sessionId) {
-		return stripe.checkout.sessions.retrieve(sessionId);
-	}
-
 	/**
 	 * Creates a new Stripe coupon for a discount percentage.
 	 * @param {number} discountPercentage - The percentage off (e.g., 10 for 10%).
@@ -71,53 +62,43 @@ export class StripeService extends IStripeService {
 		return { lineItems, initialTotalAmount };
 	}
 
-	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, productsSnapshot) {
-		const successUrl = new URL(config.services.payment.successUrl, config.app.clientUrl).toString();
-		const cancelUrl = new URL(config.services.payment.cancelUrl, config.app.clientUrl).toString();
-
-		const session = await stripe.checkout.sessions.create(
-			{
-				payment_method_types: [PaymentMethodTypes.CARD],
-				line_items: lineItems,
-				mode: CheckoutSessionModes.PAYMENT,
-				success_url: successUrl,
-				cancel_url: cancelUrl,
-				discounts: stripeDiscounts,
-				metadata: {
-					userId,
-					couponCode: couponCode || "",
-					products: productsSnapshot
-				}
-			},
-			{
-				idempotencyKey: `${userId}-${Date.now()}`
-			}
-		);
-
-		console.info(
-			`[StripeService] Created session ${session.id} for user ${userId}`
-		);
-
-		return session;
-	}
-
-	async retrievePaidSessionData(sessionId) {
-		let session;
+	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, orderId) {
+		const { successUrl, cancelUrl } = config.services.payment;
 
 		try {
-			session = await this.#retrieveCheckoutSession(sessionId);
+			return await stripe.checkout.sessions.create(
+				{
+					payment_method_types: [PaymentMethodTypes.CARD],
+					line_items: lineItems,
+					mode: CheckoutSessionModes.PAYMENT,
+					success_url: new URL(successUrl, config.app.clientUrl).toString(),
+					cancel_url: new URL(cancelUrl, config.app.clientUrl).toString(),
+					discounts: stripeDiscounts,
+					metadata: {
+						userId,
+						orderId,
+						couponCode: couponCode || ""
+					}
+				},
+				{
+					idempotencyKey: `${IdempotencyPrefixes.CHECKOUT_SESSION}-${orderId}`
+				}
+			);
 		}
 		catch (error) {
-			throw new SystemError("External payment provider communication failure.");
+			throw new SystemError(`Stripe session creation failed: ${error.message}`);
 		}
+	}
 
-		if (session.payment_status !== PaymentStatus.PAID) {
-			throw new DomainValidationError("Payment has not been confirmed by the provider.");
+	constructEvent(payload, headers) {
+		const signature = headers[StripeHeaders.SIGNATURE];
+		const webhookSecret = config.services.payment.webhookSecret;
+
+		try {
+			return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 		}
-
-		return {
-			metadata: session.metadata,
-			amountTotal: session.amount_total,
-		};
+		catch (error) {
+			throw new SystemError(`Stripe Webhook Error: ${error.message}`);
+		}
 	}
 }

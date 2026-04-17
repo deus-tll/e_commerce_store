@@ -22,29 +22,21 @@ export class PaymentController {
 	 * @returns {Promise<void>} - Responds with status 200 and a CheckoutSessionDTO.
 	 */
 	createCheckoutSession = async (req, res) => {
-		const { products, couponCode } = req.body;
+		const { products, couponCode, customerDetails } = req.body;
 		const userId = req.userId;
 
 		const sessionData = await this.#paymentService.createCheckoutSession(
 			products,
 			couponCode,
-			userId
+			userId,
+			customerDetails
 		);
 
 		return res.status(200).json(sessionData);
 	}
 
-	/**
-	 * Handles the webhook or client redirect after a successful payment, verifying the payment status
-	 * and creating the final order. Extracts the session ID and delegates the success logic.
-	 * @param {object} req - Express request object. Expects 'sessionId' in req.body.
-	 * @param {object} res - Express response object.
-	 * @returns {Promise<void>} - Responds with status 200 and a CheckoutSuccessDTO.
-	 */
-	checkoutSuccess = async (req, res) => {
-		const { sessionId } = req.body;
-		const result = await this.#paymentService.checkoutSuccess(sessionId);
-
-		return res.status(200).json(result);
+	handleWebhook = async (req, res) => {
+		await this.#paymentService.processWebhook(req.body, req.headers);
+		return res.status(200).json({ received: true });
 	}
 }

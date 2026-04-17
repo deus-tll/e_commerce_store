@@ -2,11 +2,12 @@ import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandle
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
 import {ICartService} from "../../interfaces/cart/ICartService.js";
-import {CheckoutSuccessDTO, CreateOrderDTO, OrderProductItem} from "../../domain/index.js";
+import {
+	CreateOrderDTO,
+	CustomerDetails
+} from "../../domain/index.js";
 
-import {EntityAlreadyExistsError, SystemError} from "../../errors/index.js";
-
-import {Currency} from "../../utils/currency.js";
+import {OrderStatus} from "../../constants/domain.js";
 
 /**
  * @augments ICheckoutOrderHandler
@@ -34,70 +35,39 @@ export class CheckoutOrderHandler extends ICheckoutOrderHandler {
 		this.#couponHandler = couponHandler;
 	}
 
-	async checkExistingOrder(sessionId) {
-		const existingOrder = await this.#orderService.getByPaymentSessionId(sessionId);
-
-		if (existingOrder) {
-			return new CheckoutSuccessDTO({
-				success: true,
-				message: "Payment already processed",
-				orderId: existingOrder.id,
-				orderNumber: existingOrder.orderNumber
-			});
-		}
-
-		return null;
-	}
-
-	async handleOrderCreation(sessionMetadata, sessionId, totalAmountCents) {
-		const { userId, couponCode, products } = sessionMetadata;
-		let parsedProducts;
-
-		try {
-			parsedProducts = JSON.parse(products);
-		} catch (e) {
-			throw new SystemError("Corrupted product metadata in payment session.");
-		}
-
-		// Convert from cents (base unit) back to standard currency for the order record
-		const totalAmount = Currency.fromCents(totalAmountCents);
-
+	async createInitialOrder(userId, orderItems, totalAmount, customerDetails) {
 		const orderData = new CreateOrderDTO({
-			products: parsedProducts.map(item => new OrderProductItem(item)),
+			products: orderItems,
 			totalAmount,
-			paymentSessionId: sessionId
+			customerDetails: new CustomerDetails(customerDetails),
+			status: OrderStatus.AWAITING_PAYMENT
 		});
 
-		try {
-			const newOrder = await this.#orderService.create(userId, orderData);
+		return await this.#orderService.create(userId, orderData);
+	}
 
-			const sideEffects = [];
+	async handlePaymentSuccess(orderId, userId, couponCode, totalAmountCents) {
+		const order = await this.#orderService.getById(orderId);
 
-			sideEffects.push(this.#cartService.clear(userId));
-
-			if (couponCode) {
-				sideEffects.push(this.#couponService.deactivate(couponCode, userId));
-			}
-
-			sideEffects.push(
-				this.#couponHandler.grantNewCouponIfEligible(userId, totalAmountCents)
-			);
-
-			await Promise.all(sideEffects);
-
-			return new CheckoutSuccessDTO({
-				success: true,
-				message: "Payment successful and order processed.",
-				orderId: newOrder.id,
-				orderNumber: newOrder.orderNumber
-			});
-		} catch (error) {
-			// Handle database EntityAlreadyExistsError (race condition during order creation)
-			if (error instanceof EntityAlreadyExistsError) {
-				const existingOrderResult = await this.checkExistingOrder(sessionId);
-				if (existingOrderResult) return existingOrderResult;
-			}
-			throw error;
+		if (!order || order.status !== OrderStatus.AWAITING_PAYMENT) {
+			return order;
 		}
+
+		const updatedOrder = await this.#orderService.updateStatus(orderId, OrderStatus.PENDING);
+
+		const sideEffects = [];
+		sideEffects.push(this.#cartService.clear(userId));
+		sideEffects.push(this.#couponHandler.grantNewCouponIfEligible(userId, totalAmountCents));
+
+		if (couponCode) {
+			sideEffects.push(this.#couponService.deactivate(couponCode, userId));
+		}
+
+		await Promise.all(sideEffects);
+		return updatedOrder;
+	}
+
+	async updatePaymentSessionId(orderId, paymentSessionId){
+		await this.#orderService.updatePaymentSessionId(orderId, paymentSessionId);
 	}
 }

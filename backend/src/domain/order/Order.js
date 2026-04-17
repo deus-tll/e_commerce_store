@@ -27,6 +27,19 @@ export class OrderProductItem {
 	}
 }
 
+export class CustomerDetails {
+	/** @type {string} @readonly */ fullName;
+	/** @type {string} @readonly */ phone;
+	/** @type {string} @readonly */ address;
+
+	constructor(data) {
+		this.fullName = data.fullName;
+		this.phone = data.phone;
+		this.address = data.address;
+		Object.freeze(this);
+	}
+}
+
 /**
  * Agnostic class representing the core Order Entity, used by the Repository layer.
  * All complex relationships are represented by string IDs (e.g., 'userId', 'productId').
@@ -35,6 +48,7 @@ export class OrderEntity {
 	/** @type {string} @readonly */ id;
 	/** @type {string | null} @readonly */ userId;
 	/** @type {OrderProductItem[]} @readonly */ products;
+	/** @type {CustomerDetails} @readonly */ customerDetails;
 	/** @type {number} @readonly */ totalAmount;
 	/** @type {keyof OrderStatus} @readonly */ status;
 	/** @type {string | undefined} @readonly */ paymentSessionId;
@@ -49,6 +63,7 @@ export class OrderEntity {
 		this.id = data.id;
 		this.userId = data.userId;
 		this.products = Object.freeze([...data.products]);
+		this.customerDetails = data.customerDetails;
 		this.totalAmount = data.totalAmount;
 		this.status = data.status;
 		this.paymentSessionId = data.paymentSessionId;
@@ -65,6 +80,7 @@ export class OrderEntity {
  */
 export class CreateOrderDTO {
 	/** @type {OrderProductItem[]} @readonly */ products;
+	/** @type {CustomerDetails} @readonly */ customerDetails;
 	/** @type {number} @readonly */ totalAmount;
 	/** @type {string | undefined} @readonly */ paymentSessionId;
 
@@ -73,6 +89,7 @@ export class CreateOrderDTO {
 	 */
 	constructor(data) {
 		this.products = Object.freeze([...data.products]);
+		this.customerDetails = data.customerDetails;
 		this.totalAmount = data.totalAmount;
 		this.paymentSessionId = data.paymentSessionId;
 
@@ -86,6 +103,7 @@ export class CreateOrderDTO {
 	toPersistence() {
 		return Object.freeze({
 			products: this.products,
+			customerDetails: this.customerDetails,
 			totalAmount: this.totalAmount,
 			paymentSessionId: this.paymentSessionId
 		});
@@ -100,6 +118,7 @@ export class OrderDTO {
 	/** @type {string} @readonly */ id;
 	/** @type {ShortUserDTO | null} @readonly */ user;
 	/** @type {OrderProductItem[]} @readonly */ products;
+	/** @type {CustomerDetails} @readonly */ customerDetails;
 	/** @type {number} @readonly */ totalAmount;
 	/** @type {keyof OrderStatus} @readonly */ status;
 	/** @type {string | undefined} @readonly */ paymentSessionId;
@@ -115,6 +134,7 @@ export class OrderDTO {
 		this.id = entity.id;
 		this.user = userShortDTO;
 		this.products = Object.freeze([...entity.products]);
+		this.customerDetails = entity.customerDetails;
 		this.totalAmount = entity.totalAmount;
 		this.status = entity.status;
 		this.paymentSessionId = entity.paymentSessionId;

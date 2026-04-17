@@ -15,26 +15,12 @@ export const createCheckoutSessionSchema = Joi.object({
 				'array.min': 'Product list cannot be empty.',
 				'any.required': 'Product list is required.',
 			}),
-
 		couponCode: Joi.string().trim().min(1).optional().allow(null, ""),
-	}).required().unknown(false),
-
-	params: Joi.object({}).optional(),
-	query: Joi.object({}).optional(),
-});
-
-/**
- * Joi schema for validating the POST /checkout-success request.
- */
-export const checkoutSuccessSchema = Joi.object({
-	body: Joi.object({
-		sessionId: Joi.string()
-			.trim()
-			.required()
-			.messages({
-				'any.required': 'Session ID is required.',
-				'string.empty': 'Session ID cannot be empty.',
-			}),
+		customerDetails: Joi.object({
+			fullName: Joi.string().trim().min(2).max(100).required(),
+			phone: Joi.string().trim().min(7).max(20).required(),
+			address: Joi.string().trim().min(5).max(255).required(),
+		}).required(),
 	}).required().unknown(false),
 
 	params: Joi.object({}).optional(),

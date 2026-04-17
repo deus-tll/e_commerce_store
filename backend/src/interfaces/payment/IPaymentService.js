@@ -1,4 +1,4 @@
-import {CheckoutSessionDTO, CheckoutSuccessDTO} from "../../domain/index.js";
+import {CheckoutSessionDTO} from "../../domain/index.js";
 
 /**
  * @interface IPaymentService
@@ -10,15 +10,21 @@ export class IPaymentService {
 	 * @param {[{id, quantity}]} products - Array of products to purchase.
 	 * @param {string} [couponCode] - Optional coupon code to apply.
 	 * @param {string} userId - ID of the user creating the session.
+	 * @param {object} customerDetails - Information about the recipient (name, phone, address...).
 	 * @returns {Promise<CheckoutSessionDTO>} - The newly created checkout session DTO.
 	 */
-	async createCheckoutSession(products, couponCode, userId) { throw new Error("Method not implemented."); }
+	async createCheckoutSession(products, couponCode, userId, customerDetails) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
-	 * Confirms a successful payment session based on a session ID, creates an Order record, and manages used coupons.
-	 * Ensures idempotency by checking for existing orders linked to the session.
-	 * @param {string} sessionId - The platform-specific ID of the completed payment session.
-	 * @returns {Promise<CheckoutSuccessDTO>} - The success DTO containing the new order ID.
+	 * Processes an incoming webhook event from the payment provider.
+	 * Verified the signature and updates the order status in the database.
+	 * @param {Buffer} payload - Raw request body from the provider.
+	 * @param {object} headers - Request headers for signature verification.
+	 * @returns {Promise<void>}
 	 */
-	async checkoutSuccess(sessionId) { throw new Error("Method not implemented."); }
+	async processWebhook(payload, headers) {
+		throw new Error("Method not implemented.");
+	}
 }

@@ -59,6 +59,11 @@ export class OrderService extends IOrderService {
 		return await this.#formOrderDTO(updatedEntity);
 	}
 
+	async updatePaymentSessionId(id, paymentSessionId) {
+		const updatedEntity = await this.#orderRepository.updatePaymentSessionId(id, paymentSessionId);
+		return await this.#formOrderDTO(updatedEntity);
+	}
+
 	async getById(id) {
 		const orderEntity = await this.#orderRepository.findById(id);
 

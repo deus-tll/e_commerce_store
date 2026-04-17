@@ -293,9 +293,4 @@ export class ProductMongooseRepository extends IProductRepository {
 
 		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
 	}
-
-	async existsById(id) {
-		const count = await Product.countDocuments({ _id: id });
-		return count > 0;
-	}
 }

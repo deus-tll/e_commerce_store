@@ -1,6 +1,7 @@
 // ORDER
 //=====================
 export const OrderStatus = Object.freeze({
+	AWAITING_PAYMENT: "awaiting_payment",
 	PENDING: "pending",
 	PROCESSING: "processing",
 	SHIPPED: "shipped",
@@ -9,6 +10,7 @@ export const OrderStatus = Object.freeze({
 });
 
 export const OrderStatusStyles = Object.freeze({
+	[OrderStatus.AWAITING_PAYMENT]: "!text-slate-500 !bg-slate-500/10 !border-slate-500/20",
 	[OrderStatus.PENDING]: "!text-yellow-500 !bg-yellow-500/10 !border-yellow-500/20",
 	[OrderStatus.PROCESSING]: "!text-blue-500 !bg-blue-500/10 !border-blue-500/20",
 	[OrderStatus.SHIPPED]: "!text-purple-500 !bg-purple-500/10 !border-purple-500/20",

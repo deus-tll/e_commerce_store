@@ -9,6 +9,7 @@ const orderApi = {
 	getById: (orderId) => api.get(pathWithBase(orderId)),
 	getByNumber: (orderNumber) => api.get(pathWithBase(`/number/${orderNumber}`)),
 	getByPaymentSessionId: (paymentSessionId) => api.get(pathWithBase(`/payment-session/${paymentSessionId}`)),
+	getPaymentStatus: (paymentSessionId) => api.get(pathWithBase(`/payment-status/${paymentSessionId}`)),
 
 	updateStatus: (orderId, status) => api.patch(pathWithBase(`/${orderId}/status`), { status })
 };

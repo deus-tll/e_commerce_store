@@ -261,8 +261,4 @@ export class ProductService extends IProductService {
 		const entities = await this.#productRepository.findByIds(ids);
 		return this.#productMapper.toShortDTOs(entities);
 	}
-
-	async exists(id) {
-		return await this.#productRepository.existsById(id);
-	}
 }
