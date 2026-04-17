@@ -22,11 +22,9 @@ const CartItem = ({ item }) => {
 					<img
 						src={item.image}
 						alt={item.name}
-						className="h-20 md:h-32 rounded object-cover"
+						className="h-24 w-24 md:h-32 md:w-32 rounded object-cover aspect-square"
 					/>
 				</div>
-
-				<label className="sr-only">Choose quantity:</label>
 
 				<div className="flex items-center justify-between md:order-3 md:justify-end">
 	                <div className="flex items-center gap-2">

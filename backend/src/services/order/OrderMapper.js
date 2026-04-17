@@ -1,6 +1,4 @@
 import {IOrderMapper} from "../../interfaces/mappers/IOrderMapper.js";
-import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IUserMapper} from "../../interfaces/mappers/IUserMapper.js";
 import {OrderDTO} from "../../domain/index.js";
 
 /**

@@ -98,11 +98,4 @@ export class IProductService {
 	 * @returns {Promise<ShortProductDTO[]>} - A list of short product DTOs.
 	 */
 	async getShortDTOsByIds(ids) { throw new Error("Method not implemented."); }
-
-	/**
-	 * Checks if a product exists by ID.
-	 * @param {string} id
-	 * @returns {Promise<boolean>}
-	 */
-	async exists(id) { throw new Error("Method not implemented."); }
 }

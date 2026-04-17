@@ -1,6 +1,6 @@
 import {Link} from "react-router-dom";
-import {MoveRight} from "lucide-react";
-import { useShallow } from 'zustand/react/shallow'
+import {useShallow} from 'zustand/react/shallow'
+import {MoveRight, CreditCard} from "lucide-react";
 
 import {useCartStore} from "../../stores/useCartStore.js";
 
@@ -9,12 +9,12 @@ import {formatCurrency} from "../../utils/format.js";
 import Card from "../ui/Card.jsx";
 import Button from "../ui/Button.jsx";
 
-const OrderSummary = () => {
+const OrderSummary = ({ isCheckingOut, loading, onProceed, onBack, onPayClick }) => {
 	const { totalPrice, originalPrice, savings } = useCartStore(
 		useShallow((state) => state.getTotals())
 	);
 
-	const { coupon, isCouponApplied, paymentLoading, createCheckoutSession } = useCartStore();
+	const { coupon, isCouponApplied } = useCartStore();
 
 	const dlClasses = "flex items-center justify-between gap-4";
 	const dtClasses = "text-base font-normal text-gray-300";
@@ -55,26 +55,39 @@ const OrderSummary = () => {
 				</div>
 
 				<Button
-					onClick={createCheckoutSession}
+					type="button"
+					onClick={isCheckingOut ? onPayClick : onProceed}
 					className="w-full justify-center"
-					disabled={paymentLoading}
+					disabled={loading}
 				>
-					{paymentLoading ? "Redirecting..." : "Proceed to Checkout"}
+					{isCheckingOut ? <CreditCard className="mr-2 h-4 w-4" /> : null}
+					{loading ? "Redirecting..." : isCheckingOut ? "Pay Now" : "Proceed to Checkout"}
 				</Button>
 
-				<div className="flex items-center justify-center gap-2">
-					<span className="text-sm font-normal text-gray-400">
-						or
-					</span>
-
-					<Link
-						to="/"
-						className="inline-flex items-center gap-2 text-sm font-medium text-emerald-400 underline hover:text-emerald-300 hover:no-underline"
+				{isCheckingOut && (
+					<Button
+						variant="ghost"
+						onClick={onBack}
+						className="w-full text-gray-400 hover:text-white"
+						disabled={loading}
 					>
-						Continue Shopping
-						<MoveRight size={16} />
-					</Link>
-				</div>
+						Back to Cart
+					</Button>
+				)}
+
+				{!isCheckingOut && (
+					<div className="flex items-center justify-center gap-2">
+						<span className="text-sm font-normal text-gray-400">or</span>
+
+						<Link
+							to="/"
+							className="inline-flex items-center gap-2 text-sm font-medium text-emerald-400 underline hover:text-emerald-300 hover:no-underline"
+						>
+							Continue Shopping
+							<MoveRight size={16} />
+						</Link>
+					</div>
+				)}
 			</div>
 		</Card>
 	);

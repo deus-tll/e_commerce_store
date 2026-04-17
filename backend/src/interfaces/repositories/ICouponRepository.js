@@ -27,15 +27,6 @@ export class ICouponRepository {
 	}
 
 	/**
-	 * Deletes a coupon entity by the owning user ID.
-	 * @param {string} userId - The user ID.
-	 * @returns {Promise<CouponEntity | null>} - The deleted coupon record.
-	 */
-	async deleteByUserId(userId) {
-		throw new Error("Method not implemented.");
-	}
-
-	/**
 	 * Finds a coupon by its code and user ID.
 	 * @param {string} code - The coupon code.
 	 * @param {string} userId - The user ID.

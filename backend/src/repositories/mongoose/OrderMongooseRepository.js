@@ -34,12 +34,12 @@ export class OrderMongooseRepository extends IOrderRepository {
 			throw new SystemError("Failed to generate unique order number.");
 		}
 
-		const docData = {
-			user: userId,
-			totalAmount: data.totalAmount,
-			paymentSessionId: data.paymentSessionId,
-			orderNumber: newOrderNumber,
+		const { products, ...rest  } = data;
 
+		const docData = {
+			...rest,
+			user: userId,
+			orderNumber: newOrderNumber,
 			products: data.products.map(item => ({
 				product: item.id,
 				quantity: item.quantity,
@@ -74,6 +74,20 @@ export class OrderMongooseRepository extends IOrderRepository {
 		const updatedDoc = await Order.findByIdAndUpdate(
 			id,
 			{ $set: { status } },
+			{ new: true }
+		).lean();
+
+		if (!updatedDoc) {
+			throw new EntityNotFoundError("Order", { id });
+		}
+
+		return MongooseAdapter.toOrderEntity(updatedDoc);
+	}
+
+	async updatePaymentSessionId(id, paymentSessionId) {
+		const updatedDoc = await Order.findByIdAndUpdate(
+			id,
+			{ $set: { paymentSessionId } },
 			{ new: true }
 		).lean();
 

@@ -106,6 +106,7 @@ export const RouterTypes = Object.freeze({
 	COUPON: "couponsRouter",
 	ORDER: "ordersRouter",
 	PAYMENT: "paymentsRouter",
+	PAYMENT_WEBHOOK: "paymentsWebhookRouter",
 	PRODUCT: "productsRouter",
 	REVIEW: "reviewsRouter",
 	USER: "usersRouter",

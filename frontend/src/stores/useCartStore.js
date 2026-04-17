@@ -9,6 +9,7 @@ import paymentApi from "../api/paymentApi.js";
 import {Currency} from "../utils/currency.js";
 import {handleError} from "../utils/errorHandler.js";
 import {handleAsyncAction} from "../utils/storeHelpers.js";
+import orderApi from "../api/orderApi.js";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -152,7 +153,7 @@ export const useCartStore = create((set, get) => ({
 		handleErrorOptions: { showToast: true }
 	}),
 
-	createCheckoutSession: async () => await handleAsyncAction(set, {
+	createCheckoutSession: async (customerDetails) => await handleAsyncAction(set, {
 		action: async () => {
 			const { cart, coupon, isCouponApplied } = get();
 			const stripe = await stripePromise;
@@ -160,10 +161,17 @@ export const useCartStore = create((set, get) => ({
 
 			const apiResult = await paymentApi.createCheckoutSession(
 				cart.map(p => ({ id: p.id, quantity: p.quantity || 1 })),
-				couponCode
+				couponCode,
+				customerDetails
 			);
 
-			const stripeResult = await stripe.redirectToCheckout({ sessionId: apiResult?.data.id });
+			if (!apiResult?.data?.id) {
+				throw new Error("Failed to create checkout session: No ID returned");
+			}
+
+			const stripeResult = await stripe.redirectToCheckout({
+				sessionId: apiResult.data.id
+			});
 
 			if (stripeResult.error) throw stripeResult.error;
 
@@ -188,29 +196,39 @@ export const useCartStore = create((set, get) => ({
 	}),
 
 	finalizeCheckout: async (sessionId) => {
-		set({ lastOrderNumber: null });
+		set({ lastOrderNumber: null, checkoutError: null, processingCheckout: true });
 
 		if (!sessionId) {
-			set({ checkoutError: "No session ID found in the URL." });
+			set({ checkoutError: "No session ID found.", processingCheckout: false });
 			return false;
 		}
 
-		return await handleAsyncAction(set, {
-			action: () => paymentApi.checkoutSuccess(sessionId),
-			onSuccess: (res) => {
-				get().clear();
-				set({ lastOrderNumber: res.data.orderNumber });
-			},
-			onError: (error, preventDefault) => {
-				preventDefault();
+		const maxAttempts = 5;
+		const delay = 3000;
 
-				const userMessage = "Failed to finalize the order. Please contact support.";
+		for (let i = 0; i < maxAttempts; i++) {
+			try {
+				const res = await orderApi.getPaymentStatus(sessionId);
 
-				handleError(error, userMessage, { isGlobal: true });
+				if (res.data.isPaid) {
+					get().clear();
+					set({ lastOrderNumber: res.data.orderNumber, processingCheckout: false });
 
-				set({ checkoutError: userMessage });
-			},
-			setLoading: (val) => set({ processingCheckout: val }),
+					return true;
+				}
+			}
+			catch (error) {
+				console.warn(`Attempt ${i + 1} failed:`, error.message);
+			}
+
+			if (i < maxAttempts - 1) {
+				await new Promise(resolve => setTimeout(resolve, delay));
+			}
+		}
+
+		set({
+			checkoutError: "We're still waiting for payment confirmation. Don't worry, we'll email you once it's processed.",
+			processingCheckout: false
 		});
 	}
 }));

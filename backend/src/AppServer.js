@@ -62,6 +62,16 @@ export class AppServer {
 	}
 
 	/**
+	 * Configures webhook routes that must bypass global JSON parsing.
+	 */
+	configureExternalWebhooks() {
+		this.#app.use(
+			RouteTypes.PAYMENT,
+			this.#container.get(RouterTypes.PAYMENT_WEBHOOK)
+		);
+	}
+
+	/**
 	 * Configures the application routers, retrieving them from the IoC container.
 	 */
 	setupRoutes() {
@@ -106,6 +116,7 @@ export class AppServer {
 
 			this.#container.verify();
 
+			this.configureExternalWebhooks();
 			this.configureMiddleware();
 			this.setupRoutes();
 			this.setupErrorHandling();

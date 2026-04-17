@@ -26,6 +26,14 @@ export class IOrderService {
 	async updateStatus(id, status) { throw new Error("Method not implemented."); }
 
 	/**
+	 * Updates the paymentSessionId of an existing order.
+	 * @param {string} id - The order ID.
+	 * @param {string} paymentSessionId - The new paymentSessionId.
+	 * @returns {Promise<OrderDTO>} - The updated order DTO.
+	 */
+	async updatePaymentSessionId(id, paymentSessionId) { throw new Error("Method not implemented."); }
+
+	/**
 	 * Finds an order by its ID.
 	 * @param {string} id - The order ID.
 	 * @returns {Promise<OrderDTO | null>} - The found order DTO.

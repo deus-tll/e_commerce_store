@@ -7,8 +7,7 @@ import {createProtectRoute} from "../middleware/authMiddleware.js";
 import {validationMiddleware} from "../middleware/validationMiddleware.js";
 
 import {
-	createCheckoutSessionSchema,
-	checkoutSuccessSchema
+	createCheckoutSessionSchema
 } from "../validators/paymentValidator.js";
 
 /**
@@ -28,11 +27,6 @@ export function createPaymentsRouter(paymentController, authService) {
 		"/create-checkout-session",
 		validationMiddleware(createCheckoutSessionSchema),
 		paymentController.createCheckoutSession
-	);
-	router.post(
-		"/checkout-success",
-		validationMiddleware(checkoutSuccessSchema),
-		paymentController.checkoutSuccess
 	);
 
 	return router;

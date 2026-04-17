@@ -1,5 +1,7 @@
 import { IOrderService } from "../interfaces/order/IOrderService.js";
 import {UserRoles} from "../constants/app.js";
+import {ForbiddenError} from "../errors/index.js";
+import {OrderStatus} from "../constants/domain.js";
 
 /**
  * Handles incoming HTTP requests related to orders.
@@ -97,5 +99,27 @@ export class OrderController {
 		const orderDTO = await this.#orderService.getByPaymentSessionIdOrFail(sessionId);
 
 		return res.status(200).json(orderDTO);
+	}
+
+	/**
+	 * Retrieves the payment status of an order by the provider's session ID.
+	 * Used for frontend polling after redirect from a payment gateway.
+	 * Accessible only by the owner of the order.
+	 */
+	getPaymentStatus = async (req, res) => {
+		const { sessionId } = req.params;
+		const userId = req.userId;
+
+		const order = await this.#orderService.getByPaymentSessionIdOrFail(sessionId);
+
+		if (order.user.id !== userId) {
+			throw new ForbiddenError("You do not have access to this information.");
+		}
+
+		return res.status(200).json({
+			isPaid: order.status !== OrderStatus.AWAITING_PAYMENT,
+			orderNumber: order.orderNumber,
+			status: order.status
+		});
 	}
 }

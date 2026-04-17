@@ -1,5 +1,3 @@
-import { CheckoutSuccessDTO } from "../../domain/index.js";
-
 /**
  * @interface
  * @description Defines the contract for handling the final steps of a successful checkout,
@@ -7,18 +5,36 @@ import { CheckoutSuccessDTO } from "../../domain/index.js";
  */
 export class ICheckoutOrderHandler {
 	/**
-	 * Handles the successful completion of a payment, including order creation and coupon cleanup.
-	 * @param {object} sessionMetadata - Metadata containing userId, couponCode, products.
-	 * @param {string} sessionId - The payment session ID (for idempotency).
-	 * @param {number} totalAmountCents - The final amount paid (in cents).
-	 * @returns {Promise<CheckoutSuccessDTO>}
+	 * Handles the order creation before payment.
+	 * @param {string} userId
+	 * @param {OrderProductItem[]} orderItems
+	 * @param {number} totalAmount - The final amount to pay (in cents).
+	 * @param {object} customerDetails
+	 * @returns {Promise<OrderDTO>}
 	 */
-	async handleOrderCreation(sessionMetadata, sessionId, totalAmountCents) { throw new Error("Method not implemented."); }
+	async createInitialOrder(userId, orderItems, totalAmount, customerDetails) {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
-	 * Checks if an order for a given payment session already exists (idempotency check).
-	 * @param {string} sessionId
-	 * @returns {Promise<CheckoutSuccessDTO | null>} Returns DTO if order exists, null otherwise.
+	 * Handles actions after successful payment.
+	 * @param {string} orderId
+	 * @param {string} userId
+	 * @param {string} couponCode
+	 * @param {number} totalAmountCents
+	 * @returns {Promise<OrderDTO>}
 	 */
-	async checkExistingOrder(sessionId) { throw new Error("Method not implemented."); }
+	async handlePaymentSuccess(orderId, userId, couponCode, totalAmountCents) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Handles actions after successful payment.
+	 * @param {string} orderId
+	 * @param {string} paymentSessionId
+	 * @returns {Promise<void>}
+	 */
+	async updatePaymentSessionId(orderId, paymentSessionId) {
+		throw new Error("Method not implemented.");
+	}
 }
