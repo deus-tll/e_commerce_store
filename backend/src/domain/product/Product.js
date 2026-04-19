@@ -52,7 +52,7 @@ export class ProductRatingStats {
 	 * @param {number} [data.ratingSum=0]
 	 */
 	constructor(data = {}) {
-		this.averageRating = data.averageRating || 0;
+		this.averageRating = Number(Number(data.averageRating || 0).toFixed(1));
 		this.totalReviews = data.totalReviews || 0;
 		this.ratingSum = data.ratingSum || 0;
 

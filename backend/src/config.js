@@ -1,5 +1,18 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import {fileURLToPath} from "url";
+
 import {EnvModes} from "./constants/app.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const envPath = path.resolve(__dirname, "../.env");
+
+dotenv.config({
+	path: envPath,
+	override: true
+});
 
 const nodeEnv = process.env.NODE_ENV || EnvModes.DEV;
 const isProduction = nodeEnv === EnvModes.PROD;
@@ -18,10 +31,14 @@ export const config = {
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
+		dummyJsonProductsUrl: process.env.DUMMY_JSON_PRODUCTS_URL,
+		dummyJsonProductsLimit: process.env.DUMMY_JSON_PRODUCTS_LIMIT,
+		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
 	},
 	database: {
 		mongoUri: process.env.MONGO_URI,
 		redisUrl: process.env.REDIS_URL,
+		dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true"
 	},
 	auth: {
 		access: {

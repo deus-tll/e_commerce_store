@@ -33,8 +33,6 @@ export class ReviewEntity {
  * Agnostic class for input data when creating a Review.
  */
 export class CreateReviewDTO {
-	/** @type {string} @readonly */ productId;
-	/** @type {string} @readonly */ userId;
 	/** @type {number} @readonly */ rating;
 	/** @type {string} @readonly */ comment;
 
@@ -42,8 +40,6 @@ export class CreateReviewDTO {
 	 * @param {object} data
 	 */
 	constructor(data) {
-		this.productId = data.productId;
-		this.userId = data.userId;
 		this.rating = data.rating;
 		this.comment = data.comment;
 
@@ -56,8 +52,6 @@ export class CreateReviewDTO {
 	 */
 	toPersistence() {
 		return Object.freeze({
-			productId: this.productId,
-			userId: this.userId,
 			rating: this.rating,
 			comment: this.comment
 		});
