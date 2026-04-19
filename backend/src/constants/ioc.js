@@ -114,5 +114,5 @@ export const RouterTypes = Object.freeze({
 
 export const SeederTypes = Object.freeze({
 	ADMIN: "AdminSeeder",
-	CATEGORY: "CategorySeeder"
+	PRODUCTS_DUMMY_JSON: "ProductsDummyJson"
 });

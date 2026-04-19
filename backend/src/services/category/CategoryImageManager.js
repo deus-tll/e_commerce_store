@@ -2,6 +2,7 @@ import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageMan
 import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
 
 import {BASE64_PREFIX} from "../../constants/file.js";
+import {config} from "../../config.js";
 
 /**
  * @augments ICategoryImageManager
@@ -19,7 +20,17 @@ export class CategoryImageManager extends ICategoryImageManager {
 	}
 
 	async handleImageUpdate(newImageValue, oldImageValue) {
-		const isNewUpload = typeof newImageValue === 'string' && newImageValue.startsWith(BASE64_PREFIX);
+		const isString = typeof newImageValue === "string";
+		const isOurCloudinary =
+			isString &&
+			newImageValue.includes(`res.cloudinary.com/${config.services.storage.cloudName}`);
+
+		const isNewUpload =
+			isString && (
+				newImageValue.startsWith(BASE64_PREFIX) ||
+				(newImageValue.startsWith("http") && !isOurCloudinary)
+			);
+
 		const isRemoval = !newImageValue;
 		const oldImageExists = !!oldImageValue;
 
@@ -30,8 +41,8 @@ export class CategoryImageManager extends ICategoryImageManager {
 		if (isNewUpload) {
 			finalImageUrl = await this.#categoryStorageService.upload(newImageValue);
 		}
-		// 2. // Client provided an existing URL string; retain it.
-		else if (newImageValue) {
+		// 2. Client provided an existing valid our URL string; retain it.
+		else if (isString && !isRemoval) {
 			finalImageUrl = newImageValue;
 		}
 		else if (isRemoval) {

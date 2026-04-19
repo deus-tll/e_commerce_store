@@ -52,7 +52,7 @@ export class ProductRatingStats {
 	 * @param {number} [data.ratingSum=0]
 	 */
 	constructor(data = {}) {
-		this.averageRating = data.averageRating || 0;
+		this.averageRating = Number(Number(data.averageRating || 0).toFixed(1));
 		this.totalReviews = data.totalReviews || 0;
 		this.ratingSum = data.ratingSum || 0;
 
@@ -237,6 +237,7 @@ export class ProductDTO {
  */
 export class ShortProductDTO {
 	/** @type {string} @readonly */ id;
+	/** @type {string} @readonly */ categoryId;
 	/** @type {string} @readonly */ name;
 	/** @type {number} @readonly */ price;
 	/** @type {number} @readonly */ stock;
@@ -247,6 +248,7 @@ export class ShortProductDTO {
 	 */
 	constructor(entity) {
 		this.id = entity.id;
+		this.categoryId = entity.categoryId;
 		this.name = entity.name;
 		this.price = entity.price;
 		this.stock = entity.stock;

@@ -4,7 +4,7 @@ import cors from "cors";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import connectDB from "./infrastructure/db.js";
+import {connectDB, dropDatabase} from "./infrastructure/db.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
@@ -98,13 +98,22 @@ export class AppServer {
 	 * Executes seeding operations.
 	 */
 	async runSeeders() {
-		const categorySeeder = this.#container.get(SeederTypes.CATEGORY);
 		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
+		const dummyProductsSeeder = this.#container.get(SeederTypes.PRODUCTS_DUMMY_JSON);
 
 		console.log("[Server] Starting seeders...");
-		await categorySeeder.seed();
 		await adminSeeder.seed();
+		await dummyProductsSeeder.seed();
 		console.log("[Server] Seeding complete.");
+	}
+
+	async clearDatabase() {
+		if (config.database.dropOnStartup) {
+			await dropDatabase();
+		}
+		else {
+			console.log("[Database] Skipping drop of Database.");
+		}
 	}
 
 	/**
@@ -113,6 +122,8 @@ export class AppServer {
 	async start() {
 		try {
 			await connectDB();
+			// only works in development and with DROP_DB=true in .env
+			await this.clearDatabase();
 
 			this.#container.verify();
 

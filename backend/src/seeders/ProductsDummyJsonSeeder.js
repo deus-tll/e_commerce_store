@@ -1,0 +1,252 @@
+import {ICategoryService} from "../interfaces/category/ICategoryService.js";
+import {IProductService} from "../interfaces/product/IProductService.js";
+import {IUserService} from "../interfaces/user/IUserService.js";
+import {IReviewService} from "../interfaces/review/IReviewService.js";
+
+import {
+    CreateCategoryDTO,
+    CreateProductDTO,
+    ProductAttribute,
+    CreateUserDTO,
+    CreateReviewDTO
+} from "../domain/index.js";
+
+import {BaseSeeder} from "./BaseSeeder.js";
+
+import {UserRoles} from "../constants/app.js";
+import {config} from "../config.js";
+
+/**
+ * @typedef {Object} DummyJsonProduct
+ * @property {string} title
+ * @property {string} description
+ * @property {number} price
+ * @property {number} stock
+ * @property {string} category
+ * @property {string} thumbnail
+ * @property {string[]} images
+ * @property {number} rating
+ * @property {string} [brand]
+ * @property {Object} dimensions
+ * @property {number} dimensions.width
+ * @property {number} dimensions.height
+ * @property {number} dimensions.depth
+ * @property {number} weight
+ * @property {DummyJsonReview[]} reviews
+ */
+
+/**
+ * @typedef {Object} DummyJsonReview
+ * @property {number} rating
+ * @property {string} comment
+ * @property {string} reviewerName
+ * @property {string} reviewerEmail
+ */
+
+const ALLOWED_ATTRIBUTES = {
+    BRAND: "Brand",
+    WEIGHT: "Weight",
+    WIDTH: "Width",
+    HEIGHT: "Height",
+    DEPTH: "Depth",
+};
+
+export class ProductsDummyJsonSeeder extends BaseSeeder {
+    /** @type {ICategoryService} */ #categoryService;
+    /** @type {IProductService} */ #productService;
+    /** @type {IUserService} */ #userService;
+    /** @type {IReviewService} */ #reviewService;
+
+    #categoryMap = new Map();
+    #userMap = new Map();
+
+    /**
+     * @param {ICategoryService} categoryService
+     * @param {IProductService} productService
+     * @param {IUserService} userService
+     * @param {IReviewService} reviewService
+     */
+    constructor(categoryService, productService, userService, reviewService) {
+        super();
+        this.#categoryService = categoryService;
+        this.#productService = productService;
+        this.#userService = userService;
+        this.#reviewService = reviewService;
+    }
+
+    async #isDatabaseNotEmpty() {
+        const [categoryResult, productResult] = await Promise.all([
+            this.#categoryService.getAll(1, 1),
+            this.#productService.getAll(1, 1)
+        ]);
+        return categoryResult.pagination.total > 0 || productResult.pagination.total > 0;
+    }
+
+    async #fetchExternalProducts() {
+        const response = await fetch(
+            `${config.app.dummyJsonProductsUrl}?limit=${config.app.dummyJsonProductsLimit}`
+        );
+        if (!response.ok) {
+            console.error(`Failed to fetch products: ${response.statusText}`);
+            return [];
+        }
+        const { products } = await response.json();
+        return products || [];
+    }
+
+    /**
+     * @param {string} slug
+     * @param {string} fallbackImage
+     * @returns {Promise<string>} categoryId
+     */
+    async #getOrCreateCategory(slug, fallbackImage) {
+        if (this.#categoryMap.has(slug)) {
+            return this.#categoryMap.get(slug);
+        }
+
+        const categoryName = this.#formatName(slug);
+        const dto = new CreateCategoryDTO({
+            name: categoryName,
+            image: fallbackImage,
+            allowedAttributes: [
+                ALLOWED_ATTRIBUTES.BRAND,
+                ALLOWED_ATTRIBUTES.WEIGHT,
+                ALLOWED_ATTRIBUTES.WIDTH,
+                ALLOWED_ATTRIBUTES.HEIGHT,
+                ALLOWED_ATTRIBUTES.DEPTH
+            ],
+        });
+
+        const created = await this.#categoryService.create(dto);
+        this.#categoryMap.set(slug, created.id);
+        console.log(`[Seeder] Created category: ${created.name}`);
+        return created.id;
+    }
+
+    /**
+     * @param {DummyJsonProduct} p
+     * @param {string} categoryId
+     */
+    async #createProduct(p, categoryId) {
+        const mainImage = (p.images && p.images.length > 0)
+            ? p.images[0]
+            : p.thumbnail;
+
+        const additionalImages = (p.images && p.images.length > 1)
+            ? p.images.slice(1)
+            : [];
+
+        const val = (v) => v ?? "N/A";
+
+        const attributes = [
+            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.BRAND, value: val(p.brand) }),
+            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.WEIGHT, value: val(p.weight) }),
+            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.WIDTH, value: val(p.dimensions?.width) }),
+            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.HEIGHT, value: val(p.dimensions?.height) }),
+            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.DEPTH, value: val(p.dimensions?.depth) })
+        ];
+
+        const dto = new CreateProductDTO({
+            name: p.title,
+            description: p.description,
+            price: p.price,
+            stock: p.stock,
+            categoryId,
+            isFeatured: p.rating > 4.5,
+            images: { mainImage, additionalImages },
+            attributes
+        });
+
+        const created = await this.#productService.create(dto);
+        console.log(`[Seeder] Created product: ${created.name}`);
+        return created;
+    }
+
+    /**
+     * @param {DummyJsonReview} reviewData
+     * @returns {Promise<string>} userId
+     */
+    async #getOrCreateUser(reviewData) {
+        const email = reviewData.reviewerEmail;
+        if (this.#userMap.has(email)) {
+            return this.#userMap.get(email);
+        }
+
+        const dto = new CreateUserDTO({
+            name: reviewData.reviewerName,
+            email: email,
+            password: config.app.defaultSeederUserPassword,
+            role: UserRoles.CUSTOMER,
+            isVerified: true
+        });
+
+        const created = await this.#userService.create(dto);
+        this.#userMap.set(email, created.id);
+        return created.id;
+    }
+
+    /**
+     * @param {string} productId
+     * @param {DummyJsonReview[]} reviews
+     */
+    async #processReviews(productId, reviews) {
+        const processedUsersForThisProduct = new Set();
+
+        for (const reviewData of reviews) {
+            const userId = await this.#getOrCreateUser(reviewData);
+
+            if (processedUsersForThisProduct.has(userId)) {
+                console.warn(`[Seeder] Skipping duplicate review from user ${userId} for product ${productId}`);
+                continue;
+            }
+
+            const dto = new CreateReviewDTO({
+                rating: reviewData.rating,
+                comment: reviewData.comment
+            });
+
+            try {
+                await this.#reviewService.create(productId, userId, dto);
+                processedUsersForThisProduct.add(userId);
+            } catch (error) {
+                console.error(`[Seeder] Could not create review: ${error.message}`);
+            }
+        }
+    }
+
+    #formatName(slug) {
+        if (!slug) return "Unknown";
+        return slug
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+
+    async seed() {
+        try {
+            console.log("[Seeder] Starting DummyJson seeding process...");
+
+            if (await this.#isDatabaseNotEmpty()) {
+                console.log("[Seeder] Database is not empty. Skipping seeding.");
+                return;
+            }
+
+            const products = await this.#fetchExternalProducts();
+            if (!products.length) return;
+
+            for (const p of products) {
+                const categoryId = await this.#getOrCreateCategory(p.category, p.thumbnail);
+                const createdProduct = await this.#createProduct(p, categoryId);
+
+                if (p.reviews && Array.isArray(p.reviews) && p.reviews.length > 0) {
+                    await this.#processReviews(createdProduct.id, p.reviews);
+                }
+            }
+
+            console.log("[Seeder] DummyJson seeding completed successfully!");
+        }
+        catch(error) {
+            console.error("[Seeder] Error during seeding:", error.message);
+        }
+    }
+}

@@ -29,7 +29,7 @@ export function createProductsRouter(productController, authService) {
 		productController.getFacets
 	);
 	router.get("/featured", productController.getFeatured);
-	router.get("/recommended", productController.getRecommended);
+	router.get("/recommended", protectRoute, productController.getRecommended);
 	router.get("/",
 		validationMiddleware(getAllProductsPublicSchema),
 		productController.getAll

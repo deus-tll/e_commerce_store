@@ -79,7 +79,6 @@ import {createReviewsRouter} from "../http/routers/reviewsRouterFactory.js";
 import {createUsersRouter} from "../http/routers/usersRouterFactory.js";
 
 import {AdminSeeder} from "../seeders/AdminSeeder.js";
-import {CategorySeeder} from "../seeders/CategorySeeder.js";
 
 import {
 	RepositoryTypes,
@@ -97,6 +96,7 @@ import {
 
 import {config} from "../config.js";
 import {createPaymentsWebhookRouter} from "../http/routers/paymentsWebhookRouterFactory.js";
+import {ProductsDummyJsonSeeder} from "../seeders/ProductsDummyJsonSeeder.js";
 
 class Container {
 	constructor() {
@@ -314,7 +314,7 @@ container.register(ControllerTypes.CATEGORY, CategoryController, [ServiceTypes.C
 container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
 container.register(ControllerTypes.ORDER, OrderController, [ServiceTypes.ORDER]);
 container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.PAYMENT]);
-container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT]);
+container.register(ControllerTypes.PRODUCT, ProductController, [ServiceTypes.PRODUCT, ServiceTypes.CART]);
 container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
 container.register(ControllerTypes.USER, UserController, [ServiceTypes.USER, ServiceTypes.USER_STATS]);
 // ====================================================================
@@ -391,8 +391,13 @@ container.register(RouterTypes.USER, (c) => {
 
 // 7. Seeders (depends on services)
 // ====================================================================
-container.register(SeederTypes.CATEGORY, CategorySeeder, [ServiceTypes.CATEGORY]);
 container.register(SeederTypes.ADMIN, AdminSeeder, [ServiceTypes.USER]);
+container.register(SeederTypes.PRODUCTS_DUMMY_JSON, ProductsDummyJsonSeeder, [
+	ServiceTypes.CATEGORY,
+	ServiceTypes.PRODUCT,
+	ServiceTypes.USER,
+	ServiceTypes.REVIEW
+]);
 // ====================================================================
 
 export default container;
