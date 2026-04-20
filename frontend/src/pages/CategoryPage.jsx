@@ -4,6 +4,8 @@ import {useParams} from "react-router-dom";
 import {ProductFilterKeys, useProductStore} from "../stores/useProductStore.js";
 import {useCategoryStore} from "../stores/useCategoryStore.js";
 
+import {PRODUCT_SORT_OPTIONS} from "../constants/productSortOptions.js";
+
 import ProductGrid from "../components/product/ProductGrid.jsx";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
@@ -13,13 +15,6 @@ import Pagination from "../components/ui/Pagination.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import Button from "../components/ui/Button.jsx";
 import SortSelector from "../components/ui/SortSelector.jsx";
-
-const PRODUCT_SORT_OPTIONS = [
-	{ label: "Newest First", value: "createdAt-desc" },
-	{ label: "Price: Low to High", value: "price-asc" },
-	{ label: "Price: High to Low", value: "price-desc" },
-	{ label: "Top Rated", value: "ratingStats.averageRating-desc" },
-];
 
 const CategoryPage = () => {
 	const { category: categorySlug } = useParams();
@@ -77,6 +72,9 @@ const CategoryPage = () => {
 	}, [updateFilter]);
 
 	const isLoading = productsLoading || categoryLoading;
+	const isWrongCategory = filters.categorySlug !== categorySlug;
+	const isActuallyLoading = isLoading || isWrongCategory;
+
 	const selectedAttributes = filters.attributes;
 
     return (
@@ -151,7 +149,7 @@ const CategoryPage = () => {
 		        </aside>
 
 		        <div className="flex-1">
-			        {isLoading ? (
+			        {isActuallyLoading ? (
 				        <LoadingSpinner fullscreen={false} />
 			        ) : products.length === 0 ? (
 				        <EmptyState
@@ -166,15 +164,7 @@ const CategoryPage = () => {
 			        ) : (
 				        <>
 					        <ProductGrid products={products} />
-					        {pagination?.pages > 1 && (
-						        <div className="flex justify-center pt-10">
-							        <Pagination
-								        page={pagination.page}
-								        pages={pagination.pages}
-								        onChange={setPage}
-							        />
-						        </div>
-					        )}
+							<Pagination page={pagination.page} pages={pagination.pages} onChange={setPage} />
 				        </>
 			        )}
 		        </div>

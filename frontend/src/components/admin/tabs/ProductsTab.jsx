@@ -3,6 +3,8 @@ import {PlusCircle, Package, FilterX, Filter} from "lucide-react";
 
 import {ProductFilterKeys, useProductStore} from "../../../stores/useProductStore.js";
 
+import {ADMIN_PRODUCT_SORT_OPTIONS} from "../../../constants/productSortOptions.js";
+
 import {createProductColumns} from "../tableColumns.jsx";
 
 import DataList from "../DataList.jsx";
@@ -16,15 +18,6 @@ import PaginationInfo from "../../ui/PaginationInfo.jsx";
 import Modal from "../../ui/Modal.jsx";
 import IconButton from "../../ui/IconButton.jsx";
 import SortSelector from "../../ui/SortSelector.jsx";
-
-const PRODUCT_SORT_OPTIONS = [
-    { label: "Newest First", value: "createdAt-desc" },
-    { label: "Oldest First", value: "createdAt-asc" },
-    { label: "Price: Low to High", value: "price-asc" },
-    { label: "Price: High to Low", value: "price-desc" },
-    { label: "Name: A-Z", value: "name-asc" },
-    { label: "Top Rated", value: "ratingStats.averageRating-desc" },
-];
 
 const ProductsTab = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -114,7 +107,7 @@ const ProductsTab = () => {
                         <SortSelector
                             sortBy={filters.sort.sortBy}
                             order={filters.sort.order}
-                            options={PRODUCT_SORT_OPTIONS}
+                            options={ADMIN_PRODUCT_SORT_OPTIONS}
                             onSortChange={(newSort) => updateFilter(ProductFilterKeys.SORT, newSort)}
                         />
                     </div>

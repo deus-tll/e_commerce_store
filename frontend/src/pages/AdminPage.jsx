@@ -1,7 +1,7 @@
 import {useSearchParams} from "react-router-dom";
-import {PlusCircle, ShoppingBasket, BarChart, Users, ClipboardCheck} from "lucide-react";
 
-import {AdminTabs} from "../constants/app.js";
+import {ADMIN_TABS} from "../constants/app.js";
+import {ADMIN_PAGE_TABS} from "../constants/navigation.jsx";
 
 import ProductsTab from "../components/admin/tabs/ProductsTab.jsx";
 import CategoriesTab from "../components/admin/tabs/CategoriesTab.jsx";
@@ -15,25 +15,17 @@ import SectionHeader from "../components/ui/SectionHeader.jsx";
 import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 
-const tabs = [
-	{ id: AdminTabs.PRODUCTS, label: "Products", icon: ShoppingBasket },
-	{ id: AdminTabs.CATEGORIES, label: "Categories", icon: PlusCircle },
-	{ id: AdminTabs.ORDERS, label: "Orders", icon: ClipboardCheck },
-	{ id: AdminTabs.USERS, label: "Users", icon: Users },
-	{ id: AdminTabs.ANALYTICS, label: "Analytics", icon: BarChart },
-];
-
 const AdminPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const activeTab = searchParams.get("tab") || AdminTabs.PRODUCTS;
+	const activeTab = searchParams.get("tab") || ADMIN_TABS.PRODUCTS;
 
 	const setActiveTab = (tabId) => {
 		setSearchParams({ tab: tabId });
 	};
 
 	const isTabActive = (tabId) => {
-		if (tabId === AdminTabs.USERS) {
-			return [AdminTabs.USERS, AdminTabs.USER_STATS].includes(activeTab);
+		if (tabId === ADMIN_TABS.USERS) {
+			return [ADMIN_TABS.USERS, ADMIN_TABS.USER_STATS].includes(activeTab);
 		}
 		return activeTab === tabId;
 	};
@@ -43,7 +35,7 @@ const AdminPage = () => {
             <SectionHeader title="Admin Dashboard" />
             <Card className="p-6 mb-8">
                 <div className="flex justify-center flex-wrap gap-3">
-	                {tabs.map((tab) => {
+	                {ADMIN_PAGE_TABS.map((tab) => {
 		                const { icon: Icon } = tab;
 
 		                return (
@@ -61,32 +53,32 @@ const AdminPage = () => {
                 </div>
             </Card>
 
-            {activeTab === AdminTabs.PRODUCTS && <ProductsTab />}
-            {activeTab === AdminTabs.CATEGORIES && <CategoriesTab />}
-            {activeTab === AdminTabs.ORDERS && <OrdersTab />}
+            {activeTab === ADMIN_TABS.PRODUCTS && <ProductsTab />}
+            {activeTab === ADMIN_TABS.CATEGORIES && <CategoriesTab />}
+            {activeTab === ADMIN_TABS.ORDERS && <OrdersTab />}
 
-	        {(activeTab === AdminTabs.USERS || activeTab === AdminTabs.USER_STATS) && (
+	        {(activeTab === ADMIN_TABS.USERS || activeTab === ADMIN_TABS.USER_STATS) && (
 		        <div className="space-y-6">
 			        <div className="flex items-center gap-2">
 				        <Button
-					        variant={activeTab === AdminTabs.USERS ? "primary" : "secondary"}
-					        onClick={() => setActiveTab(AdminTabs.USERS)}
+					        variant={activeTab === ADMIN_TABS.USERS ? "primary" : "secondary"}
+					        onClick={() => setActiveTab(ADMIN_TABS.USERS)}
 				        >
 					        Manage
 				        </Button>
 				        <Button
-					        variant={activeTab === AdminTabs.USER_STATS ? "primary" : "secondary"}
-					        onClick={() => setActiveTab(AdminTabs.USER_STATS)}
+					        variant={activeTab === ADMIN_TABS.USER_STATS ? "primary" : "secondary"}
+					        onClick={() => setActiveTab(ADMIN_TABS.USER_STATS)}
 				        >
 					        Stats
 				        </Button>
 			        </div>
 
-			        {activeTab === AdminTabs.USERS ? <UsersTab /> : <UserStatsTab />}
+			        {activeTab === ADMIN_TABS.USERS ? <UsersTab /> : <UserStatsTab />}
 		        </div>
 	        )}
 
-            {activeTab === AdminTabs.ANALYTICS && <AnalyticsTab />}
+            {activeTab === ADMIN_TABS.ANALYTICS && <AnalyticsTab />}
         </Container>
     );
 };

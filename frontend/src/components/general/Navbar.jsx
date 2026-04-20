@@ -4,7 +4,7 @@ import {ShoppingCart, UserPlus, LogIn, LogOut, Lock, User, Search} from "lucide-
 import {useAuthStore} from "../../stores/useAuthStore.js";
 import {useCartStore} from "../../stores/useCartStore.js";
 
-import {UserRoles} from "../../constants/domain.js";
+import {USER_ROLES} from "../../constants/domain.js";
 
 import SearchForm from "../ui/SearchForm.jsx";
 import Button from "../ui/Button.jsx";
@@ -16,12 +16,12 @@ const Navbar = () => {
 	const [search, setSearch] = useState("");
 	const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
-	const { user, logout } = useAuthStore();
+	const { user, checkingAuth, logout } = useAuthStore();
 	const { cart } = useCartStore();
 
 	const navigate = useNavigate();
 
-	const isAdmin = user?.role === UserRoles.ADMIN;
+	const isAdmin = user?.role === USER_ROLES.ADMIN;
 
 	const handleSearch = (e) => {
 		if (e) e.preventDefault();
@@ -63,56 +63,70 @@ const Navbar = () => {
 		                    Shop
 	                    </Link>
 
-						{user && (
-							<Link to="/cart"
-							      className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
-								<ShoppingCart className="inline-block mr-1 group-hover:text-emerald-400" size={20}/>
+						{!checkingAuth
+							? (
+								<>
+									{user
+										? (
+											<>
+												<Link
+													to="/cart"
+													className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out"
+												>
+													<ShoppingCart className="inline-block mr-1 group-hover:text-emerald-400" size={20}/>
 
-								{cart.length > 0 &&
-									<span className='absolute -top-1.5 -right-1 bg-emerald-500 text-white rounded-full px-1.5 py-0.6
-									text-xs group-hover:bg-emerald-400 transition duration-300 ease-in-out'
-									>
-										{cart.length}
-									</span>
-								}
-							</Link>
-						)}
+													{cart.length > 0 &&
+														<span className='absolute -top-1.5 -right-1 bg-emerald-500 text-white rounded-full px-1.5 py-0.6 text-xs
+															group-hover:bg-emerald-400 transition duration-300 ease-in-out'
+														>
+															{cart.length}
+														</span>
+													}
+												</Link>
 
-						{ user ? (
-							<>
-								<Link to="/profile" className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
-									<User className="inline-block mr-1 group-hover:text-emerald-400" size={20} />
-								</Link>
-								{isAdmin && (
-									<Link
-										to="admin-dashboard"
-										className="border border-emerald-600 text-emerald-400 px-3 py-1.5 rounded-full font-medium transition duration-300 ease-in-out flex items-center hover:bg-emerald-700/40"
-									>
-										<Lock className="inline-block mr-1" size={18} />
-										<span className="hidden lg:inline">Dashboard</span>
-									</Link>
-								)}
-	                            <Button onClick={logout} variant="secondary" className="flex items-center gap-2">
-	                                <LogOut size={18} />
-		                            <span className="hidden lg:inline">Logout</span>
-	                            </Button>
-							</>
-						) : (
-							<>
-                                <Link to="/signup">
-                                    <Button className="flex items-center gap-2">
-                                        <UserPlus size={18} />
-                                        Sign Up
-                                    </Button>
-                                </Link>
-                                <Link to="/login">
-                                    <Button variant="secondary" className="flex items-center gap-2">
-                                        <LogIn size={18} />
-                                        Login
-                                    </Button>
-                                </Link>
-							</>
-						)}
+												<Link to="/profile" className="relative group text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out">
+													<User className="inline-block mr-1 group-hover:text-emerald-400" size={20} />
+												</Link>
+
+												{isAdmin && (
+													<Link
+														to="admin-dashboard"
+														className="border border-emerald-600 text-emerald-400 px-3 py-1.5 rounded-full font-medium transition duration-300 ease-in-out flex items-center hover:bg-emerald-700/40"
+													>
+														<Lock className="inline-block mr-1" size={18} />
+														<span className="hidden lg:inline">Dashboard</span>
+													</Link>
+												)}
+
+												<Button onClick={logout} variant="secondary" className="flex items-center gap-2">
+													<LogOut size={18} />
+													<span className="hidden lg:inline">Logout</span>
+												</Button>
+											</>
+										)
+										: (
+											<>
+												<Link to="/signup">
+													<Button className="flex items-center gap-2">
+														<UserPlus size={18} />
+														Sign Up
+													</Button>
+												</Link>
+												<Link to="/login">
+													<Button variant="secondary" className="flex items-center gap-2">
+														<LogIn size={18} />
+														Login
+													</Button>
+												</Link>
+											</>
+										)
+									}
+								</>
+							)
+							: (
+								<div className="w-[100px] md:w-[200px]" />
+							)
+						}
 					</nav>
 				</div>
 

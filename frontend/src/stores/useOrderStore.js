@@ -2,8 +2,8 @@ import {create} from "zustand";
 
 import orderApi from "../api/orderApi.js";
 
-import {PaginationLimits} from "../constants/app.js";
-import {OrderStatusValues} from "../constants/domain.js";
+import {PAGINATION_LIMITS} from "../constants/app.js";
+import {ORDER_STATUS_VALUES} from "../constants/domain.js";
 
 import {
 	getInitialPagination,
@@ -43,11 +43,11 @@ export const useOrderStore = create((set, get) => ({
 	error: null,
 
 	orders: [],
-	pagination: getInitialPagination(PaginationLimits.ORDERS),
+	pagination: getInitialPagination(PAGINATION_LIMITS.ORDERS),
 	filters: INITIAL_ORDER_FILTERS,
 
 	myOrders: [],
-	myOrdersPagination: getInitialPagination(PaginationLimits.ORDERS),
+	myOrdersPagination: getInitialPagination(PAGINATION_LIMITS.ORDERS),
 	myOrdersFilters: INITIAL_ORDER_FILTERS,
 
 	fetchOrders: async (scope = OrderStoreScope.ADMIN) => {
@@ -115,7 +115,7 @@ export const useOrderStore = create((set, get) => ({
 	}),
 
 	updateFilter: async (key, value, scope = OrderStoreScope.ADMIN) => {
-		if(key === OrderFilterKeys.STATUS && value !== "" && !OrderStatusValues.includes(value)) {
+		if(key === OrderFilterKeys.STATUS && value !== "" && !ORDER_STATUS_VALUES.includes(value)) {
 			set({ error: "Invalid status selected." });
 			return;
 		}
@@ -129,7 +129,7 @@ export const useOrderStore = create((set, get) => ({
 		await handleClearFilters(
 			set, () => get().fetchOrders(scope),
 			INITIAL_ORDER_FILTERS, false,
-			{ limit: PaginationLimits.ORDERS, stateKeys: { pagination, filters } }
+			{ limit: PAGINATION_LIMITS.ORDERS, stateKeys: { pagination, filters } }
 		);
 	},
 	clearFiltersAndFetch: async (scope = OrderStoreScope.ADMIN) => {
@@ -137,7 +137,7 @@ export const useOrderStore = create((set, get) => ({
 		await handleClearFilters(
 			set, () => get().fetchOrders(scope),
 			INITIAL_ORDER_FILTERS, true,
-			{ limit: PaginationLimits.ORDERS, stateKeys: { pagination, filters } }
+			{ limit: PAGINATION_LIMITS.ORDERS, stateKeys: { pagination, filters } }
 		);
 	},
 

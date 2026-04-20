@@ -2,8 +2,8 @@ import {create} from "zustand";
 
 import userApi from "../api/userApi.js";
 
-import {PaginationLimits} from "../constants/app.js";
-import {UserRoleValues} from "../constants/domain.js";
+import {PAGINATION_LIMITS} from "../constants/app.js";
+import {USER_ROLE_VALUES} from "../constants/domain.js";
 
 import {
 	getInitialPagination,
@@ -27,7 +27,7 @@ const INITIAL_USER_FILTERS = Object.freeze({
 
 export const useUserStore = create((set, get) => ({
 	users: [],
-	pagination: getInitialPagination(PaginationLimits.USERS),
+	pagination: getInitialPagination(PAGINATION_LIMITS.USERS),
 	filters: INITIAL_USER_FILTERS,
 	loading: false,
 	error: null,
@@ -72,7 +72,7 @@ export const useUserStore = create((set, get) => ({
 	}),
 
 	updateFilter: async (key, value) => {
-		if(key === UserFilterKeys.ROLE && value !== "" && !UserRoleValues.includes(value)) {
+		if(key === UserFilterKeys.ROLE && value !== "" && !USER_ROLE_VALUES.includes(value)) {
 			set({ error: "Invalid role selected." });
 			return;
 		}
@@ -80,10 +80,10 @@ export const useUserStore = create((set, get) => ({
 		await handleUpdateFilter(set, get().fetchUsers, key, value);
 	},
 	clearFilters: () => handleClearFilters(
-		set, get().fetchUsers, INITIAL_USER_FILTERS, false, { limit: PaginationLimits.USERS }
+		set, get().fetchUsers, INITIAL_USER_FILTERS, false, { limit: PAGINATION_LIMITS.USERS }
 	),
 	clearFiltersAndFetch: async () => await handleClearFilters(
-		set, get().fetchUsers, INITIAL_USER_FILTERS, true, { limit: PaginationLimits.USERS }
+		set, get().fetchUsers, INITIAL_USER_FILTERS, true, { limit: PAGINATION_LIMITS.USERS }
 	),
 
 	clearError: () => set({ error: null })

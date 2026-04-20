@@ -2,7 +2,7 @@ import {useState, useEffect, useMemo} from "react";
 import {Filter, FilterX, UserPlus, Users} from "lucide-react";
 
 import {UserFilterKeys, useUserStore} from "../../../stores/useUserStore.js";
-import {UserRoleValues} from "../../../constants/domain.js";
+import {USER_ROLE_VALUES} from "../../../constants/domain.js";
 
 import {createUserColumns} from "../tableColumns.jsx";
 
@@ -88,7 +88,7 @@ const UsersTab = () => {
 		                            onChange={(e) => updateFilter(UserFilterKeys.ROLE, e.target.value)}
 	                            >
 		                            <option value="">All Roles</option>
-		                            {UserRoleValues.map((role) => (
+		                            {USER_ROLE_VALUES.map((role) => (
 			                            <option key={role} value={role}>
 				                            {role.charAt(0).toUpperCase() + role.slice(1)}
 			                            </option>

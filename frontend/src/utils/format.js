@@ -16,3 +16,11 @@ export const formatCurrency = (value, currency = "USD", locale = undefined) => {
     if (Number.isNaN(amount)) return "";
     return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 };
+
+export const formatStatusName = (status) => {
+    if (!status) return "Unknown";
+    return status
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}

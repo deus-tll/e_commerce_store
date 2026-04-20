@@ -2,7 +2,7 @@ import {create} from "zustand";
 
 import categoryApi from "../api/categoryApi.js";
 
-import {PaginationLimits, PaginationMaxLimits} from "../constants/app.js";
+import {PAGINATION_LIMITS, PAGINATION_MAX_LIMITS} from "../constants/app.js";
 
 import {
 	getInitialPagination,
@@ -22,7 +22,7 @@ const INITIAL_CATEGORY_FILTERS = Object.freeze({
 
 export const useCategoryStore = create((set, get) => ({
 	categories: [],
-	pagination: getInitialPagination(PaginationLimits.CATEGORIES),
+	pagination: getInitialPagination(PAGINATION_LIMITS.CATEGORIES),
 	filters: INITIAL_CATEGORY_FILTERS,
 
 	searchResults: [],
@@ -55,7 +55,7 @@ export const useCategoryStore = create((set, get) => ({
 	searchCategories: async (term) => await handleAsyncAction(set, {
 		action: () => categoryApi.getAll({
 			page: 1,
-			limit: PaginationMaxLimits.CATEGORIES,
+			limit: PAGINATION_MAX_LIMITS.CATEGORIES,
 			search: term
 		}),
 		onSuccess: (res) => set({ searchResults: res.data.categories }),
@@ -101,12 +101,12 @@ export const useCategoryStore = create((set, get) => ({
 	clearFilters: () => handleClearFilters(
 		set, get().fetchCategories,
 		INITIAL_CATEGORY_FILTERS, false,
-		{ limit: PaginationLimits.CATEGORIES }
+		{ limit: PAGINATION_LIMITS.CATEGORIES }
 	),
 	clearFiltersAndFetch: () => handleClearFilters(
 		set, get().fetchCategories,
 		INITIAL_CATEGORY_FILTERS, true,
-		{ limit: PaginationLimits.CATEGORIES }
+		{ limit: PAGINATION_LIMITS.CATEGORIES }
 	),
 
 	clearCategories: () => set({ categories: [] }),

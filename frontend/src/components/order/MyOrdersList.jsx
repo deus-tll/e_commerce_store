@@ -1,7 +1,7 @@
 import {Link} from "react-router-dom";
 import {ChevronRight} from "lucide-react";
 
-import {OrderStatusStyles} from "../../constants/domain.js";
+import {ORDER_STATUS_STYLES} from "../../constants/domain.js";
 import {formatCurrency, formatDate} from "../../utils/format.js";
 
 import Card from "../ui/Card.jsx";
@@ -44,7 +44,7 @@ const MyOrdersList = ({ orders, pagination, onPageChange }) => {
 							</div>
 
 							<div className="flex flex-row sm:flex-col justify-between items-end gap-2 border-t sm:border-t-0 pt-4 sm:pt-0 border-gray-800">
-								<div className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${OrderStatusStyles[order.status]}`}>
+								<div className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${ORDER_STATUS_STYLES[order.status]}`}>
 									{order.status}
 								</div>
 
@@ -61,11 +61,7 @@ const MyOrdersList = ({ orders, pagination, onPageChange }) => {
 				</Link>
 			))}
 
-			{pagination && pagination.pages > 1 && (
-				<div className="p-4">
-					<Pagination page={pagination.page} pages={pagination.pages} onChange={onPageChange} />
-				</div>
-			)}
+			<Pagination page={pagination.page} pages={pagination.pages} onChange={onPageChange} />
 		</div>
 	);
 };

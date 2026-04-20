@@ -1,4 +1,4 @@
-export const AdminTabs = Object.freeze({
+export const ADMIN_TABS = Object.freeze({
 	CATEGORIES: "categories",
 	PRODUCTS: "products",
 	ORDERS: "orders",
@@ -7,12 +7,12 @@ export const AdminTabs = Object.freeze({
 	ANALYTICS: "analytics",
 });
 
-export const ProfileTabs = Object.freeze({
+export const PROFILE_TABS = Object.freeze({
 	ACCOUNT: "account",
 	MY_ORDERS: "my_orders",
 });
 
-export const PaginationLimits = Object.freeze({
+export const PAGINATION_LIMITS = Object.freeze({
 	CATEGORIES: 12,
 	PRODUCTS: 12,
 	USERS: 12,
@@ -20,6 +20,6 @@ export const PaginationLimits = Object.freeze({
 	ORDERS: 12
 });
 
-export const PaginationMaxLimits = Object.freeze({
+export const PAGINATION_MAX_LIMITS = Object.freeze({
 	CATEGORIES: 50
 });

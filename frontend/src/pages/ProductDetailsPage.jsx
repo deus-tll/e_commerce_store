@@ -59,7 +59,7 @@ const ProductDetailsPage = () => {
 
     if (loading) return <LoadingSpinner />;
 
-    if (error || (!loading && !currentProduct)) {
+    if (error) {
         return (
             <Container size="lg" className="py-20 text-center">
                 <div className="flex flex-col items-center gap-4">
@@ -72,7 +72,7 @@ const ProductDetailsPage = () => {
         );
     }
 
-    if (currentProduct?.id !== id) return <LoadingSpinner />;
+    if (!currentProduct || currentProduct.id !== id) return <LoadingSpinner />;
 
     const isAddingToCart = itemLoadingId === currentProduct.id;
 

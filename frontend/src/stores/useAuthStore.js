@@ -1,13 +1,9 @@
 import {create} from "zustand";
 
 import axios from "../config/axios.js";
-import {authApi, AuthPaths, NoRetryUrls} from "../api/authApi.js";
+import {authApi, AuthPaths} from "../api/authApi.js";
 
 import {handleAsyncAction} from "../utils/storeHelpers.js";
-
-const PUBLIC_PATHS = [
-	"/", AuthPaths.SIGNUP, AuthPaths.LOGIN, AuthPaths.FORGOT_PASSWORD, AuthPaths.RESET_PASSWORD, AuthPaths.VERIFY_EMAIL
-];
 
 export const useAuthStore = create((set) => ({
 	user: null,
@@ -103,10 +99,19 @@ function canRetryRequest(error, originalRequest) {
 	if (originalRequest._retry) return false;
 
 	const url = originalRequest.url || "";
-	if (NoRetryUrls.some(noRetryUrl => url.includes(noRetryUrl))) return false;
+
+	if (url.includes(AuthPaths.REFRESH_TOKEN)) return false;
+	const criticalExclusions = [
+		AuthPaths.LOGIN,
+		AuthPaths.SIGNUP,
+		AuthPaths.FORGOT_PASSWORD,
+		AuthPaths.VERIFY_EMAIL,
+		AuthPaths.RESET_PASSWORD
+	];
+
+	if (criticalExclusions.some(path => url.includes(path))) return false;
 
 	const errorCode = error.response?.data?.code;
-
 	return errorCode === "TOKEN_EXPIRED" || errorCode === "INVALID_TOKEN";
 }
 
@@ -146,10 +151,21 @@ function queueFailedRequest(originalRequest) {
 async function handleTokenRefresh(originalRequest) {
 	isRefreshing = true;
 
+	const handleFailure = async (err) => {
+		// Refresh failed. Reject all queued requests
+		processQueue(err);
+
+		// If refresh failed, handle the critical logout/redirect
+		await useAuthStore.getState().logout();
+
+		// Propagate the refresh failure
+		return Promise.reject(err);
+	}
+
 	try {
 		// Call the refresh logic from the store
 		const success = await useAuthStore.getState().refreshToken();
-		if (!success) throw new Error("Refresh failed");
+		if (!success) return await handleFailure(new Error("Refresh failed"));
 
 		// Refresh succeeded. Resolve all queued requests
 		processQueue(null);
@@ -158,20 +174,7 @@ async function handleTokenRefresh(originalRequest) {
 		return axios(originalRequest);
 	}
 	catch (refreshError) {
-		// Refresh failed. Reject all queued requests
-		processQueue(refreshError);
-
-		// If refresh failed, handle the critical logout/redirect
-		if (typeof window !== 'undefined') {
-			const currentPath = window.location.pathname;
-
-			if (!PUBLIC_PATHS.includes(currentPath)) {
-				window.location.href = '/login';
-			}
-		}
-
-		// Propagate the refresh failure
-		return Promise.reject(refreshError);
+		return await handleFailure(refreshError);
 	}
 	finally {
 		isRefreshing = false;

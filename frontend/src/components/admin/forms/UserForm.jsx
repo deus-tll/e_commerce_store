@@ -4,7 +4,7 @@ import {Save, User, Mail, Shield, CheckCircle, Lock, UserPlus} from "lucide-reac
 import useFormData from "../../../hooks/useFormData.js";
 import {validateEmail, validatePassword, validateRequired} from "../../../utils/validators.js";
 import {getFormDataPayloadForEdit} from "../../../utils/helpers.js";
-import {UserRoles} from "../../../constants/domain.js";
+import {USER_ROLES} from "../../../constants/domain.js";
 
 import {useUserStore} from "../../../stores/useUserStore.js";
 
@@ -16,7 +16,7 @@ import ErrorMessage from "../../ui/ErrorMessage.jsx";
 const getInitialState = (user) => ({
 	name: user?.name || "",
 	email: user?.email || "",
-	role: user?.role || UserRoles.CUSTOMER,
+	role: user?.role || USER_ROLES.CUSTOMER,
 	password: "",
 	isVerified: user?.isVerified || false
 });

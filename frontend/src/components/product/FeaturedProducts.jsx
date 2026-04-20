@@ -1,13 +1,28 @@
 import Carousel from "../ui/Carousel.jsx";
 import ProductCard from "./ProductCard.jsx";
+import {useProductStore} from "../../stores/useProductStore.js";
+import {useEffect} from "react";
 
-const FeaturedProducts = ({ featuredProducts }) => {
+const FeaturedProducts = () => {
+	const {
+		featuredProducts, featuredProductsLoading,
+		fetchFeaturedProducts, clearFeaturedProducts
+	} = useProductStore();
+
 	const responsiveSettings = [
 		{ width: 0, items: 1 },
 		{ width: 640, items: 2 },
 		{ width: 1024, items: 3 },
 		{ width: 1280, items: 4 }
 	];
+
+	useEffect(() => {
+		void fetchFeaturedProducts();
+		return () => clearFeaturedProducts();
+	}, [fetchFeaturedProducts, clearFeaturedProducts]);
+
+	if (featuredProductsLoading && featuredProducts.length === 0) return null;
+	if (featuredProducts.length === 0) return null;
 
 	return (
 		<div className="py-12">
@@ -20,9 +35,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 					items={featuredProducts}
 					responsive={responsiveSettings}
 					renderItem={(product) => (
-						<div key={product._id} className="w-full flex-shrink-0 px-2">
-							<ProductCard product={product} />
-						</div>
+						<ProductCard product={product} />
 					)}
 				/>
 			</div>

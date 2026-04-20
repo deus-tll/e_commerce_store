@@ -2,7 +2,7 @@ import {create} from "zustand";
 
 import reviewApi from "../api/reviewApi.js";
 
-import {PaginationLimits} from "../constants/app.js";
+import {PAGINATION_LIMITS} from "../constants/app.js";
 
 import {
 	getInitialPagination,
@@ -19,7 +19,7 @@ const prepareReviewData = (data) => ({
 
 export const useReviewStore = create((set, get) => ({
 	reviews: [],
-	pagination: getInitialPagination(PaginationLimits.REVIEWS),
+	pagination: getInitialPagination(PAGINATION_LIMITS.REVIEWS),
 	filters: {},
 	loading: false,
 	error: null,
@@ -74,7 +74,7 @@ export const useReviewStore = create((set, get) => ({
 
 	clearReviews: () => set({
 		reviews: [],
-		pagination: getInitialPagination(PaginationLimits.REVIEWS),
+		pagination: getInitialPagination(PAGINATION_LIMITS.REVIEWS),
 		error: null
 	}),
 	clearError: () => set({ error: null })

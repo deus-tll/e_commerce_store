@@ -72,16 +72,11 @@ const ReviewsList = ({ productId }) => {
 						))}
 					</div>
 
-					{pagination?.pages > 1 && (
-						<div className="flex justify-center pt-4">
-							<Pagination
-								page={pagination.page}
-								pages={pagination.pages}
-								onChange={handlePageChange}
-								disabled={loading}
-							/>
-						</div>
-					)}
+					<Pagination
+						page={pagination.page}
+						pages={pagination.pages}
+						onChange={handlePageChange}
+					/>
 				</>
 			)}
 

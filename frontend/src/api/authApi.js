@@ -16,16 +16,6 @@ export const AuthPaths = Object.freeze({
 	CHANGE_PASSWORD: "change-password",
 });
 
-export const NoRetryUrls = [
-	pathWithBase(AuthPaths.SIGNUP),
-	pathWithBase(AuthPaths.LOGIN),
-	pathWithBase(AuthPaths.FORGOT_PASSWORD),
-	pathWithBase(AuthPaths.REFRESH_TOKEN),
-	pathWithBase(AuthPaths.VERIFY_EMAIL),
-	pathWithBase(AuthPaths.RESET_PASSWORD)
-];
-
-
 export const authApi = {
 	signup: (data) => api.post(pathWithBase(AuthPaths.SIGNUP), data),
 	login: (data) => api.post(pathWithBase(AuthPaths.LOGIN), data),
