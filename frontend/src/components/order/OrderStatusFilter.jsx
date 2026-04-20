@@ -1,5 +1,6 @@
-import {OrderStatusStyles, OrderStatusValues} from "../../constants/domain.js";
+import {ORDER_STATUS_STYLES, ORDER_STATUS_VALUES} from "../../constants/domain.js";
 import {Select} from "../ui/Input.jsx";
+import {formatStatusName} from "../../utils/format.js";
 
 const OrderStatusFilter = ({ value, onChange, label = "Filter by Status" }) => {
 	return (
@@ -8,13 +9,13 @@ const OrderStatusFilter = ({ value, onChange, label = "Filter by Status" }) => {
 
 			<Select
 				value={value}
-				className={OrderStatusStyles[value]}
+				className={ORDER_STATUS_STYLES[value]}
 				onChange={(e) => onChange(e.target.value)}
 			>
 				<option value="">All Statuses</option>
-				{OrderStatusValues.map((status) => (
+				{ORDER_STATUS_VALUES.map((status) => (
 					<option key={status} value={status}>
-						{status.charAt(0).toUpperCase() + status.slice(1)}
+						{formatStatusName(status)}
 					</option>
 				))}
 			</Select>

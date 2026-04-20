@@ -62,15 +62,17 @@ const CategorySearchField = ({ selectedCategory, onSelectCategory, onDeselectCat
 						placeholder="Search category (e.g., 'shoes')"
 					/>
 
-					<div className="flex items-center gap-2">
-						<IconButton
-							variant="danger"
-							onClick={handleResetSearchResults}
-							title="Clear Search Results"
-						>
-							<FilterX className="h-5 w-5" />
-						</IconButton>
-					</div>
+					{searchResults.length > 0 && categorySearchInput.length > 0 &&
+						<div className="flex items-center gap-2">
+							<IconButton
+								variant="danger"
+								onClick={handleResetSearchResults}
+								title="Clear Search Results"
+							>
+								<FilterX className="h-5 w-5" />
+							</IconButton>
+						</div>
+					}
 				</div>
 
 				{/* Display selected category name */}

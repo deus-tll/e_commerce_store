@@ -2,7 +2,7 @@ import {create} from "zustand";
 
 import productApi from "../api/productApi.js";
 
-import {PaginationLimits} from "../constants/app.js";
+import {PAGINATION_LIMITS} from "../constants/app.js";
 import {
 	getInitialPagination,
 	handleAsyncAction, handleClearFilters,
@@ -48,7 +48,7 @@ const _toggleAttributeFilter = (currentAttributes, name, value) => {
 
 export const useProductStore = create((set, get) => ({
 	products: [],
-	pagination: getInitialPagination(PaginationLimits.PRODUCTS),
+	pagination: getInitialPagination(PAGINATION_LIMITS.PRODUCTS),
 	filters: INITIAL_PRODUCT_FILTERS,
 
 	featuredProducts: [],
@@ -60,6 +60,7 @@ export const useProductStore = create((set, get) => ({
 	facetsLoading: false,
 
 	loading: false,
+	featuredProductsLoading: false,
 	error: null,
 
 	fetchProducts: async () => await handlePaginatedFetch(
@@ -84,6 +85,7 @@ export const useProductStore = create((set, get) => ({
 	fetchFeaturedProducts: async () => await handleAsyncAction(set, {
 		action: () => productApi.getFeatured(),
 		onSuccess: (res) => set({ featuredProducts: res.data }),
+		setLoading: (val) => set({ featuredProductsLoading: val }),
 		errorMessage: "Failed to load featured products. Please refresh.",
 		shouldUpdateStoreError: false,
 		handleErrorOptions: { isGlobal: true }
@@ -154,12 +156,13 @@ export const useProductStore = create((set, get) => ({
 	},
 
 	clearFilters: () => handleClearFilters(
-		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, false, { limit: PaginationLimits.PRODUCTS }
+		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, false, { limit: PAGINATION_LIMITS.PRODUCTS }
 	),
 	clearFiltersAndFetch: async () => await handleClearFilters(
-		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, true, { limit: PaginationLimits.PRODUCTS }
+		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, true, { limit: PAGINATION_LIMITS.PRODUCTS }
 	),
 
 	clearCurrentProduct: () => set({ currentProduct: null }),
+	clearFeaturedProducts: () => set({ featuredProducts: [] }),
 	clearError: () => set({ error: null }),
 }));

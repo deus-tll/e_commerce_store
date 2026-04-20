@@ -1,8 +1,9 @@
 import {useSearchParams} from 'react-router-dom';
-import {User, ShoppingBag} from 'lucide-react';
 
 import {useAuthStore} from '../stores/useAuthStore.js';
-import {ProfileTabs} from "../constants/app.js";
+
+import {PROFILE_TABS} from "../constants/app.js";
+import {PROFILE_PAGE_TABS} from "../constants/navigation.jsx";
 
 import AccountTab from "../components/profile/tabs/AccountTab.jsx";
 import MyOrdersTab from "../components/profile/tabs/MyOrdersTab.jsx";
@@ -10,14 +11,9 @@ import MyOrdersTab from "../components/profile/tabs/MyOrdersTab.jsx";
 import Container from '../components/ui/Container.jsx';
 import Button from "../components/ui/Button.jsx";
 
-const tabs = [
-	{ id: ProfileTabs.ACCOUNT, label: "Account Settings", icon: User },
-	{ id: ProfileTabs.MY_ORDERS, label: "My Orders", icon: ShoppingBag }
-];
-
 const ProfilePage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const activeTab = searchParams.get("tab") || ProfileTabs.ACCOUNT;
+	const activeTab = searchParams.get("tab") || PROFILE_TABS.ACCOUNT;
 
 	const setActiveTab = (tabId) => {
 		setSearchParams({ tab: tabId });
@@ -32,7 +28,7 @@ const ProfilePage = () => {
 				{/* Sidebar Navigation */}
 				<div className="w-full lg:w-64 flex-shrink-0">
 					<div className="flex lg:flex-col gap-2 p-1 bg-gray-900/50 rounded-xl border border-gray-800">
-						{tabs.map((tab) => {
+						{PROFILE_PAGE_TABS.map((tab) => {
 							const { icon: Icon } = tab;
 							const isActive = activeTab === tab.id;
 
@@ -53,8 +49,8 @@ const ProfilePage = () => {
 
 				{/* Content Area */}
 				<div className="flex-1">
-					{activeTab === ProfileTabs.ACCOUNT && <AccountTab/>}
-					{activeTab === ProfileTabs.MY_ORDERS && <MyOrdersTab/>}
+					{activeTab === PROFILE_TABS.ACCOUNT && <AccountTab/>}
+					{activeTab === PROFILE_TABS.MY_ORDERS && <MyOrdersTab/>}
 				</div>
 			</div>
 

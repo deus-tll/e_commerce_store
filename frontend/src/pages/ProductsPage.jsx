@@ -3,6 +3,8 @@ import {useSearchParams} from "react-router-dom";
 
 import {ProductFilterKeys, useProductStore} from "../stores/useProductStore.js";
 
+import {PRODUCT_SORT_OPTIONS} from "../constants/productSortOptions.js";
+
 import ProductGrid from "../components/product/ProductGrid.jsx";
 
 import Container from "../components/ui/Container.jsx";
@@ -12,13 +14,6 @@ import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import Button from "../components/ui/Button.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import SortSelector from "../components/ui/SortSelector.jsx";
-
-const PRODUCT_SORT_OPTIONS = [
-	{ label: "Newest First", value: "createdAt-desc" },
-	{ label: "Price: Low to High", value: "price-asc" },
-	{ label: "Price: High to Low", value: "price-desc" },
-	{ label: "Top Rated", value: "ratingStats.averageRating-desc" },
-];
 
 const ProductsPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -81,11 +76,7 @@ const ProductsPage = () => {
 					: (
 						<>
 							<ProductGrid products={products} />
-							{pagination?.pages > 1 && (
-								<div className="flex justify-center pt-10">
-									<Pagination page={pagination.page} pages={pagination.pages} onChange={setPage} />
-								</div>
-							)}
+							<Pagination page={pagination.page} pages={pagination.pages} onChange={setPage} />
 						</>
 					)
 			}

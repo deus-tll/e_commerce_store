@@ -4,7 +4,7 @@ import Button from "./Button.jsx";
 
 const Carousel = ({ items, renderItem, responsive = [{ width: 0, items: 1 }] }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
-	const [itemsPerPage, setItemsPerPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(0);
 
 	useEffect(() => {
 		const handleResize = () => {
@@ -18,22 +18,24 @@ const Carousel = ({ items, renderItem, responsive = [{ width: 0, items: 1 }] }) 
 			}
 
 			setItemsPerPage(currentItems);
+
+			setCurrentIndex((prev) => Math.min(prev, Math.max(0, items.length - currentItems)));
 		}
 
 		handleResize();
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
-	}, [responsive]);
+	}, [items.length, responsive]);
 
 	const nextSlide = () => {
-		setCurrentIndex((prevIndex) => prevIndex + itemsPerPage);
+		setCurrentIndex((prev) => Math.min(prev + itemsPerPage, items.length - itemsPerPage));
 	};
 
 	const prevSlide = () => {
-		setCurrentIndex((prevIndex) => prevIndex - itemsPerPage);
+		setCurrentIndex((prev) => Math.max(prev - itemsPerPage, 0));
 	};
 
-	if (!items || items.length === 0) {
+	if (!items || items.length === 0 || itemsPerPage === 0) {
 		return null;
 	}
 
@@ -47,13 +49,13 @@ const Carousel = ({ items, renderItem, responsive = [{ width: 0, items: 1 }] }) 
 					className="flex transition-transform duration-300 ease-in-out"
 					style={{ transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)` }}
 				>
-					{items.map((item, index) => (
+					{items.map((item) => (
 						<div
-							key={index}
-							className="flex-shrink-0"
+							key={item.id}
+							className="flex-shrink-0 px-2"
 							style={{ width: `${100 / itemsPerPage}%` }}
 						>
-							{renderItem(item, index)}
+							{renderItem(item)}
 						</div>
 					))}
 				</div>

@@ -5,8 +5,8 @@ import {AlertCircle} from "lucide-react";
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {useOrderStore} from "../stores/useOrderStore.js";
 
-import {UserRoles} from "../constants/domain.js";
-import {OrderStatusStyles} from "../constants/domain.js";
+import {USER_ROLES} from "../constants/domain.js";
+import {ORDER_STATUS_STYLES} from "../constants/domain.js";
 
 import {formatCurrency, formatDate} from "../utils/format.js";
 
@@ -36,7 +36,7 @@ const OrderDetailsPage = () => {
 
 	if (loading) return <LoadingSpinner />;
 
-	if (error || (!loading && !currentOrder)) {
+	if (error) {
 		return (
 			<Container size="lg" className="py-20 text-center">
 				<div className="flex flex-col items-center gap-4">
@@ -49,7 +49,7 @@ const OrderDetailsPage = () => {
 		);
 	}
 
-	if (currentOrder?.id !== id) return <LoadingSpinner />;
+	if (!currentOrder || currentOrder.id !== id) return <LoadingSpinner />;
 
 	return (
 		<Container size="lg">
@@ -57,7 +57,7 @@ const OrderDetailsPage = () => {
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
 				<div>
 					<Link
-						to={user?.role === UserRoles.ADMIN ? "/admin-dashboard?tab=orders" : "/profile?tab=my_orders"}
+						to={user?.role === USER_ROLES.ADMIN ? "/admin-dashboard?tab=orders" : "/profile?tab=my_orders"}
 						className="text-sm text-emerald-500 hover:text-emerald-400 mb-2 inline-block"
 					>
 						&larr; Back to Orders
@@ -71,7 +71,7 @@ const OrderDetailsPage = () => {
 				</div>
 
 				<div className="w-full md:w-64">
-					{user?.role === UserRoles.ADMIN
+					{user?.role === USER_ROLES.ADMIN
 						? (
 							<OrderStatusSelect
 								status={currentOrder.status}
@@ -81,7 +81,7 @@ const OrderDetailsPage = () => {
 							/>
 						)
 						: (
-							<div className={`px-4 py-2 rounded-lg border text-center font-semibold ${OrderStatusStyles[currentOrder.status]}`}>
+							<div className={`px-4 py-2 rounded-lg border text-center font-semibold ${ORDER_STATUS_STYLES[currentOrder.status]}`}>
 								{currentOrder.status.toUpperCase()}
 							</div>
 						)}

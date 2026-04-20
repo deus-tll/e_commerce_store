@@ -1,7 +1,6 @@
 import {useEffect} from 'react';
 
 import {useCategoryStore} from "../stores/useCategoryStore.js";
-import {useProductStore} from "../stores/useProductStore.js";
 
 import Container from "../components/ui/Container.jsx";
 import SectionHeader from "../components/ui/SectionHeader.jsx";
@@ -11,23 +10,18 @@ import Button from "../components/ui/Button.jsx";
 
 const HomePage = () => {
 	const {
-		featuredProducts, loading: productsLoading,
-		fetchFeaturedProducts
-	} = useProductStore();
-	const {
 		categories, pagination, loading: categoriesLoading,
 		fetchCategories, setPage, clearFilters, clearCategories
 	} = useCategoryStore();
 
 	useEffect(() => {
-		void fetchFeaturedProducts();
 		void fetchCategories();
 
 		return () => {
 			clearCategories();
 			void clearFilters();
 		};
-	}, [fetchFeaturedProducts, fetchCategories, clearCategories, clearFilters]);
+	}, [fetchCategories, clearCategories, clearFilters]);
 
 	const hasMore = pagination && pagination.page < pagination.pages;
 
@@ -40,9 +34,7 @@ const HomePage = () => {
 
     return (
         <Container size="lg">
-	        {!productsLoading && featuredProducts.length > 0 &&
-		        <FeaturedProducts featuredProducts={featuredProducts} />
-	        }
+			<FeaturedProducts />
 
             <SectionHeader title="Explore Our Categories" subtitle="Discover high-quality, sustainable products for every part of your life" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
