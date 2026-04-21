@@ -1,8 +1,7 @@
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
 import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
 
-import {BASE64_PREFIX} from "../../constants/file.js";
-import {config} from "../../config.js";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * @augments ICategoryImageManager
@@ -20,41 +19,20 @@ export class CategoryImageManager extends ICategoryImageManager {
 	}
 
 	async handleImageUpdate(newImageValue, oldImageValue) {
+		if (!newImageValue) {
+			throw new DomainValidationError("Category image is required and cannot be empty.");
+		}
+
 		const isString = typeof newImageValue === "string";
-		const isOurCloudinary =
-			isString &&
-			newImageValue.includes(`res.cloudinary.com/${config.services.storage.cloudName}`);
 
-		const isNewUpload =
-			isString && (
-				newImageValue.startsWith(BASE64_PREFIX) ||
-				(newImageValue.startsWith("http") && !isOurCloudinary)
-			);
+		if (isString && newImageValue !== oldImageValue) {
+			const finalImageUrl = await this.#categoryStorageService.upload(newImageValue);
+			if (oldImageValue) await this.#categoryStorageService.delete(oldImageValue);
 
-		const isRemoval = !newImageValue;
-		const oldImageExists = !!oldImageValue;
-
-		let finalImageUrl = oldImageValue;
-
-		// 1. Determine the new state of the image URL.
-		// We prioritize uploading first so that if it fails, the old image is preserved.
-		if (isNewUpload) {
-			finalImageUrl = await this.#categoryStorageService.upload(newImageValue);
-		}
-		// 2. Client provided an existing valid our URL string; retain it.
-		else if (isString && !isRemoval) {
-			finalImageUrl = newImageValue;
-		}
-		else if (isRemoval) {
-			finalImageUrl = null;
+			return finalImageUrl;
 		}
 
-		// 3. Cleanup orphaned images.
-		if (oldImageExists && (isNewUpload || isRemoval)) {
-			await this.#categoryStorageService.delete(oldImageValue);
-		}
-
-		return finalImageUrl;
+		return oldImageValue;
 	}
 
 	async deleteImage(imageUrl) {
