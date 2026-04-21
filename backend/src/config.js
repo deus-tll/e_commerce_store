@@ -59,6 +59,7 @@ export const config = {
 			cloudName: process.env.CLOUDINARY_CLOUD_NAME,
 			apiKey: process.env.CLOUDINARY_API_KEY,
 			apiSecret: process.env.CLOUDINARY_API_SECRET,
+			dropOnStartup: process.env.DROP_STORAGE_ON_STARTUP === "true"
 		},
 		payment: {
 			secretKey: process.env.STRIPE_SECRET_KEY,

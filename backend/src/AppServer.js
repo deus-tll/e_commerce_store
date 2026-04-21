@@ -8,7 +8,7 @@ import {connectDB, dropDatabase} from "./infrastructure/db.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {RouterTypes, SeederTypes} from "./constants/ioc.js";
+import {RouterTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
@@ -107,12 +107,22 @@ export class AppServer {
 		console.log("[Server] Seeding complete.");
 	}
 
-	async clearDatabase() {
+	async dropDatabase() {
 		if (config.database.dropOnStartup) {
 			await dropDatabase();
 		}
 		else {
 			console.log("[Database] Skipping drop of Database.");
+		}
+	}
+
+	async dropStorage() {
+		if (config.services.storage.dropOnStartup) {
+			const storageService = this.#container.get(ServiceTypes.STORAGE);
+			await storageService.deleteAll();
+		}
+		else {
+			console.log("[Storage] Skipping drop of Storage.");
 		}
 	}
 
@@ -122,8 +132,11 @@ export class AppServer {
 	async start() {
 		try {
 			await connectDB();
-			// only works in development and with DROP_DB=true in .env
-			await this.clearDatabase();
+
+			// only works in development and with DROP_DB_ON_STARTUP=true in .env
+			await this.dropDatabase();
+			// only works in development and with DROP_STORAGE_ON_STARTUP=true in .env
+			await this.dropStorage();
 
 			this.#container.verify();
 

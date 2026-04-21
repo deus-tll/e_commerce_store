@@ -3,6 +3,7 @@ import cloudinary from "../../infrastructure/cloudinary.js";
 import {IStorageService} from "../../interfaces/storage/IStorageService.js";
 
 import {SystemError} from "../../errors/index.js";
+import {config} from "../../config.js";
 
 /**
  * Cloudinary implementation of the IStorageService contract.
@@ -64,6 +65,42 @@ export class CloudinaryStorageService extends IStorageService {
 		}
 		catch (error) {
 			console.error("[Cloudinary] Delete failed:", error.message);
+		}
+	}
+
+	async deleteAll() {
+		if (config.app.isProduction) {
+			console.warn("[Cloudinary] Cleanup skipped: Production environment detected.");
+			return;
+		}
+
+		try {
+			console.log("[Cloudinary] Starting cleanup of all assets...");
+
+			let hasMore = true;
+			let deletedCount = 0;
+
+			while (hasMore) {
+				const result = await cloudinary.api.delete_all_resources({
+					resource_type: 'image',
+					invalidate: true,
+					max_results: 1000
+				});
+
+				const count = Object.keys(result.deleted).length;
+				deletedCount += count;
+
+				hasMore = !!result.next_cursor;
+
+				if (hasMore) {
+					console.log(`[Cloudinary] Deleted ${deletedCount} assets, moving to next batch...`);
+				}
+			}
+
+			console.log(`[Cloudinary] Cleanup complete. Total assets removed: ${deletedCount}`);
+		}
+		catch (error) {
+			console.error("[Cloudinary] Cleanup failed:", error.message);
 		}
 	}
 }
