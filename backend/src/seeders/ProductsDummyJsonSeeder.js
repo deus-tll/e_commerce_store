@@ -123,28 +123,36 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         return created.id;
     }
 
+    #getMainImage(images, thumbnail) {
+        return (images && images.length > 0)
+            ? images[0]
+            : thumbnail;
+    }
+
+    #getAdditionalImages(images) {
+        return (images && images.length > 1)
+            ? images.slice(1)
+            : [];
+    }
+
     /**
      * @param {DummyJsonProduct} p
      * @param {string} categoryId
      */
     async #createProduct(p, categoryId) {
-        const mainImage = (p.images && p.images.length > 0)
-            ? p.images[0]
-            : p.thumbnail;
+        let attributes = [];
 
-        const additionalImages = (p.images && p.images.length > 1)
-            ? p.images.slice(1)
-            : [];
+        const ifPresentThenPush = (name, value) => {
+            if (value) {
+                attributes.push(new ProductAttribute({ name, value }));
+            }
+        }
 
-        const val = (v) => v ?? "N/A";
-
-        const attributes = [
-            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.BRAND, value: val(p.brand) }),
-            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.WEIGHT, value: val(p.weight) }),
-            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.WIDTH, value: val(p.dimensions?.width) }),
-            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.HEIGHT, value: val(p.dimensions?.height) }),
-            new ProductAttribute({ name: ALLOWED_ATTRIBUTES.DEPTH, value: val(p.dimensions?.depth) })
-        ];
+        ifPresentThenPush(ALLOWED_ATTRIBUTES.BRAND, p.brand);
+        ifPresentThenPush(ALLOWED_ATTRIBUTES.WEIGHT, p.weight);
+        ifPresentThenPush(ALLOWED_ATTRIBUTES.WIDTH, p.dimensions?.width);
+        ifPresentThenPush(ALLOWED_ATTRIBUTES.HEIGHT, p.dimensions?.height);
+        ifPresentThenPush(ALLOWED_ATTRIBUTES.DEPTH, p.dimensions?.depth);
 
         const dto = new CreateProductDTO({
             name: p.title,
@@ -153,7 +161,10 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
             stock: p.stock,
             categoryId,
             isFeatured: p.rating > 4.5,
-            images: { mainImage, additionalImages },
+            images: {
+                mainImage: this.#getMainImage(p.images, p.thumbnail),
+                additionalImages: this.#getAdditionalImages(p.images)
+            },
             attributes
         });
 
@@ -235,7 +246,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
             if (!products.length) return;
 
             for (const p of products) {
-                const categoryId = await this.#getOrCreateCategory(p.category, p.thumbnail);
+                const categoryId = await this.#getOrCreateCategory(p.category, this.#getMainImage(p.images, p.thumbnail));
                 const createdProduct = await this.#createProduct(p, categoryId);
 
                 if (p.reviews && Array.isArray(p.reviews) && p.reviews.length > 0) {
