@@ -4,8 +4,6 @@ import cors from "cors";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import {connectDB, dropDatabase} from "./infrastructure/db.js";
-
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
 import {RouterTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
@@ -26,6 +24,7 @@ export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
 	/** @type {Container} */ #container;
+	/** @type {IDatabaseService} */ #db;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
@@ -35,6 +34,7 @@ export class AppServer {
 		this.#app = express();
 		this.#port = config.app.port;
 		this.#container = container;
+		this.#db = this.#container.get(ServiceTypes.DATABASE);
 	}
 
 	/**
@@ -109,10 +109,10 @@ export class AppServer {
 
 	async dropDatabase() {
 		if (config.database.dropOnStartup) {
-			await dropDatabase();
+			await this.#db.drop();
 		}
 		else {
-			console.log("[Database] Skipping drop of Database.");
+			console.log("[Database] Skipping drop.");
 		}
 	}
 
@@ -122,7 +122,7 @@ export class AppServer {
 			await storageService.deleteAll();
 		}
 		else {
-			console.log("[Storage] Skipping drop of Storage.");
+			console.log("[Storage] Skipping drop.");
 		}
 	}
 
@@ -131,7 +131,7 @@ export class AppServer {
 	 */
 	async start() {
 		try {
-			await connectDB();
+			await this.#db.connect();
 
 			// only works in development and with DROP_DB_ON_STARTUP=true in .env
 			await this.dropDatabase();

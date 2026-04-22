@@ -10,6 +10,7 @@ import {JwtProvider} from "../providers/JwtProvider.js";
 
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
 
+import {MongooseDatabaseService} from "../services/database/MongooseDatabaseService.js";
 import {AuthCacheService} from "../cache/AuthCacheService.js";
 import {ProductCacheService} from "../cache/ProductCacheService.js";
 import {FilesystemEmailContentService} from "../services/email/FilesystemEmailContentService.js";
@@ -77,8 +78,10 @@ import {createPaymentsRouter} from "../http/routers/paymentsRouterFactory.js";
 import {createProductsRouter} from "../http/routers/productsRouterFactory.js";
 import {createReviewsRouter} from "../http/routers/reviewsRouterFactory.js";
 import {createUsersRouter} from "../http/routers/usersRouterFactory.js";
+import {createPaymentsWebhookRouter} from "../http/routers/paymentsWebhookRouterFactory.js";
 
 import {AdminSeeder} from "../seeders/AdminSeeder.js";
+import {ProductsDummyJsonSeeder} from "../seeders/ProductsDummyJsonSeeder.js";
 
 import {
 	RepositoryTypes,
@@ -95,8 +98,6 @@ import {
 } from "../constants/ioc.js";
 
 import {config} from "../config.js";
-import {createPaymentsWebhookRouter} from "../http/routers/paymentsWebhookRouterFactory.js";
-import {ProductsDummyJsonSeeder} from "../seeders/ProductsDummyJsonSeeder.js";
 
 class Container {
 	constructor() {
@@ -194,6 +195,7 @@ container.register(RepositoryTypes.USER, UserMongooseRepository, []);
 // 2. Independent Instances (lowest level dependency, have no dependencies)
 // ====================================================================
 // Services
+container.register(ServiceTypes.DATABASE, MongooseDatabaseService, []);
 container.register(ServiceTypes.AUTH_CACHE, AuthCacheService, []);
 container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, []);
 container.register(ServiceTypes.EMAIL_CONTENT, FilesystemEmailContentService, []);

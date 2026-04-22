@@ -50,6 +50,8 @@ export const FactoryTypes = Object.freeze({
 });
 
 export const ServiceTypes = Object.freeze({
+	DATABASE: "IDatabaseService",
+
 	AUTH_CACHE: "AuthCacheService",
 	PRODUCT_CACHE: "ProductCacheService",
 	EMAIL_CONTENT: "IEmailContentService",
