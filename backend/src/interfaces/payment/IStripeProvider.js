@@ -1,11 +1,11 @@
 import {OrderProductItem} from "../../domain/index.js";
 
 /**
- * @interface IStripeService
+ * @interface IStripeProvider
  * @description Contract for all direct interactions with the external Stripe API.
  * Ensures the main payment service logic is decoupled from Stripe's implementation details.
  */
-export class IStripeService {
+export class IStripeProvider {
 	/**
 	 * Converts the generic applied coupon data into the payment provider's
 	 * specific discount data structure (e.g., Stripe Discount Objects).

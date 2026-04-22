@@ -1,18 +1,22 @@
-import {stripe} from "../../infrastructure/stripe.js";
-import {IStripeService} from "../../interfaces/payment/IStripeService.js";
+import Stripe from "stripe";
+
+import {IStripeProvider} from "../../interfaces/payment/IStripeProvider.js";
 
 import {SystemError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
 import {CheckoutSessionModes, Currencies, PaymentMethodTypes} from "../../constants/payment.js";
 import {IdempotencyPrefixes, StripeCouponDurations, StripeHeaders} from "../../constants/stripe.js";
+
 import {config} from "../../config.js";
 
+export const stripe = new Stripe(config.providers.payment.stripe.secretKey);
+
 /**
- * @augments IStripeService
+ * @augments IStripeProvider
  * @description Handles all low-level communication and data translation for the Stripe API.
  */
-export class StripeService extends IStripeService {
+export class StripeProvider extends IStripeProvider {
 	/**
 	 * Creates a new Stripe coupon for a discount percentage.
 	 * @param {number} discountPercentage - The percentage off (e.g., 10 for 10%).

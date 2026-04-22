@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 
-import {InvalidTokenError, TokenExpiredError} from "../errors/index.js";
+import {InvalidTokenError, TokenExpiredError} from "../../errors/index.js";
 
-import {TokenTypes} from "../constants/auth.js";
-import {config} from "../config.js";
+import {TokenTypes} from "../../constants/auth.js";
+import {config} from "../../config.js";
 
 const ACCESS_TOKEN_SECRET = config.auth.access.secret;
 const REFRESH_TOKEN_SECRET = config.auth.refresh.secret;

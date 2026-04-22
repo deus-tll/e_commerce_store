@@ -17,6 +17,8 @@ export const ProviderTypes = Object.freeze({
 	CACHE: "ICacheProvider",
 	STORAGE: "IStorageProvider",
 	JWT: "IJwtProvider",
+	EMAIL: "IEmailProvider",
+	STRIPE: "IStripeProvider",
 });
 
 export const CookieHandlerTypes = Object.freeze({
@@ -56,7 +58,6 @@ export const ServiceTypes = Object.freeze({
 	AUTH_CACHE: "AuthCacheService",
 	PRODUCT_CACHE: "ProductCacheService",
 	EMAIL_CONTENT: "IEmailContentService",
-	EMAIL: "IEmailService",
 	PASSWORD: "IPasswordService",
 	SLUG_GENERATOR: "ISlugGenerator",
 
@@ -81,7 +82,6 @@ export const ServiceTypes = Object.freeze({
 	SESSION_AUTH: "ISessionAuthService",
 	PAYMENT: "IPaymentService",
 
-	STRIPE: "IStripeService",
 	CHECKOUT_ORDER_HANDLER: "ICheckoutOrderHandler",
 	CHECKOUT_COUPON_HANDLER: "ICouponHandler"
 });

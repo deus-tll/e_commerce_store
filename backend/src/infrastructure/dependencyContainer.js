@@ -9,14 +9,14 @@ import {UserMongooseRepository} from "../repositories/mongoose/UserMongooseRepos
 import {MongooseDatabaseProvider} from "../providers/database/MongooseDatabaseProvider.js";
 import {RedisCacheProvider} from "../providers/cache/RedisCacheProvider.js";
 import {MemoryCacheProvider} from "../providers/cache/MemoryCacheProvider.js";
-import {JwtProvider} from "../providers/JwtProvider.js";
+import {JwtProvider} from "../providers/auth/JwtProvider.js";
 
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
 
 import {AuthCacheService} from "../services/cache/AuthCacheService.js";
 import {ProductCacheService} from "../services/cache/ProductCacheService.js";
 import {FilesystemEmailContentService} from "../services/email/FilesystemEmailContentService.js";
-import {MailTrapEmailService} from "../services/email/MailTrapEmailService.js";
+import {MailTrapEmailProvider} from "../providers/email/MailTrapEmailProvider.js";
 import {PasswordService} from "../services/security/PasswordService.js";
 import {SlugGenerator} from "../services/utils/SlugGenerator.js";
 import {DateTimeService} from "../services/utils/DateTimeService.js";
@@ -26,7 +26,7 @@ import {CouponMapper} from "../services/coupon/CouponMapper.js";
 import {CouponFactory} from "../services/coupon/CouponFactory.js";
 import {UserMapper} from "../services/user/UserMapper.js";
 
-import {CloudinaryStorageProvider} from "../services/storages/CloudinaryStorageProvider.js";
+import {CloudinaryStorageProvider} from "../providers/storage/CloudinaryStorageProvider.js";
 import {CategoryStorageService} from "../services/storages/CategoryStorageService.js";
 import {CategoryImageManager} from "../services/category/CategoryImageManager.js";
 import {ProductStorageService} from "../services/storages/ProductStorageService.js";
@@ -54,7 +54,7 @@ import {CouponService} from "../services/coupon/CouponService.js";
 import {AnalyticsService} from "../services/analytics/AnalyticsService.js";
 import {SessionAuthService} from "../services/auth/SessionAuthService.js";
 
-import {StripeService} from "../services/payment/StripeService.js";
+import {StripeProvider} from "../providers/payment/StripeProvider.js";
 import {CheckoutOrderHandler} from "../services/order/CheckoutOrderHandler.js";
 import {CheckoutCouponHandler} from "../services/coupon/CheckoutCouponHandler.js";
 import {StripePaymentService} from "../services/payment/StripePaymentService.js";
@@ -213,6 +213,8 @@ container.register(ProviderTypes.DATABASE, MongooseDatabaseProvider, []);
 container.register(ProviderTypes.CACHE, SelectedCache, []);
 container.register(ProviderTypes.STORAGE, CloudinaryStorageProvider, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
+container.register(ProviderTypes.EMAIL, MailTrapEmailProvider, [ServiceTypes.EMAIL_CONTENT]);
+container.register(ProviderTypes.STRIPE, StripeProvider, []);
 
 
 // Factories
@@ -247,8 +249,6 @@ container.register(CookieHandlerTypes.AUTH, AuthCookieHandler, [UtilityTypes.DAT
 // Cache
 container.register(ServiceTypes.AUTH_CACHE, AuthCacheService, [ProviderTypes.CACHE]);
 container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, [ProviderTypes.CACHE]);
-// Email
-container.register(ServiceTypes.EMAIL, MailTrapEmailService, [ServiceTypes.EMAIL_CONTENT]);
 // =============
 // Storage
 container.register(ServiceTypes.CATEGORY_STORAGE, CategoryStorageService, [ProviderTypes.STORAGE]);
@@ -263,7 +263,7 @@ container.register(ServiceTypes.USER, UserService,
 	[RepositoryTypes.USER, ServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, QueryTranslatorTypes.USER]
 );
 container.register(ServiceTypes.USER_ACCOUNT, UserAccountService,
-	[ServiceTypes.USER, ServiceTypes.EMAIL, ServiceTypes.PASSWORD, ProviderTypes.JWT, ServiceTypes.AUTH_CACHE, ServiceTypes.USER_TOKEN, MapperTypes.USER]
+	[ServiceTypes.USER, ProviderTypes.EMAIL, ServiceTypes.PASSWORD, ProviderTypes.JWT, ServiceTypes.AUTH_CACHE, ServiceTypes.USER_TOKEN, MapperTypes.USER]
 );
 // =============
 // Category
@@ -308,13 +308,12 @@ container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
 );
 // =============
 // Payment
-container.register(ServiceTypes.STRIPE, StripeService, []);
 container.register(ServiceTypes.CHECKOUT_COUPON_HANDLER, CheckoutCouponHandler, [ServiceTypes.COUPON]);
 container.register(ServiceTypes.CHECKOUT_ORDER_HANDLER, CheckoutOrderHandler,
 	[ServiceTypes.ORDER, ServiceTypes.COUPON, ServiceTypes.CART, ServiceTypes.CHECKOUT_COUPON_HANDLER]
 );
 container.register(ServiceTypes.PAYMENT, StripePaymentService,
-	[ServiceTypes.STRIPE, ServiceTypes.PRODUCT, ServiceTypes.CHECKOUT_ORDER_HANDLER, ServiceTypes.CHECKOUT_COUPON_HANDLER]
+	[ProviderTypes.STRIPE, ServiceTypes.PRODUCT, ServiceTypes.CHECKOUT_ORDER_HANDLER, ServiceTypes.CHECKOUT_COUPON_HANDLER]
 );
 // ====================================================================
 

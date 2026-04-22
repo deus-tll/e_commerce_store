@@ -8,22 +8,22 @@ import {FileFolders} from "../../constants/file.js";
  * @augments IProductStorageService
  */
 export class ProductStorageService extends IProductStorageService {
-	/** @type {IStorageProvider} */ #storageService;
+	/** @type {IStorageProvider} */ #storageProvider;
 	/** @type {string} */ #folder = FileFolders.PRODUCTS;
 
 	/**
-	 * @param {IStorageProvider} storageService
+	 * @param {IStorageProvider} storageProvider
 	 */
-	constructor(storageService) {
+	constructor(storageProvider) {
 		super();
-		this.#storageService = storageService;
+		this.#storageProvider = storageProvider;
 	}
 
 	async upload(file) {
-		return this.#storageService.upload(file, this.#folder);
+		return this.#storageProvider.upload(file, this.#folder);
 	}
 
 	async delete(fileUrl) {
-		return this.#storageService.delete(fileUrl, this.#folder);
+		return this.#storageProvider.delete(fileUrl, this.#folder);
 	}
 }
