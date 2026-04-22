@@ -6,7 +6,7 @@ import {fileURLToPath} from "url";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {ProviderTypes, RouterTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
+import {ProviderTypes, RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
@@ -35,7 +35,7 @@ export class AppServer {
 		this.#app = express();
 		this.#port = config.app.port;
 		this.#container = container;
-		this.#db = this.#container.get(ServiceTypes.DATABASE);
+		this.#db = this.#container.get(ProviderTypes.DATABASE);
 		this.#cache = this.#container.get(ProviderTypes.CACHE);
 	}
 

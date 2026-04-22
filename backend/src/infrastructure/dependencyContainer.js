@@ -209,7 +209,7 @@ container.register(ServiceTypes.PASSWORD, PasswordService, []);
 container.register(ServiceTypes.SLUG_GENERATOR, SlugGenerator, []);
 
 // Providers
-container.register(ServiceTypes.DATABASE, MongooseDatabaseProvider, []);
+container.register(ProviderTypes.DATABASE, MongooseDatabaseProvider, []);
 container.register(ProviderTypes.CACHE, SelectedCache, []);
 container.register(ProviderTypes.STORAGE, CloudinaryStorageProvider, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
