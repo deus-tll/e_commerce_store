@@ -13,7 +13,7 @@ export class RedisCacheProvider extends ICacheProvider {
 
     constructor() {
         super();
-        this.#uri = config.cache.redis.url;
+        this.#uri = config.providers.cache.redis.url;
     }
 
     async connect() {

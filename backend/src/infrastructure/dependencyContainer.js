@@ -106,7 +106,7 @@ const cacheImplementations = {
 	[CACHE_TYPE.REDIS]: RedisCacheProvider,
 	[CACHE_TYPE.MEMORY]: MemoryCacheProvider
 };
-const SelectedCache = cacheImplementations[config.cache.type];
+const SelectedCache = cacheImplementations[config.providers.cache.type];
 
 class Container {
 	constructor() {

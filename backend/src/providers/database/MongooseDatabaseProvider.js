@@ -11,7 +11,7 @@ export class MongooseDatabaseProvider extends IDatabaseProvider {
 
     constructor() {
         super();
-        this.#uri = config.database.mongoUri;
+        this.#uri = config.providers.database.mongo.uri;
     }
 
     async connect() {

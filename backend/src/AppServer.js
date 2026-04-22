@@ -110,7 +110,7 @@ export class AppServer {
 	}
 
 	async dropDatabase() {
-		if (config.database.dropOnStartup) {
+		if (config.providers.database.dropOnStartup) {
 			await this.#db.drop();
 		}
 		else {
@@ -119,7 +119,7 @@ export class AppServer {
 	}
 
 	async dropStorage() {
-		if (config.services.storage.dropOnStartup) {
+		if (config.providers.storage.dropOnStartup) {
 			const storageService = this.#container.get(ProviderTypes.STORAGE);
 			await storageService.deleteAll();
 		}

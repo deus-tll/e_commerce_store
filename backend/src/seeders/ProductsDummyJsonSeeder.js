@@ -84,7 +84,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
 
     async #fetchExternalProducts() {
         const response = await fetch(
-            `${config.app.dummyJsonProductsUrl}?limit=${config.app.dummyJsonProductsLimit}`
+            `${config.seeding.dummyJson.productsUrl}?limit=${config.seeding.dummyJson.productsLimit}`
         );
         if (!response.ok) {
             console.error(`Failed to fetch products: ${response.statusText}`);
@@ -186,7 +186,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         const dto = new CreateUserDTO({
             name: reviewData.reviewerName,
             email: email,
-            password: config.app.defaultSeederUserPassword,
+            password: config.seeding.defaultSeederUserPassword,
             role: UserRoles.CUSTOMER,
             isVerified: true
         });

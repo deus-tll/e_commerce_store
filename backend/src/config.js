@@ -31,19 +31,53 @@ export const config = {
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
-		dummyJsonProductsUrl: process.env.DUMMY_JSON_PRODUCTS_URL,
-		dummyJsonProductsLimit: process.env.DUMMY_JSON_PRODUCTS_LIMIT,
+	},
+	seeding: {
 		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
-	},
-	database: {
-		mongoUri: process.env.MONGO_URI,
-		dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true"
-	},
-	cache: {
-		type: process.env.CACHE_TYPE || CACHE_TYPE.MEMORY,
-		redis: {
-			url: process.env.REDIS_URL
+		dummyJson: {
+			productsUrl: process.env.DUMMY_JSON_PRODUCTS_URL,
+			productsLimit: process.env.DUMMY_JSON_PRODUCTS_LIMIT
 		}
+	},
+	providers: {
+		database: {
+			dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true",
+			mongo: {
+				uri: process.env.MONGO_URI,
+			}
+		},
+		cache: {
+			type: process.env.CACHE_TYPE || CACHE_TYPE.MEMORY,
+			redis: {
+				url: process.env.REDIS_URL
+			}
+		},
+		storage: {
+			dropOnStartup: process.env.DROP_STORAGE_ON_STARTUP === "true",
+			cloudinary: {
+				cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+				apiKey: process.env.CLOUDINARY_API_KEY,
+				apiSecret: process.env.CLOUDINARY_API_SECRET,
+			},
+		},
+		payment: {
+			stripe: {
+				secretKey: process.env.STRIPE_SECRET_KEY,
+				successUrl: process.env.STRIPE_SUCCESS_URL,
+				cancelUrl: process.env.STRIPE_CANCEL_URL,
+				webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+			}
+		},
+		mail: {
+			mailtrap: {
+				endpoint: process.env.MAILTRAP_ENDPOINT,
+				token: process.env.MAILTRAP_TOKEN,
+				sender: {
+					email: process.env.MAILTRAP_SENDER_EMAIL,
+					name: process.env.MAILTRAP_SENDER_NAME,
+				}
+			}
+		},
 	},
 	auth: {
 		access: {
@@ -57,28 +91,6 @@ export const config = {
 		password: {
 			saltRounds: Number(process.env.SALT_ROUNDS) || 10,
 			resetUrl: process.env.RESET_PASSWORD_URL,
-		},
-	},
-	services: {
-		storage: {
-			cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-			apiKey: process.env.CLOUDINARY_API_KEY,
-			apiSecret: process.env.CLOUDINARY_API_SECRET,
-			dropOnStartup: process.env.DROP_STORAGE_ON_STARTUP === "true"
-		},
-		payment: {
-			secretKey: process.env.STRIPE_SECRET_KEY,
-			successUrl: process.env.STRIPE_SUCCESS_URL,
-			cancelUrl: process.env.STRIPE_CANCEL_URL,
-			webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-		},
-		mail: {
-			endpoint: process.env.MAILTRAP_ENDPOINT,
-			token: process.env.MAILTRAP_TOKEN,
-			sender: {
-				email: process.env.MAILTRAP_SENDER_EMAIL,
-				name: process.env.MAILTRAP_SENDER_NAME,
-			},
 		},
 	},
 	business: {

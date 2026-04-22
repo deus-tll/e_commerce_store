@@ -2,11 +2,11 @@ import {MailtrapClient} from "mailtrap";
 import {config} from "../config.js";
 
 export const mailtrapClient = new MailtrapClient({
-	endpoint: config.services.mail.endpoint,
-	token: config.services.mail.token,
+	endpoint: config.providers.mail.mailtrap.endpoint,
+	token: config.providers.mail.mailtrap.token,
 });
 
 export const sender = {
-	email: config.services.mail.sender.email,
-	name: config.services.mail.sender.name
+	email: config.providers.mail.mailtrap.sender.email,
+	name: config.providers.mail.mailtrap.sender.name
 }

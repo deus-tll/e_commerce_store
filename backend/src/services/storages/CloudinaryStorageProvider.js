@@ -5,9 +5,9 @@ import {SystemError} from "../../errors/index.js";
 import {config} from "../../config.js";
 
 cloudinary.config({
-	cloud_name: config.services.storage.cloudName,
-	api_key: config.services.storage.apiKey,
-	api_secret: config.services.storage.apiSecret,
+	cloud_name: config.providers.storage.cloudinary.cloudName,
+	api_key: config.providers.storage.cloudinary.apiKey,
+	api_secret: config.providers.storage.cloudinary.apiSecret,
 });
 
 /**

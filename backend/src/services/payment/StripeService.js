@@ -63,7 +63,7 @@ export class StripeService extends IStripeService {
 	}
 
 	async createCheckoutSession(lineItems, stripeDiscounts, userId, couponCode, orderId) {
-		const { successUrl, cancelUrl } = config.services.payment;
+		const { successUrl, cancelUrl } = config.providers.payment.stripe;
 
 		try {
 			return await stripe.checkout.sessions.create(
@@ -92,7 +92,7 @@ export class StripeService extends IStripeService {
 
 	constructEvent(payload, headers) {
 		const signature = headers[StripeHeaders.SIGNATURE];
-		const webhookSecret = config.services.payment.webhookSecret;
+		const webhookSecret = config.providers.payment.stripe.webhookSecret;
 
 		try {
 			return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
