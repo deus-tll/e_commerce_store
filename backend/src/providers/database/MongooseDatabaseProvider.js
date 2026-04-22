@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import {IDatabaseService} from "../../interfaces/database/IDatabaseService.js";
+import {IDatabaseProvider} from "../../interfaces/database/IDatabaseProvider.js";
 import {config} from "../../config.js";
 
 /**
- * MongoDB implementation of the IDatabaseService using Mongoose.
- * @augments IDatabaseService
+ * MongoDB implementation of the IDatabaseProvider using Mongoose.
+ * @augments IDatabaseProvider
  */
-export class MongooseDatabaseService extends IDatabaseService {
+export class MongooseDatabaseProvider extends IDatabaseProvider {
     #uri;
 
     constructor() {
@@ -22,7 +22,7 @@ export class MongooseDatabaseService extends IDatabaseService {
         }
         catch (error) {
             console.error("[Database] Mongoose connection failed:", error.message);
-            process.exit(1);
+            throw error;
         }
     }
 

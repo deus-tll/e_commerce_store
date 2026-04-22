@@ -6,11 +6,13 @@ import {ProductMongooseRepository} from "../repositories/mongoose/ProductMongoos
 import {ReviewMongooseRepository} from "../repositories/mongoose/ReviewMongooseRepository.js";
 import {UserMongooseRepository} from "../repositories/mongoose/UserMongooseRepository.js";
 
+import {MongooseDatabaseProvider} from "../providers/database/MongooseDatabaseProvider.js";
+import {RedisCacheProvider} from "../providers/cache/RedisCacheProvider.js";
+import {MemoryCacheProvider} from "../providers/cache/MemoryCacheProvider.js";
 import {JwtProvider} from "../providers/JwtProvider.js";
 
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
 
-import {MongooseDatabaseService} from "../services/database/MongooseDatabaseService.js";
 import {AuthCacheService} from "../services/cache/AuthCacheService.js";
 import {ProductCacheService} from "../services/cache/ProductCacheService.js";
 import {FilesystemEmailContentService} from "../services/email/FilesystemEmailContentService.js";
@@ -83,6 +85,7 @@ import {createPaymentsWebhookRouter} from "../http/routers/paymentsWebhookRouter
 import {AdminSeeder} from "../seeders/AdminSeeder.js";
 import {ProductsDummyJsonSeeder} from "../seeders/ProductsDummyJsonSeeder.js";
 
+import {CACHE_TYPE} from "../constants/app.js";
 import {
 	RepositoryTypes,
 	ProviderTypes,
@@ -98,9 +101,12 @@ import {
 } from "../constants/ioc.js";
 
 import {config} from "../config.js";
-import {RedisCacheProvider} from "../providers/cache/RedisCacheProvider.js";
-import {MemoryCacheProvider} from "../providers/cache/MemoryCacheProvider.js";
-import {CACHE_TYPE} from "../constants/app.js";
+
+const cacheImplementations = {
+	[CACHE_TYPE.REDIS]: RedisCacheProvider,
+	[CACHE_TYPE.MEMORY]: MemoryCacheProvider
+};
+const SelectedCache = cacheImplementations[config.cache.type];
 
 class Container {
 	constructor() {
@@ -198,18 +204,13 @@ container.register(RepositoryTypes.USER, UserMongooseRepository, []);
 // 2. Independent Instances (lowest level dependency, have no dependencies)
 // ====================================================================
 // Services
-container.register(ServiceTypes.DATABASE, MongooseDatabaseService, []);
 container.register(ServiceTypes.EMAIL_CONTENT, FilesystemEmailContentService, []);
 container.register(ServiceTypes.PASSWORD, PasswordService, []);
 container.register(ServiceTypes.SLUG_GENERATOR, SlugGenerator, []);
 container.register(ServiceTypes.STORAGE, CloudinaryStorageService, []);
 
 // Providers
-const cacheImplementations = {
-	[CACHE_TYPE.REDIS]: RedisCacheProvider,
-	[CACHE_TYPE.MEMORY]: MemoryCacheProvider
-};
-const SelectedCache = cacheImplementations[config.cache.type];
+container.register(ServiceTypes.DATABASE, MongooseDatabaseProvider, []);
 container.register(ProviderTypes.CACHE, SelectedCache, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
 

@@ -24,7 +24,7 @@ export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
 	/** @type {Container} */ #container;
-	/** @type {IDatabaseService} */ #db;
+	/** @type {IDatabaseProvider} */ #db;
 	/** @type {ICacheProvider} */ #cache;
 
 	/**

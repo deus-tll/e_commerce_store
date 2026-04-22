@@ -1,8 +1,8 @@
 /**
- * @interface IDatabaseService
+ * @interface IDatabaseProvider
  * @description Defines the contract for database lifecycle management
  */
-export class IDatabaseService {
+export class IDatabaseProvider {
     /**
      * Establishes a connection to the database.
      * @returns {Promise<any>}
