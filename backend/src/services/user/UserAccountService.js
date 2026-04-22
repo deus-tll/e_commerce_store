@@ -4,7 +4,7 @@ import {IEmailService} from "../../interfaces/email/IEmailService.js";
 import {AuthResponseAssembler} from "../../domain/index.js";
 
 import {JwtProvider} from "../../providers/JwtProvider.js";
-import {AuthCacheService} from "../../cache/AuthCacheService.js";
+import {AuthCacheService} from "../cache/AuthCacheService.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 

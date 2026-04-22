@@ -6,7 +6,7 @@ import {fileURLToPath} from "url";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {RouterTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
+import {ProviderTypes, RouterTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
@@ -25,6 +25,7 @@ export class AppServer {
 	/** @type {number | string} */ #port;
 	/** @type {Container} */ #container;
 	/** @type {IDatabaseService} */ #db;
+	/** @type {ICacheProvider} */ #cache;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
@@ -35,6 +36,7 @@ export class AppServer {
 		this.#port = config.app.port;
 		this.#container = container;
 		this.#db = this.#container.get(ServiceTypes.DATABASE);
+		this.#cache = this.#container.get(ProviderTypes.CACHE);
 	}
 
 	/**
@@ -131,7 +133,15 @@ export class AppServer {
 	 */
 	async start() {
 		try {
-			await this.#db.connect();
+			await this.#db.connect()
+
+			try {
+				await this.#cache.connect();
+			}
+			catch (error) {
+				if (config.app.isProduction) throw error;
+				console.warn(`[Server] Cache not available: ${error.message}`);
+			}
 
 			// only works in development and with DROP_DB_ON_STARTUP=true in .env
 			await this.dropDatabase();
@@ -164,7 +174,10 @@ export class AppServer {
 		console.log("[Server] Shutting down...");
 
 		try {
-			await this.#db.disconnect();
+			await Promise.allSettled([
+				this.#db.disconnect(),
+				this.#cache.disconnect()
+			]);
 
 			console.log("[Server] Cleanup complete. Exiting.");
 			process.exit(0);

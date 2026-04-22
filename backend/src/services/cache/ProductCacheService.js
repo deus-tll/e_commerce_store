@@ -1,12 +1,19 @@
 import {BaseCacheService} from "./BaseCacheService.js";
 
-import {CacheKeys} from "../constants/app.js";
+import {CacheKeys} from "../../constants/app.js";
 
 /**
- * Manages the storage and retrieval of product related data in the cache (Redis).
+ * Manages the storage and retrieval of product related data in the cache.
  * @augments BaseCacheService
  */
 export class ProductCacheService extends BaseCacheService {
+	/**
+	 * @param {ICacheProvider} cacheProvider
+	 */
+	constructor(cacheProvider) {
+		super(cacheProvider);
+	}
+
 	/**
 	 * Defines the full, context-qualified prefix for this cache service's keys.
 	 * @returns {string} The prefix, e.g., "PRODUCTS:featured_products".

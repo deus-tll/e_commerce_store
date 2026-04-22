@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import {EnvModes} from "./constants/app.js";
+import {CACHE_TYPE, EnvModes} from "./constants/app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,8 +37,13 @@ export const config = {
 	},
 	database: {
 		mongoUri: process.env.MONGO_URI,
-		redisUrl: process.env.REDIS_URL,
 		dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true"
+	},
+	cache: {
+		type: process.env.CACHE_TYPE || CACHE_TYPE.MEMORY,
+		redis: {
+			url: process.env.REDIS_URL
+		}
 	},
 	auth: {
 		access: {

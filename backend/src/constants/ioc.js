@@ -13,7 +13,8 @@ export const UtilityTypes = Object.freeze({
 });
 
 export const ProviderTypes = Object.freeze({
-	JWT: "IJwtProvider"
+	JWT: "IJwtProvider",
+	CACHE: "ICacheProvider"
 });
 
 export const CookieHandlerTypes = Object.freeze({

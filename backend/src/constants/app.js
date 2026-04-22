@@ -1,3 +1,8 @@
+export const CACHE_TYPE = Object.freeze({
+	REDIS: "redis",
+	MEMORY: "memory"
+});
+
 export const CacheKeys = Object.freeze({
 	FEATURED_PRODUCTS: "featured_products",
 	REFRESH_TOKEN: "refresh_token"

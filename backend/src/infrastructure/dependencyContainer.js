@@ -11,8 +11,8 @@ import {JwtProvider} from "../providers/JwtProvider.js";
 import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
 
 import {MongooseDatabaseService} from "../services/database/MongooseDatabaseService.js";
-import {AuthCacheService} from "../cache/AuthCacheService.js";
-import {ProductCacheService} from "../cache/ProductCacheService.js";
+import {AuthCacheService} from "../services/cache/AuthCacheService.js";
+import {ProductCacheService} from "../services/cache/ProductCacheService.js";
 import {FilesystemEmailContentService} from "../services/email/FilesystemEmailContentService.js";
 import {MailTrapEmailService} from "../services/email/MailTrapEmailService.js";
 import {PasswordService} from "../services/security/PasswordService.js";
@@ -98,6 +98,9 @@ import {
 } from "../constants/ioc.js";
 
 import {config} from "../config.js";
+import {RedisCacheProvider} from "../providers/cache/RedisCacheProvider.js";
+import {MemoryCacheProvider} from "../providers/cache/MemoryCacheProvider.js";
+import {CACHE_TYPE} from "../constants/app.js";
 
 class Container {
 	constructor() {
@@ -196,15 +199,20 @@ container.register(RepositoryTypes.USER, UserMongooseRepository, []);
 // ====================================================================
 // Services
 container.register(ServiceTypes.DATABASE, MongooseDatabaseService, []);
-container.register(ServiceTypes.AUTH_CACHE, AuthCacheService, []);
-container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, []);
 container.register(ServiceTypes.EMAIL_CONTENT, FilesystemEmailContentService, []);
 container.register(ServiceTypes.PASSWORD, PasswordService, []);
 container.register(ServiceTypes.SLUG_GENERATOR, SlugGenerator, []);
 container.register(ServiceTypes.STORAGE, CloudinaryStorageService, []);
 
 // Providers
+const cacheImplementations = {
+	[CACHE_TYPE.REDIS]: RedisCacheProvider,
+	[CACHE_TYPE.MEMORY]: MemoryCacheProvider
+};
+const SelectedCache = cacheImplementations[config.cache.type];
+container.register(ProviderTypes.CACHE, SelectedCache, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
+
 
 // Factories
 container.register(FactoryTypes.COUPON, () => new CouponFactory(config.business.coupon.discountPercentage));
@@ -235,6 +243,9 @@ container.register(CookieHandlerTypes.AUTH, AuthCookieHandler, [UtilityTypes.DAT
 
 // 4. Dependent Services (depends on repositories and independent services)
 // ====================================================================
+// Cache
+container.register(ServiceTypes.AUTH_CACHE, AuthCacheService, [ProviderTypes.CACHE]);
+container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, [ProviderTypes.CACHE]);
 // Email
 container.register(ServiceTypes.EMAIL, MailTrapEmailService, [ServiceTypes.EMAIL_CONTENT]);
 // =============
