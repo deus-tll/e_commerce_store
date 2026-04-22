@@ -127,7 +127,7 @@ export class AppServer {
 	}
 
 	/**
-	 * Connects to the database, runs seeders, and starts the Express server.
+	 * Configures and starts the server.
 	 */
 	async start() {
 		try {
@@ -153,6 +153,24 @@ export class AppServer {
 			});
 		} catch (error) {
 			console.error("[Server] Fatal error during server startup:", error);
+			process.exit(1);
+		}
+	}
+
+	/**
+	 * Gracefully shuts down the server
+	 */
+	async stop() {
+		console.log("[Server] Shutting down...");
+
+		try {
+			await this.#db.disconnect();
+
+			console.log("[Server] Cleanup complete. Exiting.");
+			process.exit(0);
+		}
+		catch (error) {
+			console.error("[Server] Error during shutdown:", error);
 			process.exit(1);
 		}
 	}
