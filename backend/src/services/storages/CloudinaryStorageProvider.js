@@ -1,15 +1,20 @@
-import cloudinary from "../../infrastructure/cloudinary.js";
+import { v2 as cloudinary } from "cloudinary";
 
-import {IStorageService} from "../../interfaces/storage/IStorageService.js";
-
+import {IStorageProvider} from "../../interfaces/storage/IStorageProvider.js";
 import {SystemError} from "../../errors/index.js";
 import {config} from "../../config.js";
 
+cloudinary.config({
+	cloud_name: config.services.storage.cloudName,
+	api_key: config.services.storage.apiKey,
+	api_secret: config.services.storage.apiSecret,
+});
+
 /**
  * Cloudinary implementation of the IStorageService contract.
- * @augments IStorageService
+ * @augments IStorageProvider
  */
-export class CloudinaryStorageService extends IStorageService {
+export class CloudinaryStorageProvider extends IStorageProvider {
 	/**
 	 * Extracts the public ID segment (excluding folder and extension) from a secure URL.
 	 * @param {string} fileUrl

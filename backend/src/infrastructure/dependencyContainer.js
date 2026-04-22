@@ -26,7 +26,7 @@ import {CouponMapper} from "../services/coupon/CouponMapper.js";
 import {CouponFactory} from "../services/coupon/CouponFactory.js";
 import {UserMapper} from "../services/user/UserMapper.js";
 
-import {CloudinaryStorageService} from "../services/storages/CloudinaryStorageService.js";
+import {CloudinaryStorageProvider} from "../services/storages/CloudinaryStorageProvider.js";
 import {CategoryStorageService} from "../services/storages/CategoryStorageService.js";
 import {CategoryImageManager} from "../services/category/CategoryImageManager.js";
 import {ProductStorageService} from "../services/storages/ProductStorageService.js";
@@ -207,11 +207,11 @@ container.register(RepositoryTypes.USER, UserMongooseRepository, []);
 container.register(ServiceTypes.EMAIL_CONTENT, FilesystemEmailContentService, []);
 container.register(ServiceTypes.PASSWORD, PasswordService, []);
 container.register(ServiceTypes.SLUG_GENERATOR, SlugGenerator, []);
-container.register(ServiceTypes.STORAGE, CloudinaryStorageService, []);
 
 // Providers
 container.register(ServiceTypes.DATABASE, MongooseDatabaseProvider, []);
 container.register(ProviderTypes.CACHE, SelectedCache, []);
+container.register(ProviderTypes.STORAGE, CloudinaryStorageProvider, []);
 container.register(ProviderTypes.JWT, JwtProvider, []);
 
 
@@ -251,9 +251,9 @@ container.register(ServiceTypes.PRODUCT_CACHE, ProductCacheService, [ProviderTyp
 container.register(ServiceTypes.EMAIL, MailTrapEmailService, [ServiceTypes.EMAIL_CONTENT]);
 // =============
 // Storage
-container.register(ServiceTypes.CATEGORY_STORAGE, CategoryStorageService, [ServiceTypes.STORAGE]);
+container.register(ServiceTypes.CATEGORY_STORAGE, CategoryStorageService, [ProviderTypes.STORAGE]);
 container.register(ImageManagerTypes.CATEGORY, CategoryImageManager, [ServiceTypes.CATEGORY_STORAGE]);
-container.register(ServiceTypes.PRODUCT_STORAGE, ProductStorageService, [ServiceTypes.STORAGE]);
+container.register(ServiceTypes.PRODUCT_STORAGE, ProductStorageService, [ProviderTypes.STORAGE]);
 container.register(ImageManagerTypes.PRODUCT, ProductImageManager, [ServiceTypes.PRODUCT_STORAGE]);
 // =============
 // User

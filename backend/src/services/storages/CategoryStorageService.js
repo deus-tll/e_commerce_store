@@ -1,5 +1,5 @@
 import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
-import {IStorageService} from "../../interfaces/storage/IStorageService.js";
+import {IStorageProvider} from "../../interfaces/storage/IStorageProvider.js";
 
 import {FileFolders} from "../../constants/file.js";
 
@@ -8,11 +8,11 @@ import {FileFolders} from "../../constants/file.js";
  * @augments ICategoryStorageService
  */
 export class CategoryStorageService extends ICategoryStorageService {
-	/** @type {IStorageService} */ #storageService;
+	/** @type {IStorageProvider} */ #storageService;
 	/** @type {string} */ #folder = FileFolders.CATEGORIES;
 
 	/**
-	 * @param {IStorageService} storageService
+	 * @param {IStorageProvider} storageService
 	 */
 	constructor(storageService) {
 		super();

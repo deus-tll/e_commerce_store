@@ -120,7 +120,7 @@ export class AppServer {
 
 	async dropStorage() {
 		if (config.services.storage.dropOnStartup) {
-			const storageService = this.#container.get(ServiceTypes.STORAGE);
+			const storageService = this.#container.get(ProviderTypes.STORAGE);
 			await storageService.deleteAll();
 		}
 		else {

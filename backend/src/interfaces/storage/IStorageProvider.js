@@ -1,8 +1,8 @@
 /**
- * @interface IStorageService
+ * @interface IStorageProvider
  * @description Defines the contract for storage operations (uploading and deleting files) with an external provider.
  */
-export class IStorageService {
+export class IStorageProvider {
 	/**
 	 * Uploads a file (e.g., Base64 string or buffer) to the storage provider.
 	 * @param {string} file - The file content (e.g., Base64 encoded string).
