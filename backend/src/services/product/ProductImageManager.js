@@ -69,18 +69,20 @@ export class ProductImageManager extends IProductImageManager {
 
 		// --- 1. Main Image Update ---
 		if (newImagesData.mainImage !== undefined) {
-			const newMainImage = newImagesData.mainImage;
+			const newMain = newImagesData.mainImage;
+			const oldMain = oldImages.mainImage;
 
-			if (newMainImage !== oldImages.mainImage) {
-				// Upload new image
-				finalMainImage = await this.#productStorageService.upload(newMainImage);
-				// Queue old URL for deletion if it exists
-				if (oldImages.mainImage) urlsToDelete.push(oldImages.mainImage);
-			} else if (!newMainImage) {
-				// Disallow explicit null/empty update unless logic permits.
+			if (!newMain) {
 				throw new DomainValidationError("The main image is required and cannot be empty.");
 			}
-			// (Preservation): If newMainImage === oldImages.mainImage,
+
+			// If we got any url or base64, and it's not equal to old value:
+			// upload to storage new image and delete the old one
+			if (newMain && newMain !== oldMain) {
+				finalMainImage = await this.#productStorageService.upload(newMain);
+				if (oldMain) urlsToDelete.push(oldMain);
+			}
+			// (Preservation): If newMain === oldImages.mainImage,
 			// nothing happens here, and finalMainImage retains its initial
 			// preserved value from when it was initialized above.
 		}
@@ -94,12 +96,12 @@ export class ProductImageManager extends IProductImageManager {
 			for (const image of newImagesData.additionalImages) {
 				if (typeof image !== "string") continue;
 
-				if (!oldImages.additionalImages.includes(image)) {
-					// This is a new raw image that needs uploading
-					imagesToUpload.push(image);
-				} else {
+				if (oldImages.additionalImages.includes(image)) {
 					// This is an existing URL being retained
 					retainedUrlsSet.add(image);
+				} else {
+					// This is a new raw image that needs uploading
+					imagesToUpload.push(image);
 				}
 			}
 

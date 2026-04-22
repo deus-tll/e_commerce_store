@@ -1,9 +1,21 @@
-import {mailtrapClient, sender} from "../../infrastructure/mailtrap.js";
+import {MailtrapClient} from "mailtrap";
 
-import {IEmailService} from "../../interfaces/email/IEmailService.js";
+import {IEmailProvider} from "../../interfaces/email/IEmailProvider.js";
 import {IEmailContentService} from "../../interfaces/email/IEmailContentService.js";
 
 import {SystemError} from "../../errors/index.js";
+
+import {config} from "../../config.js";
+
+export const mailtrapClient = new MailtrapClient({
+	endpoint: config.providers.mail.mailtrap.endpoint,
+	token: config.providers.mail.mailtrap.token,
+});
+
+export const sender = {
+	email: config.providers.mail.mailtrap.sender.email,
+	name: config.providers.mail.mailtrap.sender.name
+}
 
 const EMAIL_CATEGORIES = {
 	VERIFICATION: "Email Verification",
@@ -11,7 +23,7 @@ const EMAIL_CATEGORIES = {
 	RESET_SUCCESS: "Password Reset Success"
 };
 
-export class MailTrapEmailService extends IEmailService {
+export class MailTrapEmailProvider extends IEmailProvider {
 	/** @type {IEmailContentService} */ #contentService;
 
 	/**

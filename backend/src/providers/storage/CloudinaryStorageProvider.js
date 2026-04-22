@@ -1,14 +1,20 @@
-import cloudinary from "../../infrastructure/cloudinary.js";
+import { v2 as cloudinary } from "cloudinary";
 
-import {IStorageService} from "../../interfaces/storage/IStorageService.js";
-
+import {IStorageProvider} from "../../interfaces/storage/IStorageProvider.js";
 import {SystemError} from "../../errors/index.js";
+import {config} from "../../config.js";
+
+cloudinary.config({
+	cloud_name: config.providers.storage.cloudinary.cloudName,
+	api_key: config.providers.storage.cloudinary.apiKey,
+	api_secret: config.providers.storage.cloudinary.apiSecret,
+});
 
 /**
  * Cloudinary implementation of the IStorageService contract.
- * @augments IStorageService
+ * @augments IStorageProvider
  */
-export class CloudinaryStorageService extends IStorageService {
+export class CloudinaryStorageProvider extends IStorageProvider {
 	/**
 	 * Extracts the public ID segment (excluding folder and extension) from a secure URL.
 	 * @param {string} fileUrl
@@ -64,6 +70,42 @@ export class CloudinaryStorageService extends IStorageService {
 		}
 		catch (error) {
 			console.error("[Cloudinary] Delete failed:", error.message);
+		}
+	}
+
+	async deleteAll() {
+		if (config.app.isProduction) {
+			console.warn("[Cloudinary] Cleanup skipped: Production environment detected.");
+			return;
+		}
+
+		try {
+			console.log("[Cloudinary] Starting cleanup of all assets...");
+
+			let hasMore = true;
+			let deletedCount = 0;
+
+			while (hasMore) {
+				const result = await cloudinary.api.delete_all_resources({
+					resource_type: 'image',
+					invalidate: true,
+					max_results: 1000
+				});
+
+				const count = Object.keys(result.deleted).length;
+				deletedCount += count;
+
+				hasMore = !!result.next_cursor;
+
+				if (hasMore) {
+					console.log(`[Cloudinary] Deleted ${deletedCount} assets, moving to next batch...`);
+				}
+			}
+
+			console.log(`[Cloudinary] Cleanup complete. Total assets removed: ${deletedCount}`);
+		}
+		catch (error) {
+			console.error("[Cloudinary] Cleanup failed:", error.message);
 		}
 	}
 }

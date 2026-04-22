@@ -1,5 +1,5 @@
 import {IPaymentService} from "../../interfaces/payment/IPaymentService.js";
-import {IStripeService} from "../../interfaces/payment/IStripeService.js";
+import {IStripeProvider} from "../../interfaces/payment/IStripeProvider.js";
 import {IProductService} from "../../interfaces/product/IProductService.js";
 import {ICheckoutOrderHandler} from "../../interfaces/order/ICheckoutOrderHandler.js";
 import {ICouponHandler} from "../../interfaces/coupon/ICouponHandler.js";
@@ -11,20 +11,20 @@ import {Currency} from "../../utils/currency.js";
 import {StripeEvents} from "../../constants/stripe.js";
 
 export class StripePaymentService extends IPaymentService {
-	/** @type {IStripeService} */ #stripeService;
+	/** @type {IStripeProvider} */ #stripeProvider;
 	/** @type {IProductService} */ #productService;
 	/** @type {ICheckoutOrderHandler} */ #orderHandler;
 	/** @type {ICouponHandler} */ #couponHandler;
 
 	/**
-	 * @param {IStripeService} stripeService
+	 * @param {IStripeProvider} stripeProvider
 	 * @param {IProductService} productService
 	 * @param {ICheckoutOrderHandler} orderHandler
 	 * @param {ICouponHandler} couponHandler
 	 */
-	constructor(stripeService, productService, orderHandler, couponHandler) {
+	constructor(stripeProvider, productService, orderHandler, couponHandler) {
 		super();
-		this.#stripeService = stripeService;
+		this.#stripeProvider = stripeProvider;
 		this.#productService = productService;
 		this.#orderHandler = orderHandler;
 		this.#couponHandler = couponHandler;
@@ -53,7 +53,7 @@ export class StripePaymentService extends IPaymentService {
 		});
 
 		// 2. Calculate totals and discounts
-		const { lineItems, initialTotalAmount } = this.#stripeService.processProductsForStripe(orderItems);
+		const { lineItems, initialTotalAmount } = this.#stripeProvider.processProductsForStripe(orderItems);
 		const { totalAmount, appliedCoupon } = await this.#couponHandler.applyDiscount(
 			initialTotalAmount,
 			couponCode,
@@ -69,8 +69,8 @@ export class StripePaymentService extends IPaymentService {
 		);
 
 		// 4. Create Provider Session
-		const stripeDiscounts = await this.#stripeService.prepareDiscountsForProvider(appliedCoupon);
-		const session = await this.#stripeService.createCheckoutSession(
+		const stripeDiscounts = await this.#stripeProvider.prepareDiscountsForProvider(appliedCoupon);
+		const session = await this.#stripeProvider.createCheckoutSession(
 			lineItems,
 			stripeDiscounts,
 			userId,
@@ -88,7 +88,7 @@ export class StripePaymentService extends IPaymentService {
 	}
 
 	async processWebhook(payload, headers) {
-		const event = this.#stripeService.constructEvent(payload, headers);
+		const event = this.#stripeProvider.constructEvent(payload, headers);
 
 		if (event.type === StripeEvents.CHECKOUT_SESSION_COMPLETED) {
 			const session = event.data.object;

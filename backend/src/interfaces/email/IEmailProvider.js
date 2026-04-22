@@ -1,8 +1,8 @@
 /**
- * @interface IEmailService
+ * @interface IEmailProvider
  * @description Contract for handling all email sending logic.
  */
-export class IEmailService {
+export class IEmailProvider {
 	/**
 	 * Sends an email verification code to the user.
 	 * @param {string} email

@@ -13,7 +13,12 @@ export const UtilityTypes = Object.freeze({
 });
 
 export const ProviderTypes = Object.freeze({
-	JWT: "IJwtProvider"
+	DATABASE: "IDatabaseProvider",
+	CACHE: "ICacheProvider",
+	STORAGE: "IStorageProvider",
+	JWT: "IJwtProvider",
+	EMAIL: "IEmailProvider",
+	STRIPE: "IStripeProvider",
 });
 
 export const CookieHandlerTypes = Object.freeze({
@@ -53,11 +58,8 @@ export const ServiceTypes = Object.freeze({
 	AUTH_CACHE: "AuthCacheService",
 	PRODUCT_CACHE: "ProductCacheService",
 	EMAIL_CONTENT: "IEmailContentService",
-	EMAIL: "IEmailService",
 	PASSWORD: "IPasswordService",
 	SLUG_GENERATOR: "ISlugGenerator",
-
-	STORAGE: "IStorageService",
 
 	CATEGORY_STORAGE: "ICategoryStorageService",
 	PRODUCT_STORAGE: "IProductStorageService",
@@ -80,7 +82,6 @@ export const ServiceTypes = Object.freeze({
 	SESSION_AUTH: "ISessionAuthService",
 	PAYMENT: "IPaymentService",
 
-	STRIPE: "IStripeService",
 	CHECKOUT_ORDER_HANDLER: "ICheckoutOrderHandler",
 	CHECKOUT_COUPON_HANDLER: "ICouponHandler"
 });

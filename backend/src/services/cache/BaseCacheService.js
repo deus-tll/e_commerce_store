@@ -1,13 +1,18 @@
-import { redis } from "../infrastructure/redis.js";
-
 /**
  * @abstract
  * Base class for all specific cache services.
- * It encapsulates the connection to Redis and common cache methods.
+ * It encapsulates the connection to Cache Provider and common cache methods.
  */
 export class BaseCacheService {
-	/** @protected */
-	redis = redis;
+	/** @type {ICacheProvider} @protected */
+	_cacheProvider;
+
+	/**
+	 * @param {ICacheProvider} cacheProvider
+	 */
+	constructor(cacheProvider) {
+		this._cacheProvider = cacheProvider;
+	}
 
 	/**
 	 * Defines the full, context-qualified prefix for this cache service's keys
@@ -22,7 +27,7 @@ export class BaseCacheService {
 	}
 
 	/**
-	 * Generates a fully qualified key for Redis.
+	 * Generates a fully qualified key.
 	 * @param {string} identifier - The specific ID (e.g., userId, productId).
 	 * @returns {string} The formatted key (e.g., "AUTH:refresh_token:123").
 	 * @protected
@@ -34,7 +39,7 @@ export class BaseCacheService {
 	}
 
 	/**
-	 * Stores a value in Redis with an optional expiration time.
+	 * Stores a value in Cache with an optional expiration time.
 	 * @param {string} identifier
 	 * @param {*} value
 	 * @param {number} [ttl] - Time to live in seconds.
@@ -42,43 +47,26 @@ export class BaseCacheService {
 	 * @protected
 	 */
 	async _set(identifier, value, ttl) {
-		const key = this._getKey(identifier);
-		const data = typeof value === "string" ? value : JSON.stringify(value);
-
-		if (ttl) {
-			await this.redis.set(key, data, "EX", ttl);
-		} else {
-			await this.redis.set(key, data);
-		}
+		await this._cacheProvider.set(this._getKey(identifier), value, ttl);
 	}
 
 	/**
-	 * Retrieves a value from Redis.
+	 * Retrieves a value from Cache.
 	 * @param {string} identifier
 	 * @returns {Promise<string | null>}
 	 * @protected
 	 */
 	async _get(identifier) {
-		const key = this._getKey(identifier);
-		const data = await this.redis.get(key);
-
-		if (!data) return null;
-
-		try {
-			return JSON.parse(data);
-		} catch {
-			return data;
-		}
+		return await this._cacheProvider.get(this._getKey(identifier));
 	}
 
 	/**
-	 * Deletes a key from Redis.
+	 * Deletes a key from Cache.
 	 * @param {string} identifier
 	 * @returns {Promise<void>}
 	 * @protected
 	 */
 	async _delete(identifier) {
-		const key = this._getKey(identifier);
-		await this.redis.del(key);
+		await this._cacheProvider.delete(this._getKey(identifier));
 	}
 }

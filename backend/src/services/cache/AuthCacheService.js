@@ -1,15 +1,22 @@
 import {BaseCacheService} from "./BaseCacheService.js";
 
-import {CacheKeys} from "../constants/app.js";
-import {SECONDS_PER_DAY} from "../constants/time.js";
+import {CacheKeys} from "../../constants/app.js";
+import {SECONDS_PER_DAY} from "../../constants/time.js";
 
 const REFRESH_TOKEN_CACHE_TTL = 7 * SECONDS_PER_DAY;
 
 /**
- * Manages the storage and retrieval of auth related data in the cache (Redis).
+ * Manages the storage and retrieval of auth related data in the cache.
  * @augments BaseCacheService
  */
 export class AuthCacheService extends BaseCacheService {
+	/**
+	 * @param {ICacheProvider} cacheProvider
+	 */
+	constructor(cacheProvider) {
+		super(cacheProvider);
+	}
+
 	/**
 	 * Defines the full, context-qualified prefix for this cache service's keys.
 	 * @returns {string} The prefix, e.g., "AUTH:refresh_token".

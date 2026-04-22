@@ -4,11 +4,9 @@ import cors from "cors";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import {connectDB, dropDatabase} from "./infrastructure/db.js";
-
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
-import {RouterTypes, SeederTypes} from "./constants/ioc.js";
+import {ProviderTypes, RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
@@ -26,6 +24,8 @@ export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
 	/** @type {Container} */ #container;
+	/** @type {IDatabaseProvider} */ #db;
+	/** @type {ICacheProvider} */ #cache;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
@@ -35,6 +35,8 @@ export class AppServer {
 		this.#app = express();
 		this.#port = config.app.port;
 		this.#container = container;
+		this.#db = this.#container.get(ProviderTypes.DATABASE);
+		this.#cache = this.#container.get(ProviderTypes.CACHE);
 	}
 
 	/**
@@ -107,23 +109,44 @@ export class AppServer {
 		console.log("[Server] Seeding complete.");
 	}
 
-	async clearDatabase() {
-		if (config.database.dropOnStartup) {
-			await dropDatabase();
+	async dropDatabase() {
+		if (config.providers.database.dropOnStartup) {
+			await this.#db.drop();
 		}
 		else {
-			console.log("[Database] Skipping drop of Database.");
+			console.log("[Database] Skipping drop.");
+		}
+	}
+
+	async dropStorage() {
+		if (config.providers.storage.dropOnStartup) {
+			const storageService = this.#container.get(ProviderTypes.STORAGE);
+			await storageService.deleteAll();
+		}
+		else {
+			console.log("[Storage] Skipping drop.");
 		}
 	}
 
 	/**
-	 * Connects to the database, runs seeders, and starts the Express server.
+	 * Configures and starts the server.
 	 */
 	async start() {
 		try {
-			await connectDB();
-			// only works in development and with DROP_DB=true in .env
-			await this.clearDatabase();
+			await this.#db.connect()
+
+			try {
+				await this.#cache.connect();
+			}
+			catch (error) {
+				if (config.app.isProduction) throw error;
+				console.warn(`[Server] Cache not available: ${error.message}`);
+			}
+
+			// only works in development and with DROP_DB_ON_STARTUP=true in .env
+			await this.dropDatabase();
+			// only works in development and with DROP_STORAGE_ON_STARTUP=true in .env
+			await this.dropStorage();
 
 			this.#container.verify();
 
@@ -140,6 +163,27 @@ export class AppServer {
 			});
 		} catch (error) {
 			console.error("[Server] Fatal error during server startup:", error);
+			process.exit(1);
+		}
+	}
+
+	/**
+	 * Gracefully shuts down the server
+	 */
+	async stop() {
+		console.log("[Server] Shutting down...");
+
+		try {
+			await Promise.allSettled([
+				this.#db.disconnect(),
+				this.#cache.disconnect()
+			]);
+
+			console.log("[Server] Cleanup complete. Exiting.");
+			process.exit(0);
+		}
+		catch (error) {
+			console.error("[Server] Error during shutdown:", error);
 			process.exit(1);
 		}
 	}

@@ -1,0 +1,48 @@
+import mongoose from 'mongoose';
+import {IDatabaseProvider} from "../../interfaces/database/IDatabaseProvider.js";
+import {config} from "../../config.js";
+
+/**
+ * MongoDB implementation of the IDatabaseProvider using Mongoose.
+ * @augments IDatabaseProvider
+ */
+export class MongooseDatabaseProvider extends IDatabaseProvider {
+    #uri;
+
+    constructor() {
+        super();
+        this.#uri = config.providers.database.mongo.uri;
+    }
+
+    async connect() {
+        try {
+            const conn = await mongoose.connect(this.#uri);
+            console.log(`[Database] Mongoose connected: ${conn.connection.host}`);
+            return conn;
+        }
+        catch (error) {
+            console.error("[Database] Mongoose connection failed:", error.message);
+            throw error;
+        }
+    }
+
+    async disconnect() {
+        await mongoose.disconnect();
+        console.log("[Database] Mongoose disconnected.");
+    }
+
+    async drop() {
+        if (config.app.isProduction) {
+            console.warn("[Database] Drop skipped: Production environment.");
+            return;
+        }
+
+        try {
+            console.log("[Database] Dropping Mongoose database...");
+            await mongoose.connection.db.dropDatabase();
+            console.log("[Database] Mongoose database dropped.");
+        } catch (error) {
+            console.error("[Database] Drop failed:", error.message);
+        }
+    }
+}

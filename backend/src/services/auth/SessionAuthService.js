@@ -2,8 +2,8 @@ import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js"
 import {IUserService} from "../../interfaces/user/IUserService.js";
 import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 
-import {JwtProvider} from "../../providers/JwtProvider.js";
-import {AuthCacheService} from "../../cache/AuthCacheService.js";
+import {JwtProvider} from "../../providers/auth/JwtProvider.js";
+import {AuthCacheService} from "../cache/AuthCacheService.js";
 
 import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js";
 
