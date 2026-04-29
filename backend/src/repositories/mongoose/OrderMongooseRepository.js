@@ -7,6 +7,7 @@ import {MongooseAdapter} from "../adapters/MongooseAdapter.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError, SystemError} from "../../errors/index.js";
 import {determineSort, toObjectId} from "./utils.js";
+import {OrderStatus} from "../../constants/domain.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
 	#buildMongooseQuery(query) {
@@ -138,6 +139,14 @@ export class OrderMongooseRepository extends IOrderRepository {
 
 		const entities = foundDocs.map(doc => MongooseAdapter.toOrderEntity(doc));
 		return new RepositoryPaginationResult(entities, total);
+	}
+
+	async hasUserPurchasedProduct(userId, productId) {
+		return Boolean(await Order.exists({
+			user: userId,
+			"products.product": productId,
+			status: OrderStatus.DELIVERED
+		}));
 	}
 
 	async getSalesSummary() {

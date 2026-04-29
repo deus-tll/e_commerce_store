@@ -1,51 +1,89 @@
 import {IProductImageManager} from "../../interfaces/product/IProductImageManager.js";
-import {IProductStorageService} from "../../interfaces/storage/IProductStorageService.js";
+import {ProductStorageManager} from "../../core/storage/ProductStorageManager.js";
 import {ProductImage} from "../../domain/index.js";
 
 import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * @augments IProductImageManager
- * @description Manages the business logic for product image uploads, updates, and deletions.
- * Orchestrates interaction between the ProductService and IProductStorageService.
+ * @description Domain manager for Product image workflow.
  */
 export class ProductImageManager extends IProductImageManager {
-	/** @type {IProductStorageService} */ #productStorageService;
+	/** @type {ProductStorageManager} */ #productStorageManager;
 
 	/**
-	 * @param {IProductStorageService} productStorageService
+	 * @param {ProductStorageManager} productStorageManager
 	 */
-	constructor(productStorageService) {
+	constructor(productStorageManager) {
 		super();
-		this.#productStorageService = productStorageService;
+		this.#productStorageManager = productStorageManager;
 	}
 
-	/**
-	 * Helper to delete multiple image URLs in parallel.
-	 * @param {string[]} urls - Array of secure URLs to delete.
-	 * @returns {Promise<void>}
-	 */
-	async #deleteUrls(urls) {
-		const validUrls = urls.filter(url => url);
-		if (validUrls.length === 0) return;
+	#validatePresence(value) {
+		if (!value) {
+			throw new DomainValidationError("Main product image is required.");
+		}
+	}
 
-		const results = await Promise.allSettled(
-			validUrls.map(url => this.#productStorageService.delete(url))
+	async #updateMainImage(newMain, existingMain, urlsToDelete) {
+		if (newMain === undefined) return existingMain;
+		this.#validatePresence(newMain);
+
+		if (newMain !== existingMain) {
+			const uploadedUrl = await this.#productStorageManager.upload(newMain);
+			if (existingMain) urlsToDelete.push(existingMain);
+			return uploadedUrl;
+		}
+
+		return existingMain;
+	}
+
+	async #updateAdditionalImages(newAdditionals, existingAdditionals, urlsToDelete) {
+		if (!Array.isArray(newAdditionals)) return [...existingAdditionals];
+
+		const retainedSet = new Set();
+		const imagesToUpload = [];
+
+		for (const image of newAdditionals) {
+			if (typeof image !== "string") continue;
+
+			if (existingAdditionals.includes(image)) {
+				retainedSet.add(image);
+			} else {
+				imagesToUpload.push(image);
+			}
+		}
+
+		const uploadedUrls = await Promise.all(
+			imagesToUpload.map(img => this.#productStorageManager.upload(img))
 		);
 
-		results.forEach((result, index) => {
-			if (result.status === 'rejected') {
-				console.warn(`[Storage] Failed to delete orphaned image: ${validUrls[index]}`, result.reason);
+		for (const oldUrl of existingAdditionals) {
+			if (oldUrl && !retainedSet.has(oldUrl)) {
+				urlsToDelete.push(oldUrl);
 			}
-		});
+		}
+
+		return [...retainedSet, ...uploadedUrls];
 	}
 
-	async processNewImagesForCreation(imageData) {
+	/**
+	 * @param {ProductImage} imageData
+	 * @returns {string[]}
+	 */
+	#toArrayUrls(imageData) {
+		return [
+			imageData.mainImage,
+			...imageData.additionalImages
+		].filter(Boolean);
+	}
+
+	async imageDataUploadOnCreate(imageData) {
 		const additionalImages = imageData.additionalImages || [];
 
-		const mainImagePromise = this.#productStorageService.upload(imageData.mainImage);
+		const mainImagePromise = this.#productStorageManager.upload(imageData.mainImage);
 		const additionalImagePromises = additionalImages.map(rawImage =>
-			this.#productStorageService.upload(rawImage)
+			this.#productStorageManager.upload(rawImage)
 		);
 
 		const uploads = [
@@ -61,65 +99,20 @@ export class ProductImageManager extends IProductImageManager {
 		});
 	}
 
-	async handleImageUpdate(newImagesData, existingImages) {
-		const oldImages = existingImages || new ProductImage({ mainImage: "", additionalImages: [] });
-		let finalMainImage = oldImages.mainImage;
-		let finalAdditionalImages = [...oldImages.additionalImages];
+	async imageDataUploadOnUpdate(newImageData, existingImageData) {
 		const urlsToDelete = [];
 
-		// --- 1. Main Image Update ---
-		if (newImagesData.mainImage !== undefined) {
-			const newMain = newImagesData.mainImage;
-			const oldMain = oldImages.mainImage;
+		const finalMainImage = await this.#updateMainImage(
+			newImageData.mainImage,
+			existingImageData.mainImage,
+			urlsToDelete
+		);
 
-			if (!newMain) {
-				throw new DomainValidationError("The main image is required and cannot be empty.");
-			}
-
-			// If we got any url or base64, and it's not equal to old value:
-			// upload to storage new image and delete the old one
-			if (newMain && newMain !== oldMain) {
-				finalMainImage = await this.#productStorageService.upload(newMain);
-				if (oldMain) urlsToDelete.push(oldMain);
-			}
-			// (Preservation): If newMain === oldImages.mainImage,
-			// nothing happens here, and finalMainImage retains its initial
-			// preserved value from when it was initialized above.
-		}
-
-		// --- 2. Additional Images Update (List Replacement) ---
-		if (Array.isArray(newImagesData.additionalImages)) {
-			const retainedUrlsSet = new Set();
-			const imagesToUpload = [];
-
-			// Identify uploads vs. retentions
-			for (const image of newImagesData.additionalImages) {
-				if (typeof image !== "string") continue;
-
-				if (oldImages.additionalImages.includes(image)) {
-					// This is an existing URL being retained
-					retainedUrlsSet.add(image);
-				} else {
-					// This is a new raw image that needs uploading
-					imagesToUpload.push(image);
-				}
-			}
-
-			// Execute all additional image uploads in parallel
-			const uploadedUrls = await Promise.all(
-				imagesToUpload.map(rawImage => this.#productStorageService.upload(rawImage))
-			);
-
-			// Determine which old URLs to delete
-			for (const oldUrl of oldImages.additionalImages) {
-				if (oldUrl && !retainedUrlsSet.has(oldUrl)) {
-					urlsToDelete.push(oldUrl);
-				}
-			}
-
-			// Combine retained URLs and new uploaded URLs for the final list
-			finalAdditionalImages = [...retainedUrlsSet, ...uploadedUrls];
-		}
+		const finalAdditionalImages = await this.#updateAdditionalImages(
+			newImageData.additionalImages,
+			existingImageData.additionalImages,
+			urlsToDelete
+		);
 
 		const finalImagesData = new ProductImage({
 			mainImage: finalMainImage,
@@ -129,16 +122,23 @@ export class ProductImageManager extends IProductImageManager {
 		return { finalImagesData, urlsToDelete };
 	}
 
-	async deleteImagesByUrls(urls) {
-		return this.#deleteUrls(urls);
+	async deleteByUrls(urls) {
+		const validUrls = urls.filter(url => url);
+		if (validUrls.length === 0) return;
+
+		const results = await Promise.allSettled(
+			validUrls.map(url => this.#productStorageManager.delete(url))
+		);
+
+		results.forEach((result, index) => {
+			if (result.status === 'rejected') {
+				console.warn(`[Product Image Manager] Failed to delete orphaned image: ${validUrls[index]}`, result.reason);
+			}
+		});
 	}
 
-	async deleteProductImages(images) {
-		const urlsToDelete = [
-			images?.mainImage,
-			...(images?.additionalImages || [])
-		].filter(url => url);
-
-		await this.#deleteUrls(urlsToDelete);
+	async deleteImageData(imageData) {
+		const urlsToDelete = this.#toArrayUrls(imageData);
+		await this.deleteByUrls(urlsToDelete);
 	}
 }

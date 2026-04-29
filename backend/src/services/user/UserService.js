@@ -1,12 +1,13 @@
 import {IUserService} from "../../interfaces/user/IUserService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
+import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserMapper} from "../../interfaces/mappers/IUserMapper.js";
-import {IUserQueryTranslator} from "../../interfaces/user/IUserQueryTranslator.js";
+import {IQueryParser} from "../../interfaces/parsers/IQueryParser.js";
 import {UserPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
-import {PasswordService} from "../security/PasswordService.js";
 
 import {EntityNotFoundError, SystemError} from "../../errors/index.js";
+
 
 /**
  * @augments IUserService
@@ -14,29 +15,29 @@ import {EntityNotFoundError, SystemError} from "../../errors/index.js";
  */
 export class UserService extends IUserService {
 	/** @type {IUserRepository} */ #userRepository;
-	/** @type {PasswordService} */ #passwordService;
+	/** @type {IPasswordProvider} */ #passwordProvider;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
-	/** @type {IUserQueryTranslator} */ #userQueryTranslator;
+	/** @type {IQueryParser} */ #userQueryParser;
 
 	/**
 	 * @param {IUserRepository} userRepository
-	 * @param {PasswordService} passwordService
+	 * @param {IPasswordProvider} passwordProvider
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
-	 * @param {IUserQueryTranslator} userQueryTranslator
+	 * @param {IQueryParser} userQueryParser
 	 */
-	constructor(userRepository, passwordService, userTokenService, userMapper, userQueryTranslator) {
+	constructor(userRepository, passwordProvider, userTokenService, userMapper, userQueryParser) {
 		super();
 		this.#userRepository = userRepository;
-		this.#passwordService = passwordService;
+		this.#passwordProvider = passwordProvider;
 		this.#userTokenService = userTokenService;
 		this.#userMapper = userMapper;
-		this.#userQueryTranslator = userQueryTranslator;
+		this.#userQueryParser = userQueryParser;
 	}
 
 	async create(data) {
-		const hashedPassword = await this.#passwordService.hashPassword(data.password);
+		const hashedPassword = await this.#passwordProvider.hashPassword(data.password);
 		const persistenceData = {
 			...data.toPersistence(),
 			password: hashedPassword
@@ -62,7 +63,7 @@ export class UserService extends IUserService {
 			throw new SystemError("Password hash was not loaded for comparison.");
 		}
 
-		const hashedPassword = await this.#passwordService.hashPassword(newPassword);
+		const hashedPassword = await this.#passwordProvider.hashPassword(newPassword);
 		const updatedEntity = await this.#userRepository.updateById(entity.id, { password: hashedPassword });
 
 		return this.#userMapper.toDTO(updatedEntity);
@@ -75,7 +76,7 @@ export class UserService extends IUserService {
 
 	async getAll(page = 1, limit = 10, filters = {}) {
 		const skip = (page - 1) * limit;
-		const query = this.#userQueryTranslator.translate(filters);
+		const query = this.#userQueryParser.parse(filters);
 
 		const { results, total } = await this.#userRepository.findAndCount(query, skip, limit);
 

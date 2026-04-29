@@ -1,41 +1,39 @@
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
-import {ICategoryStorageService} from "../../interfaces/storage/ICategoryStorageService.js";
-
+import {CategoryStorageManager} from "../../core/storage/CategoryStorageManager.js";
 import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * @augments ICategoryImageManager
- * @description Service to manage image update workflow for the Category domain.
+ * @description Domain manager for Category image workflow.
  */
 export class CategoryImageManager extends ICategoryImageManager {
-	/** @type {ICategoryStorageService} */ #categoryStorageService;
+	/** @type {CategoryStorageManager} */ #categoryStorageManager;
 
 	/**
-	 * @param {ICategoryStorageService} categoryStorageService
+	 * @param {CategoryStorageManager} categoryStorageManager
 	 */
-	constructor(categoryStorageService) {
+	constructor(categoryStorageManager) {
 		super();
-		this.#categoryStorageService = categoryStorageService;
+		this.#categoryStorageManager = categoryStorageManager;
 	}
 
-	async handleImageUpdate(newImageValue, oldImageValue) {
-		if (!newImageValue) {
-			throw new DomainValidationError("Category image is required and cannot be empty.");
+	#validatePresence(value) {
+		if (!value) {
+			throw new DomainValidationError("Category image is required.");
 		}
-
-		const isString = typeof newImageValue === "string";
-
-		if (isString && newImageValue !== oldImageValue) {
-			const finalImageUrl = await this.#categoryStorageService.upload(newImageValue);
-			if (oldImageValue) await this.#categoryStorageService.delete(oldImageValue);
-
-			return finalImageUrl;
-		}
-
-		return oldImageValue;
 	}
 
-	async deleteImage(imageUrl) {
-		return this.#categoryStorageService.delete(imageUrl);
+	async imageDataUploadOnCreateUpdate(newImageData, existingImageData) {
+		this.#validatePresence(newImageData);
+
+		if (newImageData === existingImageData) return existingImageData;
+		const finalImageUrl = await this.#categoryStorageManager.upload(newImageData);
+		if (existingImageData) await this.#categoryStorageManager.delete(existingImageData);
+
+		return finalImageUrl;
+	}
+
+	async deleteByUrl(url) {
+		return this.#categoryStorageManager.delete(url);
 	}
 }

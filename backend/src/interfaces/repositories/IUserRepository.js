@@ -107,6 +107,15 @@ export class IUserRepository {
 	}
 
 	/**
+	 * Checks if a user with provided ID exists.
+	 * @param {string} id
+	 * @returns {Promise<boolean>}
+	 */
+	async exists(id) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Retrieves global aggregated statistics for users.
 	 * @returns {Promise<{
 	 * total: number,

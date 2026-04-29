@@ -1,7 +1,7 @@
 import {MailtrapClient} from "mailtrap";
 
-import {IEmailProvider} from "../../interfaces/email/IEmailProvider.js";
-import {IEmailContentService} from "../../interfaces/email/IEmailContentService.js";
+import {IEmailProvider} from "../../interfaces/providers/email/IEmailProvider.js";
+import {IEmailContentProvider} from "../../interfaces/email/IEmailContentProvider.js";
 
 import {SystemError} from "../../errors/index.js";
 
@@ -24,14 +24,14 @@ const EMAIL_CATEGORIES = {
 };
 
 export class MailTrapEmailProvider extends IEmailProvider {
-	/** @type {IEmailContentService} */ #contentService;
+	/** @type {IEmailContentProvider} */ #emailContentProvider;
 
 	/**
-	 * @param {IEmailContentService} contentService
+	 * @param {IEmailContentProvider} emailContentProvider
 	 */
-	constructor(contentService) {
+	constructor(emailContentProvider) {
 		super();
-		this.#contentService = contentService;
+		this.#emailContentProvider = emailContentProvider;
 	}
 
 	async #sendEmail(to, subject, htmlContent, category) {
@@ -55,7 +55,7 @@ export class MailTrapEmailProvider extends IEmailProvider {
 
 	async sendVerificationEmail(email, verificationToken) {
 		const subject = "Verify Your Email";
-		const finalHtml = await this.#contentService.renderTemplate(
+		const finalHtml = await this.#emailContentProvider.renderTemplate(
 			"emailVerification.html",
 			{ verificationCode: verificationToken }
 		);
@@ -65,7 +65,7 @@ export class MailTrapEmailProvider extends IEmailProvider {
 
 	async sendPasswordResetEmail(email, resetPasswordUrl) {
 		const subject = "Reset Your Password";
-		const finalHtml = await this.#contentService.renderTemplate(
+		const finalHtml = await this.#emailContentProvider.renderTemplate(
 			"passwordResetRequest.html",
 			{ resetPasswordUrl: resetPasswordUrl }
 		);
@@ -75,7 +75,7 @@ export class MailTrapEmailProvider extends IEmailProvider {
 
 	async sendPasswordResetSuccessEmail(email) {
 		const subject = "Password Reset Successful";
-		const finalHtml = await this.#contentService.renderTemplate(
+		const finalHtml = await this.#emailContentProvider.renderTemplate(
 			"passwordResetSuccess.html",
 			{}
 		);

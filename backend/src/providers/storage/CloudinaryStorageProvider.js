@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 
-import {IStorageProvider} from "../../interfaces/storage/IStorageProvider.js";
+import {IStorageProvider} from "../../interfaces/providers/storage/IStorageProvider.js";
 import {SystemError} from "../../errors/index.js";
 import {config} from "../../config.js";
 

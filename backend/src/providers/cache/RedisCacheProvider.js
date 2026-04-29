@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import {ICacheProvider} from "../../interfaces/cache/ICacheProvider.js";
+import {ICacheProvider} from "../../interfaces/providers/cache/ICacheProvider.js";
 import {config} from "../../config.js";
 
 /**

@@ -1,4 +1,4 @@
-import {IProductService} from "../../interfaces/product/IProductService.js";
+import {IProductRepository} from "../../interfaces/repositories/IProductRepository.js";
 import {IProductStatsService} from "../../interfaces/product/IProductStatsService.js";
 
 /**
@@ -8,19 +8,19 @@ import {IProductStatsService} from "../../interfaces/product/IProductStatsServic
  * @augments IProductStatsService
  */
 export class ProductStatsService extends IProductStatsService {
-	/** @type {IProductService} */ #productService;
+	/** @type {IProductRepository} */ #productRepository;
 
 	/**
-	 * @param {IProductService} productService
+	 * @param {IProductRepository} productRepository
 	 */
-	constructor(productService) {
+	constructor(productRepository) {
 		super();
-		this.#productService = productService;
+		this.#productRepository = productRepository;
 	}
 
 	async handleReviewCreation(productId, newRating) {
 		// New Review: +1 total review count, rating change is the new rating, old rating is 0
-		await this.#productService.updateRatingStats(
+		await this.#productRepository.updateRatingStats(
 			productId,
 			newRating,
 			1, // totalReviewsChange (+1)
@@ -32,7 +32,7 @@ export class ProductStatsService extends IProductStatsService {
 		// Only update stats if the rating actually changed
 		if (newRating !== oldRating) {
 			// Updated Review: 0 change in total review count. New rating and old rating are used to calculate the net sum change.
-			await this.#productService.updateRatingStats(
+			await this.#productRepository.updateRatingStats(
 				productId,
 				newRating,
 				0, // totalReviewsChange (0 for update)
@@ -43,7 +43,7 @@ export class ProductStatsService extends IProductStatsService {
 
 	async handleReviewDeletion(productId, oldRating) {
 		// Deleted Review: -1 total review count. The old rating is passed to be subtracted from the rating sum.
-		await this.#productService.updateRatingStats(
+		await this.#productRepository.updateRatingStats(
 			productId,
 			0, // ratingChange (0, as the rating logic uses oldRating for subtraction)
 			-1, // totalReviewsChange (-1)

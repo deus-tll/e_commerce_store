@@ -108,6 +108,15 @@ export class IProductRepository {
 	}
 
 	/**
+	 * Checks if a product with provided ID exists.
+	 * @param {string} id
+	 * @returns {Promise<boolean>}
+	 */
+	async exists(id) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Discovers unique attribute names and values within a specific category.
 	 * @param {string} categoryId - The ID of the category to analyze.
 	 * @returns {Promise<AttributeFacetDTO[]>} - List of facets.

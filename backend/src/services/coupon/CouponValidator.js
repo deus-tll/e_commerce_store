@@ -4,6 +4,7 @@ import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository
 import {CouponValidationDTO} from "../../domain/index.js";
 
 import {DomainValidationError, EntityNotFoundError} from "../../errors/index.js";
+
 import {ValidationErrorTypes} from "../../constants/errors.js";
 
 /**
@@ -11,16 +12,14 @@ import {ValidationErrorTypes} from "../../constants/errors.js";
  * @description Concrete implementation of ICouponValidator.
  */
 export class CouponValidator extends ICouponValidator {
-	/** @type {IUserService} */ #userService;
+
 	/** @type {ICouponRepository} */ #couponRepository;
 
 	/**
-	 * @param {IUserService} userService
 	 * @param {ICouponRepository} couponRepository
 	 */
-	constructor(userService, couponRepository) {
+	constructor(couponRepository) {
 		super();
-		this.#userService = userService;
 		this.#couponRepository = couponRepository;
 	}
 
@@ -29,10 +28,6 @@ export class CouponValidator extends ICouponValidator {
 			await this.#couponRepository.updateCouponActiveState(couponEntity.code, userId, false);
 			throw new DomainValidationError("Coupon expired", ValidationErrorTypes.EXPIRED);
 		}
-	}
-
-	async validateUserExists(userId) {
-		await this.#userService.getByIdOrFail(userId);
 	}
 
 	async validate(code, userId) {

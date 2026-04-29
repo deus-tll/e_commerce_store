@@ -1,5 +1,7 @@
 import {AppServer} from "./AppServer.js";
-import container from "./infrastructure/dependencyContainer.js";
+import initContainer from "./core/di/index.js";
+
+const container = initContainer();
 
 const server = new AppServer(container);
 

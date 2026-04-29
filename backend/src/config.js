@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import path from "path";
 import {fileURLToPath} from "url";
 
-import {CACHE_TYPE, EnvModes} from "./constants/app.js";
+import {CacheTypes, EnvModes} from "./constants/app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +47,7 @@ export const config = {
 			}
 		},
 		cache: {
-			type: process.env.CACHE_TYPE || CACHE_TYPE.MEMORY,
+			type: process.env.CACHE_TYPE || CacheTypes.MEMORY,
 			redis: {
 				url: process.env.REDIS_URL
 			}
@@ -78,6 +78,12 @@ export const config = {
 				}
 			}
 		},
+		password: {
+			resetUrl: process.env.RESET_PASSWORD_URL,
+			bcrypt: {
+				saltRounds: Number(process.env.SALT_ROUNDS) || 10,
+			}
+		}
 	},
 	auth: {
 		access: {
@@ -87,11 +93,7 @@ export const config = {
 		refresh: {
 			secret: process.env.REFRESH_TOKEN_SECRET,
 			ttl: process.env.REFRESH_TOKEN_TTL || "7d",
-		},
-		password: {
-			saltRounds: Number(process.env.SALT_ROUNDS) || 10,
-			resetUrl: process.env.RESET_PASSWORD_URL,
-		},
+		}
 	},
 	business: {
 		coupon: {
