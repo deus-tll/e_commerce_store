@@ -1,4 +1,4 @@
-import {ICacheProvider} from "../../interfaces/cache/ICacheProvider.js";
+import {ICacheProvider} from "../../interfaces/providers/cache/ICacheProvider.js";
 
 /**
  * Simple in-memory cache implementation of the ICacheProvider.

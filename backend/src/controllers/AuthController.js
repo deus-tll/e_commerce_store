@@ -2,7 +2,7 @@ import {ISessionAuthService} from "../interfaces/auth/ISessionAuthService.js";
 import {IUserAccountService} from "../interfaces/user/IUserAccountService.js";
 import {CreateUserDTO} from "../domain/index.js";
 
-import {AuthCookieHandler} from "../http/cookies/AuthCookieHandler.js";
+import {AuthCookieManager} from "../http/cookies/AuthCookieManager.js";
 
 import {UserRoles} from "../constants/app.js";
 
@@ -13,17 +13,17 @@ import {UserRoles} from "../constants/app.js";
 export class AuthController {
 	/** @type {ISessionAuthService} */ #sessionAuthService;
 	/** @type {IUserAccountService} */ #userAccountService;
-	/** @type {AuthCookieHandler} */ #authCookieHandler;
+	/** @type {AuthCookieManager} */ #authCookieManager;
 
 	/**
 	 * @param {ISessionAuthService} sessionAuthService
 	 * @param {IUserAccountService} userAccountService
-	 * @param {AuthCookieHandler} authCookieHandler
+	 * @param {AuthCookieManager} authCookieManager
 	 */
-	constructor(sessionAuthService, userAccountService, authCookieHandler) {
+	constructor(sessionAuthService, userAccountService, authCookieManager) {
 		this.#sessionAuthService = sessionAuthService;
 		this.#userAccountService = userAccountService;
-		this.#authCookieHandler = authCookieHandler;
+		this.#authCookieManager = authCookieManager;
 	}
 
 	// ACCOUNT WORKFLOWS
@@ -44,7 +44,7 @@ export class AuthController {
 
 		const { user, tokens } = await this.#userAccountService.signup(createUserDTO);
 
-		this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
+		this.#authCookieManager.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
 		return res.status(201).json(user);
 	}
@@ -59,7 +59,7 @@ export class AuthController {
 		const { code } = req.body;
 		const { user, tokens } = await this.#userAccountService.verifyEmail(code);
 
-		this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
+		this.#authCookieManager.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
 		return res.status(200).json(user);
 	}
@@ -100,7 +100,7 @@ export class AuthController {
 
 		const { user, tokens } = await this.#userAccountService.resetPassword(token, password);
 
-		this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
+		this.#authCookieManager.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
 		return res.status(200).json(user);
 	}
@@ -121,7 +121,7 @@ export class AuthController {
 			newPassword
 		);
 
-		this.#authCookieHandler.clearTokens(res);
+		this.#authCookieManager.clearTokens(res);
 
 		return res.status(200).json(result);
 	}
@@ -139,7 +139,7 @@ export class AuthController {
 		const { email, password } = req.body;
 		const { user, tokens } = await this.#sessionAuthService.login(email, password);
 
-		this.#authCookieHandler.setTokens(res, tokens.accessToken, tokens.refreshToken);
+		this.#authCookieManager.setTokens(res, tokens.accessToken, tokens.refreshToken);
 
 		return res.status(200).json(user);
 	}
@@ -154,7 +154,7 @@ export class AuthController {
 		const { refreshToken } = req.cookies;
 		await this.#sessionAuthService.logout(refreshToken);
 
-		this.#authCookieHandler.clearTokens(res);
+		this.#authCookieManager.clearTokens(res);
 
 		return res.status(204).end();
 	}
@@ -181,11 +181,11 @@ export class AuthController {
 
 		try {
 			const { accessToken, refreshToken: newRefreshToken } = await this.#sessionAuthService.refreshAccessToken(oldRefreshToken);
-			this.#authCookieHandler.setTokens(res, accessToken, newRefreshToken);
+			this.#authCookieManager.setTokens(res, accessToken, newRefreshToken);
 			return res.status(200).json({ message: "Tokens refreshed successfully" });
 		}
 		catch (error) {
-			this.#authCookieHandler.clearTokens(res);
+			this.#authCookieManager.clearTokens(res);
 			throw error;
 		}
 	}

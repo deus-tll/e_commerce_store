@@ -2,7 +2,7 @@ import {IAnalyticsService} from "../../interfaces/analytics/IAnalyticsService.js
 import {IOrderRepository} from "../../interfaces/repositories/IOrderRepository.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
 import {IProductRepository} from "../../interfaces/repositories/IProductRepository.js";
-import {IDateTimeService} from "../../interfaces/utils/IDateTimeService.js";
+import {IDateTimeUtility} from "../../interfaces/utilities/IDateTimeUtility.js";
 import {AnalyticsSummaryDTO, DailySalesDataDTO, FullAnalyticsResponseDTO} from "../../domain/index.js";
 
 import {MS_PER_DAY} from "../../constants/time.js";
@@ -11,20 +11,20 @@ export class AnalyticsService extends IAnalyticsService {
 	/** @type {IOrderRepository} */ #orderRepository;
 	/** @type {IUserRepository} */ #userRepository;
 	/** @type {IProductRepository} */ #productRepository;
-	/** @type {IDateTimeService} */ #dateTimeService;
+	/** @type {IDateTimeUtility} */ #dateTimeUtility;
 
 	/**
 	 * @param {IOrderRepository} orderRepository
 	 * @param {IUserRepository} userRepository
 	 * @param {IProductRepository} productRepository
-	 * @param {IDateTimeService} dateTimeService
+	 * @param {IDateTimeUtility} dateTimeUtility
 	 */
-	constructor(orderRepository, userRepository, productRepository, dateTimeService) {
+	constructor(orderRepository, userRepository, productRepository, dateTimeUtility) {
 		super();
 		this.#orderRepository = orderRepository;
 		this.#userRepository = userRepository;
 		this.#productRepository = productRepository;
-		this.#dateTimeService = dateTimeService;
+		this.#dateTimeUtility = dateTimeUtility;
 	}
 
 	async getAnalyticsData() {
@@ -51,7 +51,7 @@ export class AnalyticsService extends IAnalyticsService {
 
 		const dailySalesData = await this.#orderRepository.getDailySalesSummary(startDate, endDate);
 
-		const filledData = this.#dateTimeService.fillDateGaps(
+		const filledData = this.#dateTimeUtility.fillDateGaps(
 			startDate,
 			endDate,
 			dailySalesData,

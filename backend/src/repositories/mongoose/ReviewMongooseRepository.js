@@ -73,4 +73,8 @@ export class ReviewMongooseRepository extends IReviewRepository {
 
 		return new RepositoryPaginationResult(reviewEntities, total);
 	}
+
+	async existsByProductAndUser(productId, userId){
+		return Boolean(await Review.exists({ product: productId, user: userId }));
+	}
 }

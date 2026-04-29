@@ -76,6 +76,8 @@ const orderSchema = new mongoose.Schema({
 	},
 }, { timestamps: true });
 
+orderSchema.index({ user: 1, "products.product": 1 });
+
 /**
  * @type {import('mongoose').Model & import('mongoose').Document}
  */

@@ -2,7 +2,7 @@ import {ICategoryService} from "../../interfaces/category/ICategoryService.js";
 import {ICategoryRepository} from "../../interfaces/repositories/ICategoryRepository.js";
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
 import {ICategoryMapper} from "../../interfaces/mappers/ICategoryMapper.js";
-import {ISlugGenerator} from "../../interfaces/utils/ISlugGenerator.js";
+import {ISlugUtility} from "../../interfaces/utilities/ISlugUtility.js";
 import {CategoryPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
@@ -15,25 +15,25 @@ export class CategoryService extends ICategoryService {
 	/** @type {ICategoryRepository} */ #categoryRepository;
 	/** @type {ICategoryImageManager} */ #categoryImageManager;
 	/** @type {ICategoryMapper} */ #categoryMapper;
-	/** @type {ISlugGenerator} */ #slugGenerator;
+	/** @type {ISlugUtility} */ #slugUtility;
 
 	/**
 	 * @param {ICategoryRepository} categoryRepository
 	 * @param {ICategoryImageManager} categoryImageManager
 	 * @param {ICategoryMapper} categoryMapper
-	 * @param {ISlugGenerator} slugGenerator
+	 * @param {ISlugUtility} slugUtility
 	 */
-	constructor(categoryRepository, categoryImageManager, categoryMapper, slugGenerator) {
+	constructor(categoryRepository, categoryImageManager, categoryMapper, slugUtility) {
 		super();
 		this.#categoryRepository = categoryRepository;
 		this.#categoryImageManager = categoryImageManager;
 		this.#categoryMapper = categoryMapper;
-		this.#slugGenerator = slugGenerator;
+		this.#slugUtility = slugUtility;
 	}
 
 	async create(data) {
-		const generatedSlug = this.#slugGenerator.generateSlug(data.name);
-		const processedImage = await this.#categoryImageManager.handleImageUpdate(
+		const generatedSlug = this.#slugUtility.generateSlug(data.name);
+		const processedImage = await this.#categoryImageManager.imageDataUploadOnCreateUpdate(
 			data.image,
 			null
 		);
@@ -56,11 +56,11 @@ export class CategoryService extends ICategoryService {
 		const persistenceData = { ...data.toPersistence() };
 
 		if (data.name !== undefined && data.name !== existingEntity.name) {
-			persistenceData.slug = this.#slugGenerator.generateSlug(data.name);
+			persistenceData.slug = this.#slugUtility.generateSlug(data.name);
 		}
 
 		if (data.image !== undefined && data.image !== "") {
-			persistenceData.image = await this.#categoryImageManager.handleImageUpdate(
+			persistenceData.image = await this.#categoryImageManager.imageDataUploadOnCreateUpdate(
 				data.image,
 				existingEntity.image
 			);
@@ -74,7 +74,7 @@ export class CategoryService extends ICategoryService {
 	async delete(id) {
 		const deletedCategory = await this.#categoryRepository.deleteById(id);
 
-		await this.#categoryImageManager.deleteImage(deletedCategory.image);
+		await this.#categoryImageManager.deleteByUrl(deletedCategory.image);
 
 		return this.#categoryMapper.toDTO(deletedCategory);
 	}

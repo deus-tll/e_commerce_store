@@ -34,16 +34,6 @@ export class IProductService {
 	async toggleFeatured(id) { throw new Error("Method not implemented."); }
 
 	/**
-	 * Updates the product's average rating and total review count atomically.
-	 * @param {string} productId - The product ID.
-	 * @param {number} ratingChange - The change in rating value.
-	 * @param {number} totalReviewsChange - +1 for create, -1 for delete, 0 for update.
-	 * @param {number} oldRating - The previous rating value.
-	 * @returns {Promise<void>}
-	 */
-	async updateRatingStats(productId, ratingChange, totalReviewsChange, oldRating) { throw new Error("Method not implemented."); }
-
-	/**
 	 * Deletes a product, managing image deletion from storage and cache invalidation.
 	 * @param {string} id - The product ID.
 	 * @returns {Promise<ProductDTO>} - The deleted product DTO.

@@ -96,6 +96,16 @@ export class IOrderRepository {
 	}
 
 	/**
+	 * Checks if user has purchased a product.
+	 * @param {string} userId
+	 * @param {string} productId
+	 * @returns {Promise<boolean>}
+	 */
+	async hasUserPurchasedProduct(userId, productId) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Calculates aggregated sales and revenue.
 	 * @returns {Promise<SalesSummaryDTO>} - The aggregated sales summary.
 	 */

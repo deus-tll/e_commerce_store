@@ -63,4 +63,14 @@ export class IReviewRepository {
 	async findAndCountByProduct(productId, skip, limit, options) {
 		throw new Error("Method not implemented.");
 	}
+
+	/**
+	 * Checks if a review exists with provided product ID and user ID.
+	 * @param {string} productId
+	 * @param {string} userId
+	 * @returns {Promise<boolean>}
+	 */
+	async existsByProductAndUser(productId, userId){
+		throw new Error("Method not implemented.");
+	}
 }

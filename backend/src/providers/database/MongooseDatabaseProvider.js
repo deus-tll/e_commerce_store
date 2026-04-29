@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import {IDatabaseProvider} from "../../interfaces/database/IDatabaseProvider.js";
+import {IDatabaseProvider} from "../../interfaces/providers/database/IDatabaseProvider.js";
 import {config} from "../../config.js";
 
 /**

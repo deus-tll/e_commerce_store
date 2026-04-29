@@ -11,7 +11,7 @@ export function createPaymentsWebhookRouter(paymentController){
     router.post(
         "/webhook",
         express.raw({ type: "application/json" }),
-        paymentController.handleWebhook
+        paymentController.webhook
     );
 
     return router;

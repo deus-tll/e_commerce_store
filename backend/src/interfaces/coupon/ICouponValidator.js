@@ -7,14 +7,6 @@ import {CouponValidationDTO} from "../../domain/index.js";
  */
 export class ICouponValidator {
 	/**
-	 * Checks if the required User exists for coupon creation.
-	 * Throws NotFoundError if the user ID is invalid.
-	 * @param {string} userId - The user ID.
-	 * @returns {Promise<void>}
-	 */
-	async validateUserExists(userId) { throw new Error("Method not implemented."); }
-
-	/**
 	 * Validates a coupon's existence, activity, and expiration date.
 	 * Handles side effects like deactivating an expired coupon.
 	 * @param {string} code - The coupon code.

@@ -241,6 +241,10 @@ export class ProductMongooseRepository extends IProductRepository {
 		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
 	}
 
+	async exists(id) {
+		return Boolean(await Product.exists({ _id: id }));
+	}
+
 	async getAttributeFacets(categoryId) {
 		const pipeline = [
 			// 1. Filter products by the specific category ID

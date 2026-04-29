@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
-import {PasswordService} from "../security/PasswordService.js";
+import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
 
 import {DomainValidationError} from "../../errors/index.js";
 
@@ -13,16 +13,16 @@ import {DomainValidationError} from "../../errors/index.js";
  */
 export class UserTokenService extends IUserTokenService {
 	/** @type {IUserRepository} */ #userRepository;
-	/** @type {PasswordService} */ #passwordService;
+	/** @type {IPasswordProvider} */ #passwordProvider;
 
 	/**
 	 * @param {IUserRepository} userRepository
-	 * @param {PasswordService} passwordService
+	 * @param {IPasswordProvider} passwordProvider
 	 */
-	constructor(userRepository, passwordService) {
+	constructor(userRepository, passwordProvider) {
 		super();
 		this.#userRepository = userRepository;
-		this.#passwordService = passwordService;
+		this.#passwordProvider = passwordProvider;
 	}
 
 	generateVerificationToken() {
@@ -69,12 +69,9 @@ export class UserTokenService extends IUserTokenService {
 
 	async resetPassword(token, newPassword) {
 		const entity = await this.#userRepository.findByValidResetToken(token);
+		if (!entity) throw new DomainValidationError("Invalid or expired reset token");
 
-		if (!entity) {
-			throw new DomainValidationError("Invalid or expired reset token");
-		}
-
-		const hashedPassword = await this.#passwordService.hashPassword(newPassword);
+		const hashedPassword = await this.#passwordProvider.hashPassword(newPassword);
 
 		const updateData = Object.freeze({
 			password: hashedPassword,

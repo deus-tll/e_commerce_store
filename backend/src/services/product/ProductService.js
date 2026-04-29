@@ -2,6 +2,7 @@ import {IProductService} from "../../interfaces/product/IProductService.js";
 import {IProductRepository} from "../../interfaces/repositories/IProductRepository.js";
 import {ICategoryService} from "../../interfaces/category/ICategoryService.js";
 import {IProductImageManager} from "../../interfaces/product/IProductImageManager.js";
+import {IQueryParser} from "../../interfaces/parsers/IQueryParser.js";
 import {IProductMapper} from "../../interfaces/mappers/IProductMapper.js";
 import {PaginationMetadata, ProductPaginationResultDTO} from "../../domain/index.js";
 
@@ -17,26 +18,26 @@ const RECOMMENDED_PRODUCTS_SIZE = 4;
 export class ProductService extends IProductService {
 	/** @type {IProductRepository} */ #productRepository;
 	/** @type {ICategoryService} */ #categoryService;
-	/** @type {ProductCacheService} */ #productCacheService;
+	/** @type {ProductCacheManager} */ #productCacheManager;
 	/** @type {IProductImageManager} */ #productImageManager;
-	/** @type {IProductQueryTranslator} */ #productQueryTranslator;
+	/** @type {IQueryParser} */ #productQueryParser;
 	/** @type {IProductMapper} */ #productMapper;
 
 	/**
 	 * @param {IProductRepository} productRepository
 	 * @param {ICategoryService} categoryService
-	 * @param {ProductCacheService} productCacheService
+	 * @param {ProductCacheManager} productCacheManager
 	 * @param {IProductImageManager} productImageManager
-	 * @param {IProductQueryTranslator} productQueryTranslator
+	 * @param {IQueryParser} productQueryParser
 	 * @param {IProductMapper} productMapper
 	 */
-	constructor(productRepository, categoryService, productCacheService, productImageManager, productQueryTranslator, productMapper) {
+	constructor(productRepository, categoryService, productCacheManager, productImageManager, productQueryParser, productMapper) {
 		super();
 		this.#productRepository = productRepository;
 		this.#categoryService = categoryService;
-		this.#productCacheService = productCacheService;
+		this.#productCacheManager = productCacheManager;
 		this.#productImageManager = productImageManager;
-		this.#productQueryTranslator = productQueryTranslator;
+		this.#productQueryParser = productQueryParser;
 		this.#productMapper = productMapper;
 	}
 
@@ -64,7 +65,7 @@ export class ProductService extends IProductService {
 	async #refreshFeaturedCache() {
 		const entities = await this.#productRepository.findByFeaturedStatus(true);
 		const dtos = await this.#formProductDTOs(entities);
-		await this.#productCacheService.setFeaturedProducts(dtos);
+		await this.#productCacheManager.setFeaturedProducts(dtos);
 
 		return dtos;
 	}
@@ -86,7 +87,7 @@ export class ProductService extends IProductService {
 	async create(data) {
 		const category = await this.#categoryService.getByIdOrFail(data.categoryId);
 
-		const processedImages = await this.#productImageManager.processNewImagesForCreation(data.images);
+		const processedImages = await this.#productImageManager.imageDataUploadOnCreate(data.images);
 		const filteredAttributes = this.#filterAttributes(category.allowedAttributes, data.attributes);
 		const persistenceData = {
 			...data.toPersistence(),
@@ -105,17 +106,8 @@ export class ProductService extends IProductService {
 		}
 		catch (error) {
 			if (processedImages) {
-				const urlsToCleanup = [
-					processedImages.mainImage,
-					...processedImages.additionalImages
-				].filter(Boolean);
-
-				if (urlsToCleanup.length > 0) {
-					this.#productImageManager.deleteImagesByUrls(urlsToCleanup)
-						.catch(err => console.error("Orphan image cleanup failed:", err));
-				}
+				await this.#productImageManager.deleteImageData(processedImages);
 			}
-
 			throw error;
 		}
 	}
@@ -140,7 +132,7 @@ export class ProductService extends IProductService {
 
 		// 3. Handle image updates: Preserve old, upload new, delete removed
 		if (data.images !== undefined) {
-			const imageResult = await this.#productImageManager.handleImageUpdate(
+			const imageResult = await this.#productImageManager.imageDataUploadOnUpdate(
 				data.images,
 				existingEntity.images
 			);
@@ -153,9 +145,7 @@ export class ProductService extends IProductService {
 		const updatedEntity = await this.#productRepository.updateById(id, persistenceData);
 
 		// 5. Delete no longer used images from storage
-		if (urlsToDelete.length > 0) {
-			await this.#productImageManager.deleteImagesByUrls(urlsToDelete);
-		}
+		await this.#productImageManager.deleteByUrls(urlsToDelete);
 
 		// 6. Update cache if the product was or is now featured
 		if (existingEntity.isFeatured || updatedEntity.isFeatured) {
@@ -173,15 +163,6 @@ export class ProductService extends IProductService {
 		return await this.#formProductDTO(updatedEntity);
 	}
 
-	async updateRatingStats(productId, ratingChange, totalReviewsChange, oldRating = 0) {
-		await this.#productRepository.updateRatingStats(
-			productId,
-			ratingChange,
-			totalReviewsChange,
-			oldRating
-		);
-	}
-
 	async delete(id) {
 		const deletedEntity = await this.#productRepository.deleteById(id);
 
@@ -189,7 +170,7 @@ export class ProductService extends IProductService {
 			await this.#refreshFeaturedCache();
 		}
 
-		await this.#productImageManager.deleteProductImages(deletedEntity.images);
+		await this.#productImageManager.deleteImageData(deletedEntity.images);
 
 		return await this.#formProductDTO(deletedEntity);
 	}
@@ -208,7 +189,7 @@ export class ProductService extends IProductService {
 			categoryId = categoryDTO.id;
 		}
 
-		const query = this.#productQueryTranslator.translate(filters, {categoryId});
+		const query = this.#productQueryParser.parse(filters, {categoryId});
 
 		const { sortBy, order } = filters;
 
@@ -242,7 +223,7 @@ export class ProductService extends IProductService {
 	}
 
 	async getFeatured() {
-		const cached = await this.#productCacheService.getFeaturedProducts();
+		const cached = await this.#productCacheManager.getFeaturedProducts();
 		if (cached) return cached;
 
 		return await this.#refreshFeaturedCache();

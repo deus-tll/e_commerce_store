@@ -4,12 +4,17 @@ import cors from "cors";
 import path from "path";
 import {fileURLToPath} from "url";
 
+import {DIContainer} from "./core/di/DIContainer.js";
+import {IDatabaseProvider} from "./interfaces/providers/database/IDatabaseProvider.js";
+import {ICacheProvider} from "./interfaces/providers/cache/ICacheProvider.js";
+
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
 import {ProviderTypes, RouterTypes, SeederTypes} from "./constants/ioc.js";
 import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,13 +28,13 @@ const JSON_LIMIT = config.app.jsonLimit;
 export class AppServer {
 	/** @type {core.Express | Express} */ #app;
 	/** @type {number | string} */ #port;
-	/** @type {Container} */ #container;
+	/** @type {DIContainer} */ #container;
 	/** @type {IDatabaseProvider} */ #db;
 	/** @type {ICacheProvider} */ #cache;
 
 	/**
 	 * Initializes the server instance, configures middleware, and sets up routes.
-	 * @param {Container} container - The IoC container instance.
+	 * @param {DIContainer} container - The IoC container instance.
 	 */
 	constructor(container) {
 		this.#app = express();

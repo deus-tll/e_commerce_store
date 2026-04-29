@@ -1,5 +1,7 @@
 import {IReviewService} from "../../interfaces/review/IReviewService.js";
 import {IReviewRepository} from "../../interfaces/repositories/IReviewRepository.js";
+import {IUserService} from "../../interfaces/user/IUserService.js";
+import {IProductService} from "../../interfaces/product/IProductService.js";
 import {IReviewMapper} from "../../interfaces/mappers/IReviewMapper.js";
 import {IProductStatsService} from "../../interfaces/product/IProductStatsService.js";
 import {IReviewValidator} from "../../interfaces/review/IReviewValidator.js";
@@ -15,6 +17,7 @@ import {EntityNotFoundError} from "../../errors/index.js";
 export class ReviewService extends IReviewService {
 	/** @type {IReviewRepository} */ #reviewRepository;
 	/** @type {IUserService} */ #userService;
+	/** @type {IProductService} */ #productService;
 	/** @type {IProductStatsService} */ #productStatsService;
 	/** @type {IReviewValidator} */ #reviewValidator;
 	/** @type {IReviewMapper} */ #reviewMapper;
@@ -22,14 +25,16 @@ export class ReviewService extends IReviewService {
 	/**
 	 * @param {IReviewRepository} reviewRepository
 	 * @param {IUserService} userService
+	 * @param {IProductService} productService
 	 * @param {IProductStatsService} productStatsService
 	 * @param {IReviewValidator} reviewValidator
 	 * @param {IReviewMapper} reviewMapper
 	 */
-	constructor(reviewRepository, userService, productStatsService, reviewValidator, reviewMapper) {
+	constructor(reviewRepository, userService, productService, productStatsService, reviewValidator, reviewMapper) {
 		super();
 		this.#reviewRepository = reviewRepository;
 		this.#userService = userService;
+		this.#productService = productService;
 		this.#productStatsService = productStatsService;
 		this.#reviewValidator = reviewValidator;
 		this.#reviewMapper = reviewMapper;
@@ -126,7 +131,7 @@ export class ReviewService extends IReviewService {
 	}
 
 	async getAllByProduct(productId, page = 1, limit = 10) {
-		await this.#reviewValidator.validateProductExistence(productId);
+		await this.#productService.getByIdOrFail(productId);
 
 		const skip = (page - 1) * limit;
 

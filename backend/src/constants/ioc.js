@@ -1,3 +1,5 @@
+import {ICheckoutService} from "../interfaces/order/ICheckoutService.js";
+
 export const RepositoryTypes = Object.freeze({
 	CART: "ICartRepository",
 	CATEGORY: "ICategoryRepository",
@@ -9,20 +11,20 @@ export const RepositoryTypes = Object.freeze({
 });
 
 export const UtilityTypes = Object.freeze({
-	DATE: "IDateTimeService"
+	SLUG: "ISlugUtility",
+	DATE: "IDateTimeUtility"
 });
 
 export const ProviderTypes = Object.freeze({
 	DATABASE: "IDatabaseProvider",
 	CACHE: "ICacheProvider",
 	STORAGE: "IStorageProvider",
-	JWT: "IJwtProvider",
+	EMAIL_CONTENT: "IEmailContentProvider",
 	EMAIL: "IEmailProvider",
-	STRIPE: "IStripeProvider",
-});
+	PAYMENT: "IPaymentProvider",
 
-export const CookieHandlerTypes = Object.freeze({
-	AUTH: "IAuthCookieHandler"
+	JWT: "IJwtProvider",
+	PASSWORD: "IPasswordProvider"
 });
 
 export const MapperTypes = Object.freeze({
@@ -35,14 +37,28 @@ export const MapperTypes = Object.freeze({
 	USER: "IUserMapper"
 });
 
+export const CookieManagerTypes = Object.freeze({
+	AUTH: "IAuthCookieManager"
+});
+
 export const ImageManagerTypes = Object.freeze({
 	PRODUCT: "IProductImageManager",
 	CATEGORY: "ICategoryImageManager"
 });
 
-export const QueryTranslatorTypes = Object.freeze({
-	PRODUCT: "IProductQueryTranslator",
-	USER: "IUserQueryTranslator"
+export const CacheManagerTypes = Object.freeze({
+	AUTH: "IAuthCacheManager",
+	PRODUCT: "IProductCacheManager"
+});
+
+export const StorageManagerTypes = Object.freeze({
+	CATEGORY: "ICategoryStorageManager",
+	PRODUCT: "IProductStorageManager"
+});
+
+export const ParserTypes = Object.freeze({
+	PRODUCT_QUERY: "IProductQueryParser",
+	USER_QUERY: "IUserQueryParser"
 });
 
 export const ValidatorTypes = Object.freeze({
@@ -55,15 +71,6 @@ export const FactoryTypes = Object.freeze({
 });
 
 export const ServiceTypes = Object.freeze({
-	AUTH_CACHE: "AuthCacheService",
-	PRODUCT_CACHE: "ProductCacheService",
-	EMAIL_CONTENT: "IEmailContentService",
-	PASSWORD: "IPasswordService",
-	SLUG_GENERATOR: "ISlugGenerator",
-
-	CATEGORY_STORAGE: "ICategoryStorageService",
-	PRODUCT_STORAGE: "IProductStorageService",
-
 	USER_TOKEN: "IUserTokenService",
 	USER_STATS: "IUserStatsService",
 	USER: "IUserService",
@@ -80,10 +87,8 @@ export const ServiceTypes = Object.freeze({
 
 	ANALYTICS: "IAnalyticsService",
 	SESSION_AUTH: "ISessionAuthService",
-	PAYMENT: "IPaymentService",
 
-	CHECKOUT_ORDER_HANDLER: "ICheckoutOrderHandler",
-	CHECKOUT_COUPON_HANDLER: "ICouponHandler"
+	CHECKOUT: "ICheckoutService",
 });
 
 export const ControllerTypes = Object.freeze({

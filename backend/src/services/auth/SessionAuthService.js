@@ -1,9 +1,10 @@
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
+import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
 import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 
 import {JwtProvider} from "../../providers/auth/JwtProvider.js";
-import {AuthCacheService} from "../cache/AuthCacheService.js";
+import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
 
 import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js";
 
@@ -15,22 +16,22 @@ import {TokenTypes} from "../../constants/auth.js";
  */
 export class SessionAuthService extends ISessionAuthService {
 	/** @type {IUserService} */ #userService;
-	/** @type {PasswordService} */ #passwordService;
+	/** @type {IPasswordProvider} */ #passwordProvider;
 	/** @type {JwtProvider} */ #jwtProvider;
-	/** @type {AuthCacheService} */ #authCacheService;
+	/** @type {AuthCacheManager} */ #authCacheManager;
 
 	/**
 	 * @param {IUserService} userService
-	 * @param {PasswordService} passwordService
+	 * @param {IPasswordProvider} passwordProvider
 	 * @param {JwtProvider} jwtProvider
-	 * @param {AuthCacheService} authCacheService
+	 * @param {AuthCacheManager} authCacheManager
 	 */
-	constructor(userService, passwordService, jwtProvider, authCacheService) {
+	constructor(userService, passwordProvider, jwtProvider, authCacheManager) {
 		super();
 		this.#userService = userService;
-		this.#passwordService = passwordService;
+		this.#passwordProvider = passwordProvider;
 		this.#jwtProvider = jwtProvider;
-		this.#authCacheService = authCacheService;
+		this.#authCacheManager = authCacheManager;
 	}
 
 	async login(email, password) {
@@ -38,7 +39,7 @@ export class SessionAuthService extends ISessionAuthService {
 			withPassword: true
 		});
 
-		const isMatch = await this.#passwordService.comparePassword(
+		const isMatch = await this.#passwordProvider.comparePassword(
 			password, userEntityWithPassword.hashedPassword
 		);
 		if (!isMatch) {
@@ -50,7 +51,7 @@ export class SessionAuthService extends ISessionAuthService {
 
 		const userDTO = await this.#userService.updateLastLogin(userId);
 
-		await this.#authCacheService.storeRefreshToken(userId, refreshToken)
+		await this.#authCacheManager.storeRefreshToken(userId, refreshToken)
 
 		return AuthResponseAssembler.assembleUserWithTokens({ user: userDTO, accessToken, refreshToken });
 	}
@@ -59,7 +60,7 @@ export class SessionAuthService extends ISessionAuthService {
 		if (refreshToken) {
 			try {
 				const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
-				await this.#authCacheService.removeRefreshToken(decoded.userId);
+				await this.#authCacheManager.removeRefreshToken(decoded.userId);
 			}
 			catch (error) {
 				console.warn("Invalid refresh token during logout:", error.message);
@@ -90,19 +91,19 @@ export class SessionAuthService extends ISessionAuthService {
 		const [_, storedToken] = await Promise.all(
 			/** @type {[UserDTO, string | null]} */ ([
 				this.#userService.getByIdOrFail(userId),
-				this.#authCacheService.getRefreshToken(userId)
+				this.#authCacheManager.getRefreshToken(userId)
 			])
 		);
 
 		// 1. Reuse detection and invalidation
 		if (!storedToken || storedToken !== refreshToken) {
-			await this.#authCacheService.invalidateAllSessions(userId);
+			await this.#authCacheManager.invalidateAllSessions(userId);
 			throw new InvalidTokenError("Refresh token not found or revoked (Possible session hijacking)");
 		}
 
 		// 2. Token rotation
 		const tokens = this.#jwtProvider.generateTokens(userId);
-		await this.#authCacheService.storeRefreshToken(userId, tokens.refreshToken);
+		await this.#authCacheManager.storeRefreshToken(userId, tokens.refreshToken);
 
 		return tokens;
 	}

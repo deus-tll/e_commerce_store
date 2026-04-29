@@ -10,6 +10,7 @@ export const CheckoutSessionModes = Object.freeze({
 	PAYMENT: "payment"
 });
 
-export const PaymentStatus = Object.freeze({
-	PAID: "paid"
+export const PaymentEventTypes = Object.freeze({
+	SUCCESS: "success",
+	UNKNOWN: "unknown"
 });

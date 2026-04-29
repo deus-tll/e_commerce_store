@@ -26,7 +26,7 @@ export function createPaymentsRouter(paymentController, authService) {
 	router.post(
 		"/create-checkout-session",
 		validationMiddleware(createCheckoutSessionSchema),
-		paymentController.createCheckoutSession
+		paymentController.checkout
 	);
 
 	return router;

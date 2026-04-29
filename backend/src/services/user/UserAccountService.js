@@ -1,10 +1,11 @@
 import {IUserAccountService} from "../../interfaces/user/IUserAccountService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IEmailProvider} from "../../interfaces/email/IEmailProvider.js";
+import {IEmailProvider} from "../../interfaces/providers/email/IEmailProvider.js";
+import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
 import {AuthResponseAssembler} from "../../domain/index.js";
 
 import {JwtProvider} from "../../providers/auth/JwtProvider.js";
-import {AuthCacheService} from "../cache/AuthCacheService.js";
+import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
@@ -19,28 +20,28 @@ import {config} from "../../config.js";
 export class UserAccountService extends IUserAccountService {
 	/** @type {IUserService} */ #userService;
 	/** @type {IEmailProvider} */ #emailProvider;
-	/** @type {PasswordService} */ #passwordService;
+	/** @type {IPasswordProvider} */ #passwordProvider;
 	/** @type {JwtProvider} */ #jwtProvider;
-	/** @type {AuthCacheService} */ #authCacheService;
+	/** @type {AuthCacheManager} */ #authCacheManager;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
 
 	/**
 	 * @param {IUserService} userService
 	 * @param {IEmailProvider} emailProvider
-	 * @param {PasswordService} passwordService
+	 * @param {IPasswordProvider} passwordProvider
 	 * @param {JwtProvider} jwtProvider
-	 * @param {AuthCacheService} authCacheService
+	 * @param {AuthCacheManager} authCacheManager
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
 	 */
-	constructor(userService, emailProvider, passwordService, jwtProvider, authCacheService, userTokenService, userMapper) {
+	constructor(userService, emailProvider, passwordProvider, jwtProvider, authCacheManager, userTokenService, userMapper) {
 		super();
 		this.#userService = userService;
 		this.#emailProvider = emailProvider;
-		this.#passwordService = passwordService;
+		this.#passwordProvider = passwordProvider;
 		this.#jwtProvider = jwtProvider;
-		this.#authCacheService = authCacheService;
+		this.#authCacheManager = authCacheManager;
 		this.#userTokenService = userTokenService;
 		this.#userMapper = userMapper;
 	}
@@ -76,7 +77,7 @@ export class UserAccountService extends IUserAccountService {
 
 		await Promise.all(
 			/** @type {Promise<any>[]} */ ([
-				this.#authCacheService.storeRefreshToken(userId, refreshToken),
+				this.#authCacheManager.storeRefreshToken(userId, refreshToken),
 				this.#emailProvider.sendVerificationEmail(email, verificationToken)
 			])
 		);
@@ -89,7 +90,7 @@ export class UserAccountService extends IUserAccountService {
 		const { id: userId } = userEntity;
 
 		const { accessToken, refreshToken } = this.#jwtProvider.generateTokens(userId);
-		await this.#authCacheService.storeRefreshToken(userId, refreshToken);
+		await this.#authCacheManager.storeRefreshToken(userId, refreshToken);
 
 		return AuthResponseAssembler.assembleUserWithTokens({
 			user: this.#userMapper.toDTO(userEntity),
@@ -120,7 +121,7 @@ export class UserAccountService extends IUserAccountService {
 			const { id: userId } = userEntity;
 
 			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-			const resetPasswordUrl = `${config.app.clientUrl}/${config.auth.password.resetUrl}/${resetToken}`;
+			const resetPasswordUrl = `${config.app.clientUrl}/${config.providers.password.resetUrl}/${resetToken}`;
 
 			await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
 			await this.#emailProvider.sendPasswordResetEmail(email, resetPasswordUrl);
@@ -145,7 +146,7 @@ export class UserAccountService extends IUserAccountService {
 
 		await Promise.all(
 			/** @type {Promise<any>[]} */ ([
-				this.#authCacheService.storeRefreshToken(userId, refreshToken),
+				this.#authCacheManager.storeRefreshToken(userId, refreshToken),
 				this.#emailProvider.sendPasswordResetSuccessEmail(email)
 			])
 		);
@@ -161,8 +162,7 @@ export class UserAccountService extends IUserAccountService {
 			withPassword: true
 		});
 
-
-		const isMatch = await this.#passwordService.comparePassword(
+		const isMatch = await this.#passwordProvider.comparePassword(
 			currentPassword, userEntityWithPassword.hashedPassword
 		);
 		if (!isMatch) {
@@ -170,7 +170,7 @@ export class UserAccountService extends IUserAccountService {
 		}
 
 		await this.#userService.changePassword(userEntityWithPassword, newPassword);
-		await this.#authCacheService.invalidateAllSessions(userId);
+		await this.#authCacheManager.invalidateAllSessions(userId);
 
 		return { message: "Password changed successfully" };
 	}

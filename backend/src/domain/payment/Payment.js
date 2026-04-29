@@ -1,46 +1,100 @@
 /**
- * Agnostic class representing the result of a Stripe (or other) checkout session creation.
- * Used by the Service layer to return structured and vendor-agnostic payment data.
+ * Class representing a product data that is being sent by user during checkout
  */
-export class CheckoutSessionDTO {
+export class ClientProductDTO {
 	/** @type {string} @readonly */ id;
-	/** @type {number} @readonly */ totalAmount;
+	/** @type {number} @readonly */ quantity;
 
 	/**
-	 * @param {object} data
-	 * @param {string} data.id - The ID of the created checkout session.
-	 * @param {number} data.totalAmount - The total amount for the session (in major currency units).
+	 * @param {string} id
+	 * @param {number} quantity
 	 */
-	constructor(data) {
-		this.id = data.id;
-		this.totalAmount = data.totalAmount;
+	constructor(id, quantity) {
+		this.id = id;
+		this.quantity = quantity;
 
 		Object.freeze(this);
 	}
 }
 
 /**
- * Agnostic class representing the result of a successful checkout process.
- * Returned after successful payment confirmation and order creation.
+ * The data to pass into payment session
  */
-export class CheckoutSuccessDTO {
-	/** @type {boolean} @readonly */ success;
-	/** @type {string} @readonly */ message;
+export class PaymentMetadataDTO {
 	/** @type {string} @readonly */ orderId;
-	/** @type {string} @readonly */ orderNumber;
+	/** @type {string} @readonly */ userId;
+
+	/**
+	 * @param {string} orderId
+	 * @param {string} userId
+	 */
+	constructor(orderId, userId) {
+		this.orderId = orderId;
+		this.userId = userId;
+
+		Object.freeze(this);
+	}
+}
+
+/**
+ * Agnostic class representing the result of a Payment Provider's checkout session creation.
+ */
+export class CheckoutSessionDTO {
+	/** @type {string} @readonly */ id;
+	/** @type {number} @readonly */ totalAmount;
+
+	/**
+	 * @param {string} id - The ID of the created checkout session.
+	 * @param {number} totalAmount - The total amount for the session (in major currency units).
+	 */
+	constructor(id, totalAmount) {
+		this.id = id;
+		this.totalAmount = totalAmount;
+
+		Object.freeze(this);
+	}
+}
+
+/**
+ * Class representing the data of an event from payment webhook completion.
+ */
+export class PaymentEventDataDTO {
+	/** @type {string} @readonly */ orderId;
+	/** @type {string} @readonly */ userId;
+	/** @type {string} @readonly */ couponCode;
+	/** @type {number} @readonly */ totalAmountInCents;
 
 	/**
 	 * @param {object} data
-	 * @param {boolean} data.success - Indicates if the payment process was successful.
-	 * @param {string} data.message - Human-readable message describing the result.
-	 * @param {string} data.orderId - The ID of the associated order.
-	 * @param {string} data.orderNumber - The number of the order.
+	 * @param {string} data.orderId
+	 * @param {string} data.userId
+	 * @param {string} data.couponCode
+	 * @param {number} data.totalAmountInCents
 	 */
 	constructor(data) {
-		this.success = data.success;
-		this.message = data.message;
 		this.orderId = data.orderId;
-		this.orderNumber = data.orderNumber;
+		this.userId = data.userId;
+		this.couponCode = data.couponCode;
+		this.totalAmountInCents = data.totalAmountInCents;
+
+		Object.freeze(this);
+	}
+}
+
+/**
+ * Successfully processed webhook's payment event object
+ */
+export class WebhookPaymentEventDTO {
+	/** @type {string} @readonly */ type;
+	/** @type {PaymentEventDataDTO} @readonly */ data;
+
+	/**
+	 * @param {string} type
+	 * @param {PaymentEventDataDTO} data
+	 */
+	constructor(type, data) {
+		this.type = type;
+		this.data = data;
 
 		Object.freeze(this);
 	}

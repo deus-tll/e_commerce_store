@@ -1,4 +1,4 @@
-export const CACHE_TYPE = Object.freeze({
+export const CacheTypes = Object.freeze({
 	REDIS: "redis",
 	MEMORY: "memory"
 });

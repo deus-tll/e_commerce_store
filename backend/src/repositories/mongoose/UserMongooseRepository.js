@@ -126,6 +126,10 @@ export class UserMongooseRepository extends IUserRepository {
 		return MongooseAdapter.toUserEntity(foundDoc);
 	}
 
+	async exists(id) {
+		return Boolean(await User.exists({ _id: id }));
+	}
+
 	async getGlobalStats() {
 		const [stats] = await User.aggregate([
 			{

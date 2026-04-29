@@ -1,17 +1,18 @@
-import {IPaymentService} from "../interfaces/payment/IPaymentService.js";
+import {ICheckoutService} from "../interfaces/order/ICheckoutService.js";
+import {ClientProductDTO, CustomerDetails} from "../domain/index.js";
 
 /**
  * Handles incoming HTTP requests related to payment and checkout,
  * extracting request data, and delegating business logic to the IPaymentService.
  */
 export class PaymentController {
-	/** @type {IPaymentService} */ #paymentService;
+	/** @type {ICheckoutService} */ #checkoutService;
 
 	/**
-	 * @param {IPaymentService} paymentService
+	 * @param {ICheckoutService} checkoutService
 	 */
-	constructor(paymentService) {
-		this.#paymentService = paymentService;
+	constructor(checkoutService) {
+		this.#checkoutService = checkoutService;
 	}
 
 	/**
@@ -21,22 +22,22 @@ export class PaymentController {
 	 * @param {object} res - Express response object.
 	 * @returns {Promise<void>} - Responds with status 200 and a CheckoutSessionDTO.
 	 */
-	createCheckoutSession = async (req, res) => {
+	checkout = async (req, res) => {
 		const { products, couponCode, customerDetails } = req.body;
 		const userId = req.userId;
 
-		const sessionData = await this.#paymentService.createCheckoutSession(
-			products,
-			couponCode,
+		const checkoutSessionDTO = await this.#checkoutService.checkout(
 			userId,
-			customerDetails
+			new CustomerDetails(customerDetails),
+			products.map(p => new ClientProductDTO(p.id, p.quantity)),
+			couponCode,
 		);
 
-		return res.status(200).json(sessionData);
+		return res.status(200).json(checkoutSessionDTO);
 	}
 
-	handleWebhook = async (req, res) => {
-		await this.#paymentService.processWebhook(req.body, req.headers);
+	webhook = async (req, res) => {
+		await this.#checkoutService.webhook(req.body, req.headers);
 		return res.status(200).json({ received: true });
 	}
 }
