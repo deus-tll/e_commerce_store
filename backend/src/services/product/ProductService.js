@@ -233,6 +233,11 @@ export class ProductService extends IProductService {
 		return await this.#productRepository.getAttributeFacets(categoryId);
 	}
 
+	async updateFeaturedByRating(minRating) {
+		await this.#productRepository.markAsFeaturedRatingBased(minRating);
+		await this.#refreshFeaturedCache();
+	}
+
 	async getRecommended(categoryIds, excludedIds) {
 		const entities = await this.#productRepository.findRecommended(
 			RECOMMENDED_PRODUCTS_SIZE,

@@ -51,6 +51,8 @@ const ALLOWED_ATTRIBUTES = {
     DEPTH: "Depth",
 };
 
+const FEATURED_PRODUCTS_MIN_RATING = 4.5;
+
 export class ProductsDummyJsonSeeder extends BaseSeeder {
     /** @type {ICategoryService} */ #categoryService;
     /** @type {IProductService} */ #productService;
@@ -160,7 +162,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
             price: p.price,
             stock: p.stock,
             categoryId,
-            isFeatured: p.rating > 4.5,
+            isFeatured: false,
             images: {
                 mainImage: this.#getMainImage(p.images, p.thumbnail),
                 additionalImages: this.#getAdditionalImages(p.images)
@@ -253,6 +255,9 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
                     await this.#processReviews(createdProduct.id, p.reviews);
                 }
             }
+
+            await this.#productService.updateFeaturedByRating(FEATURED_PRODUCTS_MIN_RATING);
+            console.log("[Seeder] Featured products updated based on rating.");
 
             console.log("[Seeder] DummyJson seeding completed successfully!");
         }

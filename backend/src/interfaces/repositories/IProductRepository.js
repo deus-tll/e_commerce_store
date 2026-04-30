@@ -1,4 +1,5 @@
 import { ProductEntity, RepositoryPaginationResult } from "../../domain/index.js";
+import Product from "../../models/mongoose/Product.js";
 
 /**
  * @typedef {import("../../domain/index.js").ProductEntity} ProductEntity
@@ -122,6 +123,15 @@ export class IProductRepository {
 	 * @returns {Promise<AttributeFacetDTO[]>} - List of facets.
 	 */
 	async getAttributeFacets(categoryId) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
+	 * Finds all products with average rating greater than or equal to provided value and sets it to be featured
+	 * @param {number} minRating
+	 * @returns {Promise<void>}
+	 */
+	async markAsFeaturedRatingBased(minRating) {
 		throw new Error("Method not implemented.");
 	}
 

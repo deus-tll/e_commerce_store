@@ -285,6 +285,14 @@ export class ProductMongooseRepository extends IProductRepository {
 		});
 	}
 
+
+	async markAsFeaturedRatingBased(minRating) {
+		await Product.updateMany(
+			{ "ratingStats.averageRating": { $gte: minRating } },
+			{ $set: { isFeatured: true } },
+		);
+	}
+
 	async findRecommended(size, categoryIds = [], excludedIds = []) {
 		const match = {};
 
