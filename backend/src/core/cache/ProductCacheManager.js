@@ -1,6 +1,6 @@
 import {BaseCacheManager} from "./BaseCacheManager.js";
 
-import {CacheKeys} from "../../constants/app.js";
+import {CacheKeys, PrefixCacheKeys} from "../../constants/app.js";
 
 /**
  * Manages the storage and retrieval of product related data in the cache.
@@ -20,7 +20,7 @@ export class ProductCacheManager extends BaseCacheManager {
 	 * @protected
 	 */
 	get _cacheContextPrefix() {
-		return "PRODUCTS";
+		return PrefixCacheKeys.PRODUCTS;
 	}
 
 	/**
