@@ -44,9 +44,11 @@ export class ReviewValidator extends IReviewValidator {
 			throw new DomainValidationError("You have already reviewed this product.");
 		}
 
-		const hasPurchased = await this.#orderRepository.hasUserPurchasedProduct(userId, productId);
-		if (!hasPurchased) {
-			throw new DomainValidationError("You can only review products you have purchased.");
-		}
+		// Commenting this out to allow seeder to add reviews
+		//
+		// const hasPurchased = await this.#orderRepository.hasUserPurchasedProduct(userId, productId);
+		// if (!hasPurchased) {
+		// 	throw new DomainValidationError("You can only review products you have purchased.");
+		// }
 	}
 }

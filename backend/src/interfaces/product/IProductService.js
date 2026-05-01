@@ -77,6 +77,15 @@ export class IProductService {
 	async getCategoryFacets(categoryId) { throw new Error("Method not implemented."); }
 
 	/**
+	 * Update featured products using provided value
+	 * @param {number} minRating
+	 * @returns {Promise<void>}
+	 */
+	async updateFeaturedByRating(minRating) {
+		throw new Error("Method not implemented.");
+	}
+
+	/**
 	 * Gets a sample of recommended products.
 	 * @param {string[]} categoryIds
 	 * @param {string[]} excludedIds

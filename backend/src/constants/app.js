@@ -3,6 +3,11 @@ export const CacheTypes = Object.freeze({
 	MEMORY: "memory"
 });
 
+export const PrefixCacheKeys = Object.freeze({
+	AUTH: "AUTH",
+	PRODUCTS: "PRODUCTS"
+});
+
 export const CacheKeys = Object.freeze({
 	FEATURED_PRODUCTS: "featured_products",
 	REFRESH_TOKEN: "refresh_token"

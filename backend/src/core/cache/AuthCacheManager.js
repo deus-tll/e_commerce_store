@@ -1,6 +1,6 @@
 import {BaseCacheManager} from "./BaseCacheManager.js";
 
-import {CacheKeys} from "../../constants/app.js";
+import {CacheKeys, PrefixCacheKeys} from "../../constants/app.js";
 
 /**
  * Manages the storage and retrieval of auth related data in the cache.
@@ -25,7 +25,7 @@ export class AuthCacheManager extends BaseCacheManager {
 	 * @protected
 	 */
 	get _cacheContextPrefix() {
-		return `AUTH:${CacheKeys.REFRESH_TOKEN}`;
+		return `${PrefixCacheKeys.AUTH}:${CacheKeys.REFRESH_TOKEN}`;
 	}
 
 	/**
