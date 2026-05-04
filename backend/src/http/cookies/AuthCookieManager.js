@@ -27,7 +27,7 @@ export class AuthCookieManager {
 		this.#refreshTokenMaxAge = ttlMs;
 
 		this.#sameSite = this.#isProduction
-			? SameSiteCookieOptions.STRICT
+			? SameSiteCookieOptions.NONE
 			: SameSiteCookieOptions.LAX;
 	}
 

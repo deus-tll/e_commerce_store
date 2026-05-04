@@ -20,20 +20,18 @@ const port = Number(process.env.PORT) || 3001;
 
 export const config = {
 	app: {
-		nodeEnv,
-		isProduction,
-		port,
-		serverUrl: isProduction
-			? process.env.APP_URL
-			: `http://localhost:${port}`,
+		nodeEnv: nodeEnv,
+		isProduction: isProduction,
+		port: port,
 		clientUrl: isProduction
-			? process.env.APP_URL
+			? process.env.PRODUCTION_CLIENT_URL
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
 	},
 	seeding: {
 		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
+		seedProductsOnStartup: process.env.SEED_PRODUCTS_ON_STARTUP === "true",
 		dummyJson: {
 			productsUrl: process.env.DUMMY_JSON_PRODUCTS_URL,
 			productsLimit: process.env.DUMMY_JSON_PRODUCTS_LIMIT
@@ -43,13 +41,17 @@ export const config = {
 		database: {
 			dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true",
 			mongo: {
-				uri: process.env.MONGO_URI,
+				uri: isProduction
+					? process.env.PRODUCTION_MONGO_URI
+					: process.env.DEVELOPMENT_MONGO_URI,
 			}
 		},
 		cache: {
 			type: process.env.CACHE_TYPE || CacheTypes.MEMORY,
 			redis: {
-				url: process.env.REDIS_URL
+				url: isProduction
+					? process.env.PRODUCTION_REDIS_URL
+					: process.env.DEVELOPMENT_REDIS_URL,
 			}
 		},
 		storage: {
