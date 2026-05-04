@@ -3,7 +3,8 @@ services:
     container_name: api.backend
     build:
       context: ./backend
-      dockerfile: dev.Dockerfile
+      dockerfile: Dockerfile
+      target: development
     stdin_open: true
     tty: true
     ports:
