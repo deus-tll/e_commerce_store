@@ -19,6 +19,18 @@ services:
     networks:
       - e_commerce_store
 
+  stripe.cli:
+    image: stripe/stripe-cli:latest
+    container_name: stripe.cli
+    entrypoint: >
+      sh -c "stripe listen --forward-to api.backend:3001/api/payments/webhook --api-key $$STRIPE_SECRET_KEY"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - api.backend
+    networks:
+      - e_commerce_store
+
   db.redis:
     image: redis:latest
     container_name: db.redis
