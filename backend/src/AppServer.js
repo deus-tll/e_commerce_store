@@ -1,8 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import path from "path";
-import {fileURLToPath} from "url";
 
 import {DIContainer} from "./core/di/DIContainer.js";
 import {IDatabaseProvider} from "./interfaces/providers/database/IDatabaseProvider.js";
@@ -11,13 +9,8 @@ import {ICacheProvider} from "./interfaces/providers/cache/ICacheProvider.js";
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
 
 import {ProviderTypes, RouterTypes, SeederTypes} from "./constants/ioc.js";
-import {ServerPaths} from "./constants/file.js";
 import {RouteTypes} from "./constants/api.js";
 import {config} from "./config.js";
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const JSON_LIMIT = config.app.jsonLimit;
 
@@ -48,18 +41,11 @@ export class AppServer {
 	 * Configures global middleware (CORS, body parsers, static files).
 	 */
 	configureMiddleware() {
-		if (!config.app.isProduction) {
-			this.#app.use(
-				cors({
-					origin: config.app.clientUrl,
-					credentials: true,
-				})
-			);
-		}
-
 		this.#app.use(
-			ServerPaths.STATIC_URL_PREFIX,
-			express.static(path.join(__dirname, ServerPaths.STATIC_FOLDER_NAME))
+			cors({
+				origin: config.app.clientUrl,
+				credentials: true,
+			})
 		);
 
 		this.#app.set('query parser', 'extended');
@@ -105,12 +91,16 @@ export class AppServer {
 	 * Executes seeding operations.
 	 */
 	async runSeeders() {
-		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
-		const dummyProductsSeeder = this.#container.get(SeederTypes.PRODUCTS_DUMMY_JSON);
-
 		console.log("[Server] Starting seeders...");
+
+		const adminSeeder = this.#container.get(SeederTypes.ADMIN);
 		await adminSeeder.seed();
-		await dummyProductsSeeder.seed();
+
+		if (config.seeding.seedProductsOnStartup) {
+			const dummyProductsSeeder = this.#container.get(SeederTypes.PRODUCTS_DUMMY_JSON);
+			await dummyProductsSeeder.seed();
+		}
+
 		console.log("[Server] Seeding complete.");
 	}
 
