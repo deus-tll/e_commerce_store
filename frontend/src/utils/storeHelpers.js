@@ -124,14 +124,14 @@ export const handleUpdateFilter = async (set, fetchDataFn, key, value, stateKeys
 /**
  * Generic helper to clear all filters and reset pagination.
  */
-export const handleClearFilters = async (set, fetchDataFn, initialFilters, shouldFetch = false, options = {}) => {
+export const handleClearFilters = async (set, fetchDataFn, resetFiltersState, shouldFetch = false, options = {}) => {
 	const {
 		limit = 10,
 		stateKeys = DEFAULT_KEYS
 	} = options;
 
 	set(() => ({
-		[stateKeys.filters]: initialFilters,
+		[stateKeys.filters]: resetFiltersState,
 		[stateKeys.pagination]: getInitialPagination(limit),
 		error: null
 	}));
