@@ -3,13 +3,15 @@ import api from "../config/axios.js";
 import {makePathWithBase} from "../utils/paths.js";
 
 const pathWithBase = makePathWithBase("/products");
-const qsOptions = { arrayFormat: "indices", encode: false, skipNulls: true };
+const qsOptions = { arrayFormat: "indices", skipNulls: true };
 
 const productApi = {
-	getAll: (params = {}) => api.get(pathWithBase(), {
-		params,
-		paramsSerializer: p => qs.stringify(p, qsOptions)
-	}),
+	getAll: (params = {}) => {
+		return api.get(pathWithBase(), {
+			params,
+			paramsSerializer: p => qs.stringify(p, qsOptions)
+		})
+	},
 	getById: (productId) => api.get(pathWithBase(`/${encodeURIComponent(productId)}`)),
 	getFeatured: () => api.get(pathWithBase(`/featured`)),
 	getRecommendations: () => api.get(pathWithBase(`/recommended`)),
