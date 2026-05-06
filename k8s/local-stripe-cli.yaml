@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-stripe-cli
+  labels:
+    app: local-stripe-cli
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-stripe-cli
+  template:
+    metadata:
+      labels:
+        app: local-stripe-cli
+    spec:
+      containers:
+      - name: stripe-cli
+        image: stripe/stripe-cli:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - >
+            stripe listen 
+            --forward-to backend-service:3001/api/payments/webhook 
+            --api-key $(STRIPE_SECRET_KEY)
+        env:
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-env
+              key: STRIPE_SECRET_KEY
