@@ -5,6 +5,7 @@ import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 export class AuthCookieManager {
 	/** @type {IDateTimeUtility} */ #dateTimeUtility;
 	/** @type {boolean} */ #isProduction;
+	/** @type {boolean} */ #forceDisableSecureCookies;
 	/** @type {string} */ #sameSite;
 	/** @type {number} */ #accessTokenMaxAge;
 	/** @type {number} */ #refreshTokenMaxAge;
@@ -13,10 +14,12 @@ export class AuthCookieManager {
 	 * @param {IDateTimeUtility} dateTimeUtility
 	 * @param {string} refreshTokenTtl
 	 * @param {boolean} isProduction
+	 * @param {boolean} forceDisableSecureCookies
 	 */
-	constructor(dateTimeUtility, refreshTokenTtl, isProduction) {
+	constructor(dateTimeUtility, refreshTokenTtl, isProduction, forceDisableSecureCookies) {
 		this.#dateTimeUtility = dateTimeUtility;
 		this.#isProduction = isProduction;
+		this.#forceDisableSecureCookies = forceDisableSecureCookies;
 
 		// Access cookie lifetime matches refresh cookie lifetime
 		// (not to confuse with jwt ttl for access and refresh, they are different).
@@ -26,7 +29,7 @@ export class AuthCookieManager {
 		this.#accessTokenMaxAge = ttlMs;
 		this.#refreshTokenMaxAge = ttlMs;
 
-		this.#sameSite = this.#isProduction
+		this.#sameSite = (this.#isProduction && !forceDisableSecureCookies)
 			? SameSiteCookieOptions.NONE
 			: SameSiteCookieOptions.LAX;
 	}
@@ -41,7 +44,7 @@ export class AuthCookieManager {
 		// All our auth tokens must be HTTP-only and secure in production
 		return {
 			httpOnly: true,
-			secure: this.#isProduction,
+			secure: this.#forceDisableSecureCookies ? false : this.#isProduction,
 			sameSite: this.#sameSite,
 			maxAge: maxAge,
 			path: "/"
@@ -56,7 +59,7 @@ export class AuthCookieManager {
 	#getBaseClearOptions() {
 		return {
 			httpOnly: true,
-			secure: this.#isProduction,
+			secure: this.#forceDisableSecureCookies ? false : this.#isProduction,
 			sameSite: this.#sameSite,
 			path: "/"
 		};

@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+  - local-redis.yaml
+  - local-stripe-cli.yaml
+
+secretGenerator:
+  - name: backend-env
+    envs:
+      - backend.env
+
+generatorOptions:
+  disableNameSuffixHash: false

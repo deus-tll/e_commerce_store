@@ -28,6 +28,7 @@ export const config = {
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
+		forceDisableSecureCookies: process.env.FORCE_DISABLE_SECURE_COOKIES === "true"
 	},
 	seeding: {
 		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
