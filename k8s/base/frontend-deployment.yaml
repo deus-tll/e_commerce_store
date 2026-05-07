@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: local-redis-deployment
+  name: frontend-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: local-redis
+      app: frontend
   template:
     metadata:
       labels:
-        app: local-redis
+        app: frontend
     spec:
       containers:
-      - name: redis
-        image: redis:latest
+      - name: frontend-container
+        image: e-commerce-frontend
         ports:
-        - containerPort: 6379
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: local-redis-service
+  name: frontend-service
 spec:
   selector:
-    app: local-redis
+    app: frontend
   ports:
     - protocol: TCP
-      port: 6379
-      targetPort: 6379
+      port: 80
+      targetPort: 80

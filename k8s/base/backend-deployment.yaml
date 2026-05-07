@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
         - name: backend-container
-          image: e-commerce-backend:latest
-          imagePullPolicy: Never
+          image: e-commerce-backend
           ports:
           - containerPort: 3001
           envFrom:
@@ -27,11 +26,9 @@ kind: Service
 metadata:
   name: backend-service
 spec:
-  type: NodePort
   selector:
     app: backend
   ports:
     - protocol: TCP
       port: 3001
       targetPort: 3001
-      nodePort: 30001

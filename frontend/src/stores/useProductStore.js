@@ -158,9 +158,18 @@ export const useProductStore = create((set, get) => ({
 	clearFilters: () => handleClearFilters(
 		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, false, { limit: PAGINATION_LIMITS.PRODUCTS }
 	),
-	clearFiltersAndFetch: async () => await handleClearFilters(
-		set, get().fetchProducts, INITIAL_PRODUCT_FILTERS, true, { limit: PAGINATION_LIMITS.PRODUCTS }
-	),
+	clearFiltersAndFetch: async () => {
+		const currentSlug = get().filters[ProductFilterKeys.CATEGORY_SLUG];
+
+		const resetFiltersState = {
+			...INITIAL_PRODUCT_FILTERS,
+			[ProductFilterKeys.CATEGORY_SLUG]: currentSlug
+		}
+
+		await handleClearFilters(
+			set, get().fetchProducts, resetFiltersState, true, { limit: PAGINATION_LIMITS.PRODUCTS }
+		)
+	},
 
 	clearCurrentProduct: () => set({ currentProduct: null }),
 	clearFeaturedProducts: () => set({ featuredProducts: [] }),

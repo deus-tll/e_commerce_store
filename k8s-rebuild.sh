@@ -36,11 +36,11 @@ docker build -t e-commerce-frontend:latest \
   ./frontend
 
 echo "Preparing environment for Kustomize..."
-cp ./backend/.env k8s/backend.env
-trap 'rm -f k8s/backend.env' EXIT
+cp ./backend/.env k8s/overlays/local/backend.env
+trap 'rm -f k8s/overlays/local/backend.env' EXIT
 
-echo "Deploying via Kustomize..."
-kubectl apply -k k8s/
+echo "Deploying via Kustomize (Local)..."
+kubectl apply -k k8s/overlays/local/
 
 echo "Forcing production overrides..."
 kubectl set env deployment/backend-deployment \
