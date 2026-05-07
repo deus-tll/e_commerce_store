@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - ingress.yaml
 
 patches:
   - path: deployment-patches.yaml
@@ -13,14 +14,14 @@ patches:
     patch: |-
       - op: replace
         path: /spec/type
-        value: LoadBalancer
+        value: NodePort
   - target:
       kind: Service
       name: frontend-service
     patch: |-
       - op: replace
         path: /spec/type
-        value: LoadBalancer
+        value: NodePort
         
 secretGenerator:
   - name: backend-env

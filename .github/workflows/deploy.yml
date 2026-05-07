@@ -47,7 +47,7 @@ jobs:
         run: |
           docker build \
             --build-arg VITE_APP_NAME=${{ vars.VITE_APP_NAME }} \
-            --build-arg VITE_APP_API_URL="http://${{ vars.GCP_BACKEND_IP }}:3001/api" \
+            --build-arg VITE_APP_API_URL="${{ vars.APP_DOMAIN_URL_API }}" \
             --build-arg VITE_STRIPE_PUBLISHABLE_KEY="${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}" \
             -t ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
             ./frontend

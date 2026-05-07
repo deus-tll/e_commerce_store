@@ -1,0 +1,35 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: shop-certificate
+spec:
+  domains:
+    - shopper-genie.duckdns.org
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shop-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: shop-static-ip
+    networking.gke.io/managed-certificates: shop-certificate
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+    - host: shopper-genie.duckdns.org
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 3001
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
