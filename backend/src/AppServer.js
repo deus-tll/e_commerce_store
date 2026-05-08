@@ -68,6 +68,10 @@ export class AppServer {
 	 * Configures the application routers, retrieving them from the IoC container.
 	 */
 	setupRoutes() {
+		this.#app.get("/", (req, res) => {
+			res.status(200).send("OK")
+		})
+
 		this.#app.use(RouteTypes.AUTH, this.#container.get(RouterTypes.AUTH));
 		this.#app.use(RouteTypes.ANALYTICS, this.#container.get(RouterTypes.ANALYTICS));
 		this.#app.use(RouteTypes.CART, this.#container.get(RouterTypes.CART));
