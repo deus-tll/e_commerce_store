@@ -7,21 +7,6 @@ resources:
 
 patches:
   - path: deployment-patches.yaml
-
-  - target:
-      kind: Service
-      name: backend-service
-    patch: |-
-      - op: replace
-        path: /spec/type
-        value: NodePort
-  - target:
-      kind: Service
-      name: frontend-service
-    patch: |-
-      - op: replace
-        path: /spec/type
-        value: NodePort
         
 secretGenerator:
   - name: backend-env
