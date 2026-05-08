@@ -42,11 +42,21 @@ trap 'rm -f k8s/overlays/local/backend.env' EXIT
 echo "Deploying via Kustomize (Local)..."
 kubectl apply -k k8s/overlays/local/
 
+echo "Waiting for deployment to be created..."
+until kubectl get deployment/backend-deployment >/dev/null 2>&1; do
+  echo "Still waiting for backend-deployment..."
+  sleep 1
+done
+
 echo "Forcing production overrides..."
 kubectl set env deployment/backend-deployment \
-  NODE_ENV=production \
-  FORCE_DISABLE_SECURE_COOKIES=true \
   PRODUCTION_CLIENT_URL="$FRONTEND_URL"
+
+kubectl rollout restart deployment/backend-deployment
+kubectl rollout restart deployment/frontend-deployment
+
+kubectl rollout status deployment/backend-deployment
+kubectl rollout status deployment/frontend-deployment
 
 echo "Deployment Complete!"
 echo "-------------------------------------------------------"

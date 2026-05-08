@@ -3,8 +3,27 @@ kind: Kustomization
 
 resources:
   - ../../base
-  - ../../base/stripe-cli.yaml
-  - service-overrides.yaml
+  - stripe-cli.yaml
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+  - target:
+      kind: Deployment
+      name: backend-deployment
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: NODE_ENV
+            value: "production"
+          - name: FORCE_DISABLE_SECURE_COOKIES
+            value: "true"
+  - path: service-overrides.yaml
 
 secretGenerator:
   - name: backend-env
