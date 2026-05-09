@@ -17,7 +17,6 @@ import {EntityNotFoundError} from "../../errors/index.js";
 import {OrderStatus} from "../../constants/domain.js";
 import {PaymentEventTypes} from "../../constants/payment.js";
 import {Currency} from "../../utils/currency.js";
-import {config} from "../../config.js";
 
 /**
  * @augments ICheckoutService
@@ -28,6 +27,7 @@ export class CheckoutService extends ICheckoutService {
 	/** @type {IOrderService} */ #orderService;
 	/** @type {ICartService} */ #cartService;
 	/** @type {ICouponService} */ #couponService;
+	/** @type {number} */ #minAmountForGrant;
 
 	/**
 	 * @param {IPaymentProvider} paymentProvider
@@ -35,14 +35,24 @@ export class CheckoutService extends ICheckoutService {
 	 * @param {IOrderService} orderService
 	 * @param {ICartService} cartService
 	 * @param {ICouponService} couponService
+	 * @param {number} minAmountForGrant
 	 */
-	constructor(paymentProvider, productService, orderService, cartService, couponService) {
+	constructor(
+		paymentProvider,
+		productService,
+		orderService,
+		cartService,
+		couponService,
+		minAmountForGrant
+	)
+	{
 		super();
 		this.#paymentProvider = paymentProvider;
 		this.#productService = productService;
 		this.#orderService = orderService;
 		this.#cartService = cartService;
 		this.#couponService = couponService;
+		this.#minAmountForGrant = minAmountForGrant;
 	}
 
 	/**
@@ -116,7 +126,7 @@ export class CheckoutService extends ICheckoutService {
 	 */
 	async #grantNewCouponIfEligible(userId, amountPaidInCents) {
 		// Check if the purchase meets the minimum threshold
-		if (amountPaidInCents < config.business.coupon.minAmountForGrant) return;
+		if (amountPaidInCents < this.#minAmountForGrant) return;
 
 		try {
 			await this.#couponService.create(userId);

@@ -14,7 +14,6 @@ import {
 import {BaseSeeder} from "./BaseSeeder.js";
 
 import {UserRoles} from "../constants/app.js";
-import {config} from "../config.js";
 
 /**
  * @typedef {Object} DummyJsonProduct
@@ -51,13 +50,14 @@ const ALLOWED_ATTRIBUTES = {
     DEPTH: "Depth",
 };
 
-const FEATURED_PRODUCTS_MIN_RATING = 4.5;
-
 export class ProductsDummyJsonSeeder extends BaseSeeder {
     /** @type {ICategoryService} */ #categoryService;
     /** @type {IProductService} */ #productService;
     /** @type {IUserService} */ #userService;
     /** @type {IReviewService} */ #reviewService;
+    /** @type {string} */ #productsUrlWithLimit;
+    /** @type {string} */ #defaultSeederUserPassword;
+    /** @type {number} */ #featuredProductsMinRating;
 
     #categoryMap = new Map();
     #userMap = new Map();
@@ -67,13 +67,28 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
      * @param {IProductService} productService
      * @param {IUserService} userService
      * @param {IReviewService} reviewService
+     * @param {string} productsUrlWithLimit
+     * @param {string} defaultSeederUserPassword
+     * @param {number} featuredProductsMinRating
      */
-    constructor(categoryService, productService, userService, reviewService) {
+    constructor(
+        categoryService,
+        productService,
+        userService,
+        reviewService,
+        productsUrlWithLimit,
+        defaultSeederUserPassword,
+        featuredProductsMinRating
+    )
+    {
         super();
         this.#categoryService = categoryService;
         this.#productService = productService;
         this.#userService = userService;
         this.#reviewService = reviewService;
+        this.#productsUrlWithLimit = productsUrlWithLimit;
+        this.#defaultSeederUserPassword = defaultSeederUserPassword;
+        this.#featuredProductsMinRating = featuredProductsMinRating;
     }
 
     async #isDatabaseNotEmpty() {
@@ -85,9 +100,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
     }
 
     async #fetchExternalProducts() {
-        const response = await fetch(
-            `${config.seeding.dummyJson.productsUrl}?limit=${config.seeding.dummyJson.productsLimit}`
-        );
+        const response = await fetch(this.#productsUrlWithLimit);
         if (!response.ok) {
             console.error(`Failed to fetch products: ${response.statusText}`);
             return [];
@@ -188,7 +201,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         const dto = new CreateUserDTO({
             name: reviewData.reviewerName,
             email: email,
-            password: config.seeding.defaultSeederUserPassword,
+            password: this.#defaultSeederUserPassword,
             role: UserRoles.CUSTOMER,
             isVerified: true
         });
@@ -256,7 +269,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
                 }
             }
 
-            await this.#productService.updateFeaturedByRating(FEATURED_PRODUCTS_MIN_RATING);
+            await this.#productService.updateFeaturedByRating(this.#featuredProductsMinRating);
             console.log("[Seeder] Featured products updated based on rating.");
 
             console.log("[Seeder] DummyJson seeding completed successfully!");

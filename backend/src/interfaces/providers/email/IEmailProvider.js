@@ -16,10 +16,10 @@ export class IEmailProvider {
 	/**
 	 * Sends a password reset link.
 	 * @param {string} email
-	 * @param {string} resetPasswordUrl
+	 * @param {string} resetToken
 	 * @returns {Promise<void>}
 	 */
-	async sendPasswordResetEmail(email, resetPasswordUrl) {
+	async sendPasswordResetEmail(email, resetToken) {
 		throw new Error("Method not implemented.");
 	}
 

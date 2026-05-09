@@ -1,33 +1,23 @@
-import Redis from "ioredis";
 import {ICacheProvider} from "../../interfaces/providers/cache/ICacheProvider.js";
-import {config} from "../../config.js";
 
 /**
  * Redis implementation of the ICacheProvider.
  * @augments ICacheProvider
  */
 export class RedisCacheProvider extends ICacheProvider {
-    #client;
-    #isConnected = false;
-    #uri;
+    /** @type {import("ioredis").Redis} */ #client;
+    /** @type {boolean} */ #isConnected = false;
 
-    constructor() {
+    /**
+     * @param {import("ioredis").Redis} client
+     */
+    constructor(client) {
         super();
-        this.#uri = config.providers.cache.redis.url;
+        this.#client = client;
+        this.#setupEvents();
     }
 
-    async connect() {
-        if (this.#client) return;
-
-        this.#client = new Redis(this.#uri, {
-            lazyConnect: true,
-            maxRetriesPerRequest: 1,
-            retryStrategy(times) {
-                if (times > 3) return null;
-                return Math.min(times * 100, 3000);
-            }
-        });
-
+    #setupEvents() {
         this.#client.on("connect", () => {
             this.#isConnected = true;
             console.log("[Cache] Redis connected.");
@@ -37,8 +27,12 @@ export class RedisCacheProvider extends ICacheProvider {
             this.#isConnected = false;
             console.error(`[Cache] Redis error: ${err.message}`);
         });
+    }
 
-        await this.#client.connect();
+    async connect() {
+        if (this.#client.status === "wait" || this.#client.status === "close") {
+            await this.#client.connect();
+        }
     }
 
     async disconnect() {
@@ -73,9 +67,5 @@ export class RedisCacheProvider extends ICacheProvider {
     async delete(key) {
         if (!this.#isConnected) return;
         await this.#client.del(key);
-    }
-
-    async quit() {
-        await this.#client.quit();
     }
 }
