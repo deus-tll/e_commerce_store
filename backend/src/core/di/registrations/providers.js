@@ -1,3 +1,11 @@
+import {MailtrapClient} from "mailtrap";
+import {v2 as cloudinary} from "cloudinary";
+import Stripe from "stripe";
+import mongoose from 'mongoose';
+import Redis from "ioredis";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
 import {MongooseDatabaseProvider} from "../../../providers/database/MongooseDatabaseProvider.js";
 import {RedisCacheProvider} from "../../../providers/cache/RedisCacheProvider.js";
 import {MemoryCacheProvider} from "../../../providers/cache/MemoryCacheProvider.js";
@@ -14,28 +22,81 @@ import {ProviderTypes} from "../../../constants/ioc.js";
 
 import {config} from "../../../config.js";
 
-const CACHE_IMPLEMENTATIONS = {
-    [CacheTypes.REDIS]: RedisCacheProvider,
-    [CacheTypes.MEMORY]: MemoryCacheProvider
-};
-const SELECTED_CACHE_IMPL = CACHE_IMPLEMENTATIONS[config.providers.cache.type];
-
-const SALT_ROUNDS = config.providers.password.bcrypt.saltRounds;
-
 /**
  * @param {DIContainer} container
  * @returns {void}
  */
 const registerProviders = (container) => {
-    container.register(ProviderTypes.DATABASE, MongooseDatabaseProvider, []);
-    container.register(ProviderTypes.CACHE, SELECTED_CACHE_IMPL, []);
-    container.register(ProviderTypes.STORAGE, CloudinaryStorageProvider, []);
-    container.register(ProviderTypes.EMAIL_CONTENT, FilesystemEmailContentProvider, []);
-    container.register(ProviderTypes.EMAIL, MailTrapEmailProvider, [ProviderTypes.EMAIL_CONTENT]);
-    container.register(ProviderTypes.PAYMENT, StripeProvider, []);
+    container.register(ProviderTypes.DATABASE, () => {
+        const uri = config.providers.database.mongo.uri;
+        const isProduction = config.app.isProduction;
 
-    container.register(ProviderTypes.JWT, JwtProvider, []);
-    container.register(ProviderTypes.PASSWORD, () => new BcryptPasswordProvider(SALT_ROUNDS));
+        return new MongooseDatabaseProvider(mongoose, uri, isProduction)
+    });
+    container.register(ProviderTypes.CACHE, () => {
+        const cacheType = config.providers.cache.type;
+
+        if (cacheType === CacheTypes.REDIS) {
+            const client = new Redis(config.providers.cache.redis.url, {
+                lazyConnect: true,
+                maxRetriesPerRequest: 1,
+                retryStrategy(times) {
+                    if (times > 3) return null;
+                    return Math.min(times * 100, 3000);
+                }
+            });
+            return new RedisCacheProvider(client);
+        }
+
+        return new MemoryCacheProvider();
+    });
+    container.register(ProviderTypes.STORAGE, () => {
+        cloudinary.config({
+            cloud_name: config.providers.storage.cloudinary.cloudName,
+            api_key: config.providers.storage.cloudinary.apiKey,
+            api_secret: config.providers.storage.cloudinary.apiSecret,
+        });
+        const isProduction = config.app.isProduction;
+
+        return new CloudinaryStorageProvider(cloudinary, isProduction);
+    });
+    container.register(ProviderTypes.EMAIL_CONTENT, FilesystemEmailContentProvider, []);
+    container.register(ProviderTypes.EMAIL, () => {
+        const mailtrapClient = new MailtrapClient({
+            token: config.providers.mail.mailtrap.token,
+        });
+        const sender = {
+            email: config.providers.mail.mailtrap.sender.email,
+            name: config.providers.mail.mailtrap.sender.name
+        };
+
+        const emailContentProvider = container.get(ProviderTypes.EMAIL_CONTENT);
+        const resetPasswordUrlBase = new URL(config.providers.password.resetUrl, config.app.clientUrl).toString();
+
+        return new MailTrapEmailProvider(mailtrapClient, sender, emailContentProvider, resetPasswordUrlBase)
+    });
+    container.register(ProviderTypes.PAYMENT, () => {
+        const stripe = new Stripe(config.providers.payment.stripe.secretKey);
+        const webhookSecret = config.providers.payment.stripe.webhookSecret;
+        const {clientUrl} = config.app;
+        const {successUrl, cancelUrl} = config.providers.payment.stripe;
+        const formURL = (input, base) => new URL(input, base).toString();
+
+        return new StripeProvider(stripe, webhookSecret, formURL(successUrl, clientUrl), formURL(cancelUrl, clientUrl));
+    });
+    container.register(ProviderTypes.JWT, () => {
+        return new JwtProvider(
+            jwt,
+            config.auth.access.secret,
+            config.auth.access.ttl,
+            config.auth.refresh.secret,
+            config.auth.refresh.ttl
+        );
+    });
+    container.register(ProviderTypes.PASSWORD, () => {
+        const saltRounds = config.providers.password.bcrypt.saltRounds;
+        return new BcryptPasswordProvider(bcrypt, saltRounds);
+    });
 }
 
 export default registerProviders;

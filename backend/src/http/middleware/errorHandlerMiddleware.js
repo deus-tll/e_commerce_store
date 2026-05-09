@@ -9,8 +9,9 @@ import {
 	UnauthorizedError
 } from "../../errors/index.js";
 
-import {config} from "../../config.js";
 import {ValidationErrorTypes} from "../../constants/errors.js";
+import {config} from "../../config.js";
+
 
 /**
  * @typedef {import('express').ErrorRequestHandler} ErrorRequestHandler

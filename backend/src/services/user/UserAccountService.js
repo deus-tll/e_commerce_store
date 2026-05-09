@@ -10,7 +10,6 @@ import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
-import {config} from "../../config.js";
 
 /**
  * Implements the IUserAccountService contract, focusing on user account state
@@ -35,7 +34,16 @@ export class UserAccountService extends IUserAccountService {
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
 	 */
-	constructor(userService, emailProvider, passwordProvider, jwtProvider, authCacheManager, userTokenService, userMapper) {
+	constructor(
+		userService,
+		emailProvider,
+		passwordProvider,
+		jwtProvider,
+		authCacheManager,
+		userTokenService,
+		userMapper
+	)
+	{
 		super();
 		this.#userService = userService;
 		this.#emailProvider = emailProvider;
@@ -121,10 +129,9 @@ export class UserAccountService extends IUserAccountService {
 			const { id: userId } = userEntity;
 
 			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.#generateResetTokenDetails();
-			const resetPasswordUrl = `${config.app.clientUrl}/${config.providers.password.resetUrl}/${resetToken}`;
 
 			await this.#userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
-			await this.#emailProvider.sendPasswordResetEmail(email, resetPasswordUrl);
+			await this.#emailProvider.sendPasswordResetEmail(email, resetToken);
 		}
 		catch (error) {
 			if (!(error instanceof EntityNotFoundError)) {

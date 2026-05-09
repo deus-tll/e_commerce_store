@@ -1,27 +1,40 @@
-import jwt from "jsonwebtoken";
-
 import {InvalidTokenError, TokenExpiredError} from "../../errors/index.js";
 
 import {TokenTypes} from "../../constants/auth.js";
-import {config} from "../../config.js";
-
-const ACCESS_TOKEN_SECRET = config.auth.access.secret;
-const REFRESH_TOKEN_SECRET = config.auth.refresh.secret;
-const ACCESS_TOKEN_TTL = config.auth.access.ttl;
-const REFRESH_TOKEN_TTL = config.auth.refresh.ttl;
 
 /**
  * Handles all technical JWT signing and verification details.
  */
 export class JwtProvider {
+	/** @type {import("jsonwebtoken")} */ #jwt;
+	/** @type {string} */ #accessTokenSecret;
+	/** @type {string} */ #accessTokenTtl;
+	/** @type {string} */ #refreshTokenSecret;
+	/** @type {string} */ #refreshTokenTtl;
+
+	/**
+	 * @param {import("jsonwebtoken")} jwt
+	 * @param {string} accessTokenSecret
+	 * @param {string} accessTokenTtl
+	 * @param {string} refreshTokenSecret
+	 * @param {string} refreshTokenTtl
+	 */
+	constructor(jwt, accessTokenSecret, accessTokenTtl, refreshTokenSecret, refreshTokenTtl) {
+		this.#jwt = jwt;
+		this.#accessTokenSecret = accessTokenSecret;
+		this.#accessTokenTtl = accessTokenTtl;
+		this.#refreshTokenSecret = refreshTokenSecret;
+		this.#refreshTokenTtl = refreshTokenTtl;
+	}
+
 	/**
 	 * Signs an access token for the given user ID.
 	 * @param {string} userId
 	 * @returns {string}
 	 */
 	signAccessToken(userId) {
-		return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
-			expiresIn: ACCESS_TOKEN_TTL
+		return this.#jwt.sign({ userId }, this.#accessTokenSecret, {
+			expiresIn: this.#accessTokenTtl
 		});
 	}
 
@@ -31,8 +44,8 @@ export class JwtProvider {
 	 * @returns {string}
 	 */
 	signRefreshToken(userId) {
-		return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
-			expiresIn: REFRESH_TOKEN_TTL
+		return this.#jwt.sign({ userId }, this.#refreshTokenSecret, {
+			expiresIn: this.#refreshTokenTtl
 		});
 	}
 
@@ -55,10 +68,10 @@ export class JwtProvider {
 	 * @throws {TokenExpiredError|InvalidTokenError}
 	 */
 	verifyToken(token, type) {
-		const secret = type === TokenTypes.ACCESS_TOKEN ? ACCESS_TOKEN_SECRET : REFRESH_TOKEN_SECRET;
+		const secret = type === TokenTypes.ACCESS_TOKEN ? this.#accessTokenSecret : this.#refreshTokenSecret;
 
 		try {
-			return jwt.verify(token, secret);
+			return this.#jwt.verify(token, secret);
 		}
 		catch (error) {
 			const tokenName = type === TokenTypes.ACCESS_TOKEN ? "Access token" : "Refresh token";

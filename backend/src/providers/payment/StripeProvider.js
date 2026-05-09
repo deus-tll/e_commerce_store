@@ -1,5 +1,3 @@
-import Stripe from "stripe";
-
 import {IPaymentProvider} from "../../interfaces/providers/payment/IPaymentProvider.js";
 import {CheckoutSessionDTO, PaymentEventDataDTO, WebhookPaymentEventDTO} from "../../domain/index.js";
 
@@ -9,15 +7,30 @@ import {Currency} from "../../utils/currency.js";
 import {CheckoutSessionModes, Currencies, PaymentEventTypes, PaymentMethodTypes} from "../../constants/payment.js";
 import {IdempotencyPrefixes, StripeCouponDurations, StripeEvents, StripeHeaders} from "../../constants/stripe.js";
 
-import {config} from "../../config.js";
-
-export const stripe = new Stripe(config.providers.payment.stripe.secretKey);
-
 /**
  * @augments IPaymentProvider
  * @description Handles all low-level communication and data translation for the Stripe API.
  */
 export class StripeProvider extends IPaymentProvider {
+	/** @type {import("stripe").Stripe} */ #stripe;
+	/** @type {string} */ #webhookSecret;
+	/** @type {string} */ #successUrl;
+	/** @type {string} */ #cancelUrl;
+
+	/**
+	 * @param {import("stripe").Stripe} stripe
+	 * @param {string} webhookSecret
+	 * @param {string} successUrl
+	 * @param {string} cancelUrl
+	 */
+	constructor(stripe, webhookSecret, successUrl, cancelUrl) {
+		super();
+		this.#stripe = stripe;
+		this.#webhookSecret = webhookSecret;
+		this.#successUrl = successUrl;
+		this.#cancelUrl = cancelUrl;
+	}
+
 	/**
 	 * Converts a list of order items into Stripe-specific line items.
 	 * @param {OrderProductItem[]} orderItems - Array of domain product items.
@@ -47,7 +60,7 @@ export class StripeProvider extends IPaymentProvider {
 	 * @returns {Promise<string>} The Stripe Coupon ID.
 	 */
 	async #createCoupon(discountPercentage) {
-		const coupon = await stripe.coupons.create({
+		const coupon = await this.#stripe.coupons.create({
 			percent_off: discountPercentage,
 			duration: StripeCouponDurations.ONCE
 		});
@@ -73,19 +86,15 @@ export class StripeProvider extends IPaymentProvider {
 		}
 
 		const { orderId } = metadata;
-		const { clientUrl } = config.app;
-		const { successUrl, cancelUrl } = config.providers.payment.stripe;
-
-		const formURL = (input, base) => new URL(input, base).toString();
 
 		try {
-			const session = await stripe.checkout.sessions.create(
+			const session = await this.#stripe.checkout.sessions.create(
 				{
 					payment_method_types: [PaymentMethodTypes.CARD],
 					line_items: lineItems,
 					mode: CheckoutSessionModes.PAYMENT,
-					success_url: formURL(successUrl, clientUrl),
-					cancel_url: formURL(cancelUrl, clientUrl),
+					success_url: this.#successUrl,
+					cancel_url: this.#cancelUrl,
 					discounts,
 					metadata: {
 						...metadata,
@@ -106,10 +115,9 @@ export class StripeProvider extends IPaymentProvider {
 
 	constructEvent(payload, headers) {
 		const signature = headers[StripeHeaders.SIGNATURE];
-		const webhookSecret = config.providers.payment.stripe.webhookSecret;
 
 		try {
-			const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+			const event = this.#stripe.webhooks.constructEvent(payload, signature, this.#webhookSecret);
 			const type = this.#mapEventType(event.type);
 			const session = event.data.object;
 

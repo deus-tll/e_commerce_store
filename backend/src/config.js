@@ -28,19 +28,20 @@ export const config = {
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
-		forceDisableSecureCookies: process.env.FORCE_DISABLE_SECURE_COOKIES === "true"
+		forceDisableSecureCookies: String(process.env.FORCE_DISABLE_SECURE_COOKIES) === "true"
 	},
 	seeding: {
 		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
-		seedProductsOnStartup: process.env.SEED_PRODUCTS_ON_STARTUP === "true",
+		seedProductsOnStartup: String(process.env.SEED_PRODUCTS_ON_STARTUP) === "true",
 		dummyJson: {
-			productsUrl: process.env.DUMMY_JSON_PRODUCTS_URL,
-			productsLimit: process.env.DUMMY_JSON_PRODUCTS_LIMIT
+			productsUrlWithLimit: process.env.DUMMY_JSON_PRODUCTS_URL
+				? `${process.env.DUMMY_JSON_PRODUCTS_URL}?limit=${Number(process.env.DUMMY_JSON_PRODUCTS_LIMIT) || 10}`
+				: "https://dummyjson.com/products?limit=10",
 		}
 	},
 	providers: {
 		database: {
-			dropOnStartup: process.env.DROP_DB_ON_STARTUP === "true",
+			dropOnStartup: String(process.env.DROP_DB_ON_STARTUP) === "true",
 			mongo: {
 				uri: isProduction
 					? process.env.PRODUCTION_MONGO_URI
@@ -56,7 +57,7 @@ export const config = {
 			}
 		},
 		storage: {
-			dropOnStartup: process.env.DROP_STORAGE_ON_STARTUP === "true",
+			dropOnStartup: String(process.env.DROP_STORAGE_ON_STARTUP) === "true",
 			cloudinary: {
 				cloudName: process.env.CLOUDINARY_CLOUD_NAME,
 				apiKey: process.env.CLOUDINARY_API_KEY,
@@ -66,14 +67,13 @@ export const config = {
 		payment: {
 			stripe: {
 				secretKey: process.env.STRIPE_SECRET_KEY,
+				webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
 				successUrl: process.env.STRIPE_SUCCESS_URL,
 				cancelUrl: process.env.STRIPE_CANCEL_URL,
-				webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
 			}
 		},
 		mail: {
 			mailtrap: {
-				endpoint: process.env.MAILTRAP_ENDPOINT,
 				token: process.env.MAILTRAP_TOKEN,
 				sender: {
 					email: process.env.MAILTRAP_SENDER_EMAIL,
@@ -107,6 +107,9 @@ export const config = {
 			name: process.env.ADMIN_NAME,
 			email: process.env.ADMIN_EMAIL,
 			password: process.env.ADMIN_PASSWORD,
+		},
+		product: {
+			featuredProductsMinRating: Number(process.env.FEATURED_PRODUCTS_MIN_RATING)
 		}
 	}
 };

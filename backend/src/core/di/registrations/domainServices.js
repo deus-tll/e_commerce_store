@@ -19,6 +19,7 @@ import {
     MapperTypes, ParserTypes, ValidatorTypes,
     ServiceTypes
 } from "../../../constants/ioc.js";
+import {config} from "../../../config.js";
 
 /**
  * @param {DIContainer} container
@@ -85,13 +86,16 @@ const registerDomainServices = (container) => {
     );
     // =============
     // Payment
-    container.register(ServiceTypes.CHECKOUT, CheckoutService, [
-        ProviderTypes.PAYMENT,
-        ServiceTypes.PRODUCT,
-        ServiceTypes.ORDER,
-        ServiceTypes.CART,
-        ServiceTypes.COUPON
-    ]);
+    container.register(ServiceTypes.CHECKOUT, () => {
+        const paymentProvider = container.get(ProviderTypes.PAYMENT);
+        const productService = container.get(ServiceTypes.PRODUCT);
+        const orderService = container.get(ServiceTypes.ORDER);
+        const cartService = container.get(ServiceTypes.CART);
+        const couponService = container.get(ServiceTypes.COUPON);
+        const minAmountForGrant = config.business.coupon.minAmountForGrant;
+
+        return new CheckoutService(paymentProvider, productService, orderService, cartService, couponService, minAmountForGrant);
+    });
 }
 
 export default registerDomainServices;

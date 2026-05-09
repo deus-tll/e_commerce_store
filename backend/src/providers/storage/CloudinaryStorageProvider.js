@@ -1,20 +1,24 @@
-import { v2 as cloudinary } from "cloudinary";
-
 import {IStorageProvider} from "../../interfaces/providers/storage/IStorageProvider.js";
 import {SystemError} from "../../errors/index.js";
-import {config} from "../../config.js";
-
-cloudinary.config({
-	cloud_name: config.providers.storage.cloudinary.cloudName,
-	api_key: config.providers.storage.cloudinary.apiKey,
-	api_secret: config.providers.storage.cloudinary.apiSecret,
-});
 
 /**
  * Cloudinary implementation of the IStorageService contract.
  * @augments IStorageProvider
  */
 export class CloudinaryStorageProvider extends IStorageProvider {
+	/** @type {import("cloudinary")."module:cloudinary.v2"} */ #cloudinary;
+	/** @type {boolean} */ #isProduction;
+
+	/**
+	 * @param {import("cloudinary")."module:cloudinary.v2"} cloudinary
+	 * @param {boolean} isProduction
+	 */
+	constructor(cloudinary, isProduction) {
+		super();
+		this.#cloudinary = cloudinary;
+		this.#isProduction = isProduction;
+	}
+
 	/**
 	 * Extracts the public ID segment (excluding folder and extension) from a secure URL.
 	 * @param {string} fileUrl
@@ -48,7 +52,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 
 	async upload(file, folder) {
 		try {
-			const response = await cloudinary.uploader.upload(file, { folder });
+			const response = await this.#cloudinary.uploader.upload(file, { folder });
 			return response["secure_url"];
 		}
 		catch (error) {
@@ -66,7 +70,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			if (!publicIdSegment) return;
 
 			const fullPublicId = `${folder}/${publicIdSegment}`;
-			await cloudinary.uploader.destroy(fullPublicId);
+			await this.#cloudinary.uploader.destroy(fullPublicId);
 		}
 		catch (error) {
 			console.error("[Cloudinary] Delete failed:", error.message);
@@ -74,7 +78,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 	}
 
 	async deleteAll() {
-		if (config.app.isProduction) {
+		if (this.#isProduction) {
 			console.warn("[Cloudinary] Cleanup skipped: Production environment detected.");
 			return;
 		}
@@ -86,7 +90,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			let deletedCount = 0;
 
 			while (hasMore) {
-				const result = await cloudinary.api.delete_all_resources({
+				const result = await this.#cloudinary.api.delete_all_resources({
 					resource_type: 'image',
 					invalidate: true,
 					max_results: 1000

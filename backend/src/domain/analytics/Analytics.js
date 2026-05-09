@@ -12,6 +12,8 @@ export class AnalyticsSummaryDTO {
 		this.products = data.products;
 		this.totalSales = data.totalSales;
 		this.totalRevenue = data.totalRevenue;
+
+		Object.freeze(this);
 	}
 }
 
@@ -27,6 +29,8 @@ export class DailySalesDataDTO {
 		this.date = data.date;
 		this.sales = data.sales;
 		this.revenue = data.revenue;
+
+		Object.freeze(this);
 	}
 }
 
@@ -40,5 +44,7 @@ export class FullAnalyticsResponseDTO {
 	constructor({ analyticsData, dailySalesData }) {
 		this.analyticsData = analyticsData;
 		this.dailySalesData = dailySalesData;
+
+		Object.freeze(this);
 	}
 }

@@ -1,21 +1,7 @@
-import {MailtrapClient} from "mailtrap";
-
 import {IEmailProvider} from "../../interfaces/providers/email/IEmailProvider.js";
 import {IEmailContentProvider} from "../../interfaces/email/IEmailContentProvider.js";
 
 import {SystemError} from "../../errors/index.js";
-
-import {config} from "../../config.js";
-
-export const mailtrapClient = new MailtrapClient({
-	endpoint: config.providers.mail.mailtrap.endpoint,
-	token: config.providers.mail.mailtrap.token,
-});
-
-export const sender = {
-	email: config.providers.mail.mailtrap.sender.email,
-	name: config.providers.mail.mailtrap.sender.name
-}
 
 const EMAIL_CATEGORIES = {
 	VERIFICATION: "Email Verification",
@@ -24,19 +10,28 @@ const EMAIL_CATEGORIES = {
 };
 
 export class MailTrapEmailProvider extends IEmailProvider {
+	/** @type {import("mailtrap").MailtrapClient} */ #client;
+	/** @type {{ email: string, name: string }} */ #sender;
 	/** @type {IEmailContentProvider} */ #emailContentProvider;
+	/** @type {string} */ #resetPasswordUrlBase;
 
 	/**
+	 * @param {import("mailtrap").MailtrapClient} client
+	 * @param {{ email: string, name: string }} sender
 	 * @param {IEmailContentProvider} emailContentProvider
+	 * @param {string} resetPasswordUrlBase
 	 */
-	constructor(emailContentProvider) {
+	constructor(client, sender, emailContentProvider, resetPasswordUrlBase) {
 		super();
+		this.#client = client;
+		this.#sender = sender;
 		this.#emailContentProvider = emailContentProvider;
+		this.#resetPasswordUrlBase = resetPasswordUrlBase;
 	}
 
 	async #sendEmail(to, subject, htmlContent, category) {
 		const mailOptions = {
-			from: sender,
+			from: this.#sender,
 			to: [{ email: to }],
 			subject,
 			html: htmlContent,
@@ -44,7 +39,7 @@ export class MailTrapEmailProvider extends IEmailProvider {
 		};
 
 		try {
-			await mailtrapClient.send(mailOptions);
+			await this.#client.send(mailOptions);
 			console.info(`[Email] ${category} sent to ${to}`);
 		}
 		catch (error) {
@@ -63,11 +58,11 @@ export class MailTrapEmailProvider extends IEmailProvider {
 		await this.#sendEmail(email, subject, finalHtml, EMAIL_CATEGORIES.VERIFICATION);
 	}
 
-	async sendPasswordResetEmail(email, resetPasswordUrl) {
+	async sendPasswordResetEmail(email, resetToken) {
 		const subject = "Reset Your Password";
 		const finalHtml = await this.#emailContentProvider.renderTemplate(
 			"passwordResetRequest.html",
-			{ resetPasswordUrl: resetPasswordUrl }
+			{ resetPasswordUrl: `${this.#resetPasswordUrlBase}/${resetToken}` }
 		);
 
 		await this.#sendEmail(email, subject, finalHtml, EMAIL_CATEGORIES.RESET_REQUEST);
