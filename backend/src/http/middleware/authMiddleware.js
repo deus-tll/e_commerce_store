@@ -9,8 +9,7 @@ import {InvalidTokenError, UnauthenticatedError, AccountNotVerifiedError, Forbid
  */
 export const createProtectRoute = (authService) => {
 	return async (req, res, next) => {
-		const accessToken = req.cookies.accessToken ||
-			(req.headers.authorization && req.headers.authorization.split(' ')[1]);
+		const accessToken = req.cookies.accessToken;
 
 		if (!accessToken) {
 			throw new InvalidTokenError("No access token provided");
