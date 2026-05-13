@@ -6,8 +6,6 @@ import {DomainValidationError} from "../../errors/index.js";
 /**
  * Creates an Express middleware function that validates the request object
  * (params, body, query) against a Joi schema.
- *
- * It uses Joi's abortEarly: false option to capture all validation errors at once.
  */
 export const validationMiddleware = (schema: ObjectSchema): RequestHandler => {
 	return (req: Request, res: Response, next: NextFunction) => {
