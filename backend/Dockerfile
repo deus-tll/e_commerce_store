@@ -9,8 +9,13 @@ COPY . .
 EXPOSE 3001
 CMD ["npm", "run", "dev"]
 
+FROM base AS builder
+RUN npm install
+COPY . .
+RUN npm run build
+
 FROM base AS production
 RUN npm ci --only=production
-COPY . .
+COPY --from=builder /app/dist ./dist
 EXPOSE 3001
 CMD ["npm", "start"]
