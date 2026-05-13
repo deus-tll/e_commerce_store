@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 
 import {CategoryController} from "../../controllers/CategoryController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
@@ -14,13 +14,13 @@ import {
 } from "../validators/categoryValidator.js";
 
 /**
- * A factory that creates and configures the Categories router, injecting necessary dependencies.
- * @param {CategoryController} categoryController
- * @param {ISessionAuthService} authService - The authentication service instance, required for protectRoute.
- * @returns {express.Router | core.Router} - Configured Express router.
+ * A factory that creates and configures the Categories router.
  */
-export function createCategoriesRouter(categoryController, authService) {
-	const router = express.Router();
+export function createCategoriesRouter(
+	categoryController: CategoryController,
+	authService: ISessionAuthService
+): Router {
+	const router = Router();
 
 	const protectRoute = createProtectRoute(authService);
 
