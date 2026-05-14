@@ -1,9 +1,7 @@
-import {IDateTimeUtility} from "../../interfaces/utilities/IDateTimeUtility.js";
-
+import {DateTime} from "../../utils/dateTime.js";
 import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
 
 export class AuthCookieManager {
-	/** @type {IDateTimeUtility} */ #dateTimeUtility;
 	/** @type {boolean} */ #isProduction;
 	/** @type {boolean} */ #forceDisableSecureCookies;
 	/** @type {string} */ #sameSite;
@@ -11,13 +9,11 @@ export class AuthCookieManager {
 	/** @type {number} */ #refreshTokenMaxAge;
 
 	/**
-	 * @param {IDateTimeUtility} dateTimeUtility
 	 * @param {string} refreshTokenTtl
 	 * @param {boolean} isProduction
 	 * @param {boolean} forceDisableSecureCookies
 	 */
-	constructor(dateTimeUtility, refreshTokenTtl, isProduction, forceDisableSecureCookies) {
-		this.#dateTimeUtility = dateTimeUtility;
+	constructor(refreshTokenTtl, isProduction, forceDisableSecureCookies) {
 		this.#isProduction = isProduction;
 		this.#forceDisableSecureCookies = forceDisableSecureCookies;
 
@@ -25,7 +21,7 @@ export class AuthCookieManager {
 		// (not to confuse with jwt ttl for access and refresh, they are different).
 		// This is to prevent browser from invalidating access token and
 		// not including it in the request, when it should be
-		const ttlMs = this.#dateTimeUtility.ttlToMilliseconds(refreshTokenTtl);
+		const ttlMs = DateTime.ttlToMilliseconds(refreshTokenTtl);
 		this.#accessTokenMaxAge = ttlMs;
 		this.#refreshTokenMaxAge = ttlMs;
 

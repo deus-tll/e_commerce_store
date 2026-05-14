@@ -10,11 +10,6 @@ export const RepositoryTypes = Object.freeze({
 	USER: "IUserRepository"
 });
 
-export const UtilityTypes = Object.freeze({
-	SLUG: "ISlugUtility",
-	DATE: "IDateTimeUtility"
-});
-
 export const ProviderTypes = Object.freeze({
 	DATABASE: "IDatabaseProvider",
 	CACHE: "ICacheProvider",

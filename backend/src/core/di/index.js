@@ -2,7 +2,6 @@ import {DIContainer} from "./DIContainer.js";
 
 import registerRepositories from "./registrations/repositories.js";
 import registerInfrastructureServices from "./registrations/infrastructureServices.js";
-import registerUtilities from "./registrations/utilities.js";
 import registerProviders from "./registrations/providers.js";
 import registerFactories from "./registrations/factories.js";
 import registerMappers from "./registrations/mappers.js";
@@ -22,7 +21,6 @@ const initContainer = () => {
 
     registerRepositories(container);
     registerInfrastructureServices(container);
-    registerUtilities(container);
     registerProviders(container);
     registerFactories(container);
     registerMappers(container);

@@ -1,6 +1,6 @@
 import {AuthCookieManager} from "../../../http/cookies/AuthCookieManager.js";
 
-import {CookieManagerTypes, UtilityTypes} from "../../../constants/ioc.js";
+import {CookieManagerTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
 /**
@@ -9,8 +9,7 @@ import {config} from "../../../config.js";
  */
 const registerCookieManagers = (container) => {
     container.register(CookieManagerTypes.AUTH, () => {
-        const dateTimeUtility = container.get(UtilityTypes.DATE);
-        return new AuthCookieManager(dateTimeUtility, config.auth.refresh.ttl, config.app.isProduction, config.app.forceDisableSecureCookies);
+        return new AuthCookieManager(config.auth.refresh.ttl, config.app.isProduction, config.app.forceDisableSecureCookies);
     });
 }
 

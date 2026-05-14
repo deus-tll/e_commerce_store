@@ -14,7 +14,7 @@ import {SessionAuthService} from "../../../services/auth/SessionAuthService.js";
 import {CheckoutService} from "../../../services/checkout/CheckoutService.js";
 
 import {
-    RepositoryTypes, UtilityTypes, ProviderTypes,
+    RepositoryTypes, ProviderTypes,
     FactoryTypes, CacheManagerTypes, ImageManagerTypes,
     MapperTypes, ParserTypes, ValidatorTypes,
     ServiceTypes, InfrastructureServiceTypes
@@ -44,7 +44,7 @@ const registerDomainServices = (container) => {
     // =============
     // Category
     container.register(ServiceTypes.CATEGORY, CategoryService,
-        [RepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY, UtilityTypes.SLUG]
+        [RepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY]
     );
     // =============
     // Product
@@ -82,7 +82,7 @@ const registerDomainServices = (container) => {
     // =============
     // Analytics
     container.register(ServiceTypes.ANALYTICS, AnalyticsService,
-        [RepositoryTypes.ORDER, RepositoryTypes.USER, RepositoryTypes.PRODUCT, UtilityTypes.DATE]
+        [RepositoryTypes.ORDER, RepositoryTypes.USER, RepositoryTypes.PRODUCT]
     );
     // =============
     // Payment

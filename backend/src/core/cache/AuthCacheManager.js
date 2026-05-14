@@ -1,5 +1,6 @@
 import {BaseCacheManager} from "./BaseCacheManager.js";
 
+import {DateTime} from "../../utils/dateTime.js";
 import {CacheKeys, PrefixCacheKeys} from "../../constants/app.js";
 
 /**
@@ -11,12 +12,11 @@ export class AuthCacheManager extends BaseCacheManager {
 
 	/**
 	 * @param {ICacheProvider} cacheProvider
-	 * @param {IDateTimeUtility} dateTimeUtility
 	 * @param {string} refreshTokenTtl
 	 */
-	constructor(cacheProvider, dateTimeUtility, refreshTokenTtl) {
+	constructor(cacheProvider, refreshTokenTtl) {
 		super(cacheProvider);
-		this.#refreshTokenTtlInSeconds = dateTimeUtility.ttlToSeconds(refreshTokenTtl);
+		this.#refreshTokenTtlInSeconds = DateTime.ttlToSeconds(refreshTokenTtl);
 	}
 
 	/**

@@ -1,7 +1,7 @@
 import {AuthCacheManager} from "../../cache/AuthCacheManager.js";
 import {ProductCacheManager} from "../../cache/ProductCacheManager.js";
 
-import {CacheManagerTypes, ProviderTypes, UtilityTypes} from "../../../constants/ioc.js";
+import {CacheManagerTypes, ProviderTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
 /**
@@ -11,11 +11,9 @@ import {config} from "../../../config.js";
 const registerCacheManagers = (container) => {
     container.register(CacheManagerTypes.AUTH, () => {
         const cacheProvider = container.get(ProviderTypes.CACHE);
-        const dateTimeUtility = container.get(UtilityTypes.DATE);
 
         return new AuthCacheManager(
             cacheProvider,
-            dateTimeUtility,
             config.auth.refresh.ttl
         );
     });

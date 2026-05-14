@@ -2,7 +2,6 @@ import {ICategoryService} from "../../interfaces/category/ICategoryService.js";
 import {ICategoryRepository} from "../../interfaces/category/ICategoryRepository.js";
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
 import {ICategoryMapper} from "../../interfaces/category/ICategoryMapper.js";
-import {ISlugUtility} from "../../interfaces/utilities/ISlugUtility.js";
 import {
 	CategoryDTO,
 	CategoryPaginationResultDTO,
@@ -12,6 +11,7 @@ import {
 } from "../../domain/index.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
+import {Slug} from "../../utils/slug.js";
 
 /**
  * Implementation of the abstract contract for Category business operations.
@@ -20,26 +20,23 @@ export class CategoryService extends ICategoryService {
 	private readonly categoryRepository: ICategoryRepository;
 	private readonly categoryImageManager: ICategoryImageManager;
 	private readonly categoryMapper: ICategoryMapper;
-	private readonly slugUtility: ISlugUtility;
 
 	constructor(
 		categoryRepository: ICategoryRepository,
 		categoryImageManager: ICategoryImageManager,
-		categoryMapper: ICategoryMapper,
-		slugUtility: ISlugUtility
+		categoryMapper: ICategoryMapper
 	) {
 		super();
 		this.categoryRepository = categoryRepository;
 		this.categoryImageManager = categoryImageManager;
 		this.categoryMapper = categoryMapper;
-		this.slugUtility = slugUtility;
 	}
 
 	async create(data: CreateCategoryDTO): Promise<CategoryDTO> {
 		const persistenceData: CreateCategoryPersistence = {
 			name: data.name,
 			allowedAttributes: data.allowedAttributes,
-			slug: this.slugUtility.generateSlug(data.name),
+			slug: Slug.generate(data.name),
 			image: await this.categoryImageManager.imageDataUploadOnCreateUpdate(
 				data.image,
 				null
@@ -57,7 +54,7 @@ export class CategoryService extends ICategoryService {
 		const persistenceData = { ...data.toPersistence() };
 
 		if (data.name !== undefined && data.name !== existingEntity.name) {
-			persistenceData.slug = this.slugUtility.generateSlug(data.name);
+			persistenceData.slug = Slug.generate(data.name);
 		}
 
 		if (data.image !== undefined && data.image !== "") {

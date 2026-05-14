@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 import {AuthCacheManager} from "./AuthCacheManager.js";
 import {ICacheProvider} from "../../infrastructure/providers/cache/ICacheProvider.js";
-import {IDateTimeUtility} from "../../interfaces/utilities/IDateTimeUtility.js";
 
 import {createMockFromInterface} from "../../tests/utils/mockFactory.js";
 
@@ -11,7 +10,6 @@ import {CacheKeys, PrefixCacheKeys} from "../../constants/app.js";
 
 describe("AuthCacheManager", () => {
     let mockCacheProvider;
-    let mockDateTimeUtility;
     let authCacheManager;
 
     const REFRESH_TOKEN_TTL = "7d";
@@ -23,19 +21,11 @@ describe("AuthCacheManager", () => {
 
     beforeEach(() => {
         mockCacheProvider = createMockFromInterface(ICacheProvider);
-        mockDateTimeUtility = createMockFromInterface(IDateTimeUtility);
-
-        mockDateTimeUtility.ttlToSeconds.mockReturnValue(TTL_IN_SECONDS);
 
         authCacheManager = new AuthCacheManager(
             mockCacheProvider,
-            mockDateTimeUtility,
             REFRESH_TOKEN_TTL
         );
-    });
-
-    it("should initialize with correctly converted TTL", () => {
-        expect(mockDateTimeUtility.ttlToSeconds).toHaveBeenCalledWith(REFRESH_TOKEN_TTL);
     });
 
     it("should store refresh token with correct key and TTL", async () => {
