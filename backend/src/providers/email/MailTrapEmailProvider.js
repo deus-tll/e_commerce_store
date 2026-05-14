@@ -1,5 +1,5 @@
-import {IEmailProvider} from "../../interfaces/providers/email/IEmailProvider.js";
-import {IEmailContentProvider} from "../../interfaces/email/IEmailContentProvider.js";
+import {IEmailProvider} from "./IEmailProvider.js";
+import {IEmailContentProvider} from "./IEmailContentProvider.js";
 
 import {SystemError} from "../../errors/index.js";
 

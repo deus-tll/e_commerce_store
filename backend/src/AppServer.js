@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import {DIContainer} from "./core/di/DIContainer.js";
-import {IDatabaseProvider} from "./interfaces/providers/database/IDatabaseProvider.js";
+import {IDatabaseProvider} from "./providers/database/IDatabaseProvider.js";
 import {ICacheProvider} from "./interfaces/providers/cache/ICacheProvider.js";
 
 import errorHandler from "./http/middleware/errorHandlerMiddleware.js";

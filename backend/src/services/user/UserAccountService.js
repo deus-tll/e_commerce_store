@@ -1,6 +1,6 @@
 import {IUserAccountService} from "../../interfaces/user/IUserAccountService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IEmailProvider} from "../../interfaces/providers/email/IEmailProvider.js";
+import {IEmailProvider} from "../../providers/email/IEmailProvider.js";
 import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
 import {AuthResponseAssembler} from "../../domain/index.js";
 

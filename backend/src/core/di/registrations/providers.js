@@ -10,7 +10,7 @@ import {MongooseDatabaseProvider} from "../../../providers/database/MongooseData
 import {RedisCacheProvider} from "../../../providers/cache/RedisCacheProvider.js";
 import {MemoryCacheProvider} from "../../../providers/cache/MemoryCacheProvider.js";
 import {CloudinaryStorageProvider} from "../../../providers/storage/CloudinaryStorageProvider.js";
-import {FilesystemEmailContentProvider} from "../../../services/email/FilesystemEmailContentProvider.js";
+import {FilesystemEmailContentProvider} from "../../../providers/email/FilesystemEmailContentProvider.js";
 import {MailTrapEmailProvider} from "../../../providers/email/MailTrapEmailProvider.js";
 import {StripeProvider} from "../../../providers/payment/StripeProvider.js";
 
