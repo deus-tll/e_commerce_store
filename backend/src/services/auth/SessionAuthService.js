@@ -1,6 +1,6 @@
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
+import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 
 import {JwtProvider} from "../../providers/auth/JwtProvider.js";
@@ -16,13 +16,13 @@ import {TokenTypes} from "../../constants/auth.js";
  */
 export class SessionAuthService extends ISessionAuthService {
 	/** @type {IUserService} */ #userService;
-	/** @type {IPasswordProvider} */ #passwordProvider;
+	/** @type {PasswordService} */ #passwordProvider;
 	/** @type {JwtProvider} */ #jwtProvider;
 	/** @type {AuthCacheManager} */ #authCacheManager;
 
 	/**
 	 * @param {IUserService} userService
-	 * @param {IPasswordProvider} passwordProvider
+	 * @param {PasswordService} passwordProvider
 	 * @param {JwtProvider} jwtProvider
 	 * @param {AuthCacheManager} authCacheManager
 	 */

@@ -3,7 +3,6 @@ import {v2 as cloudinary} from "cloudinary";
 import Stripe from "stripe";
 import mongoose from 'mongoose';
 import Redis from "ioredis";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import {MongooseDatabaseProvider} from "../../../providers/database/MongooseDatabaseProvider.js";
@@ -15,7 +14,6 @@ import {MailTrapEmailProvider} from "../../../providers/email/MailTrapEmailProvi
 import {StripeProvider} from "../../../providers/payment/StripeProvider.js";
 
 import {JwtProvider} from "../../../providers/auth/JwtProvider.js";
-import {BcryptPasswordProvider} from "../../../providers/password/BcryptPasswordProvider.js";
 
 import {CacheTypes} from "../../../constants/app.js";
 import {ProviderTypes} from "../../../constants/ioc.js";
@@ -92,10 +90,6 @@ const registerProviders = (container) => {
             config.auth.refresh.secret,
             config.auth.refresh.ttl
         );
-    });
-    container.register(ProviderTypes.PASSWORD, () => {
-        const saltRounds = config.providers.password.bcrypt.saltRounds;
-        return new BcryptPasswordProvider(bcrypt, saltRounds);
     });
 }
 

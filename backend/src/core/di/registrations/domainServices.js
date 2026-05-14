@@ -17,7 +17,7 @@ import {
     RepositoryTypes, UtilityTypes, ProviderTypes,
     FactoryTypes, CacheManagerTypes, ImageManagerTypes,
     MapperTypes, ParserTypes, ValidatorTypes,
-    ServiceTypes
+    ServiceTypes, InfrastructureServiceTypes
 } from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
@@ -29,16 +29,16 @@ const registerDomainServices = (container) => {
     // =============
     // User
     container.register(ServiceTypes.USER_STATS, UserStatsService, [RepositoryTypes.USER]);
-    container.register(ServiceTypes.USER_TOKEN, UserTokenService, [RepositoryTypes.USER, ProviderTypes.PASSWORD]);
+    container.register(ServiceTypes.USER_TOKEN, UserTokenService, [RepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD]);
     container.register(ServiceTypes.USER, UserService,
-        [RepositoryTypes.USER, ProviderTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, ParserTypes.USER_QUERY]
+        [RepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, ParserTypes.USER_QUERY]
     );
     container.register(ServiceTypes.USER_ACCOUNT, UserAccountService,
-        [ServiceTypes.USER, ProviderTypes.EMAIL, ProviderTypes.PASSWORD, ProviderTypes.JWT, CacheManagerTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
+        [ServiceTypes.USER, ProviderTypes.EMAIL, InfrastructureServiceTypes.PASSWORD, ProviderTypes.JWT, CacheManagerTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
     );
     // Session Auth
     container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
-        [ServiceTypes.USER, ProviderTypes.PASSWORD, ProviderTypes.JWT, CacheManagerTypes.AUTH]
+        [ServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, ProviderTypes.JWT, CacheManagerTypes.AUTH]
     );
     // =============
     // =============

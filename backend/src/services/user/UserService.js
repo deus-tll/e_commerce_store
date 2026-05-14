@@ -1,6 +1,6 @@
 import {IUserService} from "../../interfaces/user/IUserService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
-import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
+import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserMapper} from "../../interfaces/mappers/IUserMapper.js";
 import {IQueryParser} from "../../interfaces/parsers/IQueryParser.js";
@@ -15,14 +15,14 @@ import {EntityNotFoundError, SystemError} from "../../errors/index.js";
  */
 export class UserService extends IUserService {
 	/** @type {IUserRepository} */ #userRepository;
-	/** @type {IPasswordProvider} */ #passwordProvider;
+	/** @type {PasswordService} */ #passwordProvider;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
 	/** @type {IQueryParser} */ #userQueryParser;
 
 	/**
 	 * @param {IUserRepository} userRepository
-	 * @param {IPasswordProvider} passwordProvider
+	 * @param {PasswordService} passwordProvider
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
 	 * @param {IQueryParser} userQueryParser

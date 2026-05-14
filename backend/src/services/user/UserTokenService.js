@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import {IUserTokenService} from "../../interfaces/user/IUserTokenService.js";
 import {IUserRepository} from "../../interfaces/repositories/IUserRepository.js";
-import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
+import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 
 import {DomainValidationError} from "../../errors/index.js";
 
@@ -13,11 +13,11 @@ import {DomainValidationError} from "../../errors/index.js";
  */
 export class UserTokenService extends IUserTokenService {
 	/** @type {IUserRepository} */ #userRepository;
-	/** @type {IPasswordProvider} */ #passwordProvider;
+	/** @type {PasswordService} */ #passwordProvider;
 
 	/**
 	 * @param {IUserRepository} userRepository
-	 * @param {IPasswordProvider} passwordProvider
+	 * @param {PasswordService} passwordProvider
 	 */
 	constructor(userRepository, passwordProvider) {
 		super();

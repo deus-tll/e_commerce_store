@@ -1,7 +1,7 @@
 import {IUserAccountService} from "../../interfaces/user/IUserAccountService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
 import {IEmailProvider} from "../../providers/email/IEmailProvider.js";
-import {IPasswordProvider} from "../../interfaces/providers/password/IPasswordProvider.js";
+import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 import {AuthResponseAssembler} from "../../domain/index.js";
 
 import {JwtProvider} from "../../providers/auth/JwtProvider.js";
@@ -19,7 +19,7 @@ import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
 export class UserAccountService extends IUserAccountService {
 	/** @type {IUserService} */ #userService;
 	/** @type {IEmailProvider} */ #emailProvider;
-	/** @type {IPasswordProvider} */ #passwordProvider;
+	/** @type {PasswordService} */ #passwordProvider;
 	/** @type {JwtProvider} */ #jwtProvider;
 	/** @type {AuthCacheManager} */ #authCacheManager;
 	/** @type {IUserTokenService} */ #userTokenService;
@@ -28,7 +28,7 @@ export class UserAccountService extends IUserAccountService {
 	/**
 	 * @param {IUserService} userService
 	 * @param {IEmailProvider} emailProvider
-	 * @param {IPasswordProvider} passwordProvider
+	 * @param {PasswordService} passwordProvider
 	 * @param {JwtProvider} jwtProvider
 	 * @param {AuthCacheManager} authCacheManager
 	 * @param {IUserTokenService} userTokenService
