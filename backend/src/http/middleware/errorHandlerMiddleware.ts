@@ -1,3 +1,6 @@
+import {ErrorRequestHandler, Request, Response, NextFunction} from "express";
+
+import {ValidationErrorType} from "../../enums/error.js";
 import {
 	DomainError,
 	ActionNotAllowedError,
@@ -9,20 +12,14 @@ import {
 	UnauthorizedError
 } from "../../errors/index.js";
 
-import {ValidationErrorTypes} from "../../constants/errors.js";
 import {config} from "../../config.js";
 
-
 /**
- * @typedef {import('express').ErrorRequestHandler} ErrorRequestHandler
+ * Global error handler middleware.
  */
-
-/**
- * Global error handler middleware. It catches errors passed via next(err),
- * checks if they are custom ApiErrors, and sends a standardized JSON response.
- * @type {ErrorRequestHandler}
- */
-const errorHandler = (err, req, res, _next) => {
+const errorHandler: ErrorRequestHandler = (
+	err: Error | DomainError, req: Request, res: Response, _next: NextFunction
+) => {
 	const { isProduction } = config.app;
 
 	if (!(err instanceof DomainError) || err instanceof SystemError) {
@@ -41,8 +38,8 @@ const errorHandler = (err, req, res, _next) => {
 	// 3. Validation Errors (400, 410)
 	if (err instanceof DomainValidationError) {
 		const statusMap = {
-			[ValidationErrorTypes.EXPIRED]: 410,
-			[ValidationErrorTypes.BAD_REQUEST]: 400
+			[ValidationErrorType.EXPIRED]: 410,
+			[ValidationErrorType.BAD_REQUEST]: 400
 		};
 
 		const status = statusMap[err.type] || 400;
@@ -61,8 +58,7 @@ const errorHandler = (err, req, res, _next) => {
 	if (err instanceof UnauthorizedError || err instanceof ActionNotAllowedError) {
 		return res.status(403).json({
 			message: err.message,
-			status: 403,
-			code: err.code || null
+			status: 403
 		});
 	}
 
