@@ -5,7 +5,7 @@ import {TokenTypes} from "../../constants/auth.js";
 /**
  * Handles all technical JWT signing and verification details.
  */
-export class JwtProvider {
+export class JwtService {
 	/** @type {import("jsonwebtoken")} */ #jwt;
 	/** @type {string} */ #accessTokenSecret;
 	/** @type {string} */ #accessTokenTtl;

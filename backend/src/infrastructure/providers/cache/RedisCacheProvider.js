@@ -1,4 +1,4 @@
-import {ICacheProvider} from "../../interfaces/providers/cache/ICacheProvider.js";
+import {ICacheProvider} from "./ICacheProvider.js";
 
 /**
  * Redis implementation of the ICacheProvider.

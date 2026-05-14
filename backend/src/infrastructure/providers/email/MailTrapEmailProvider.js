@@ -1,7 +1,7 @@
 import {IEmailProvider} from "./IEmailProvider.js";
 import {IEmailContentProvider} from "./IEmailContentProvider.js";
 
-import {SystemError} from "../../errors/index.js";
+import {SystemError} from "../../../errors/index.ts";
 
 const EMAIL_CATEGORIES = {
 	VERIFICATION: "Email Verification",

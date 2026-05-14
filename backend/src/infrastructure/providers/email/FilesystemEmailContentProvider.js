@@ -2,7 +2,7 @@ import * as fs from "fs/promises";
 import path from "path";
 
 import {IEmailContentProvider} from "./IEmailContentProvider.js";
-import {SystemError} from "../../errors/index.ts";
+import {SystemError} from "../../../errors/index.ts";
 
 const templatesDir = path.join(process.cwd(), "src", "templates");
 

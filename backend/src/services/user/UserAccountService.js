@@ -1,10 +1,10 @@
 import {IUserAccountService} from "../../interfaces/user/IUserAccountService.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IEmailProvider} from "../../providers/email/IEmailProvider.js";
+import {IEmailProvider} from "../../infrastructure/providers/email/IEmailProvider.js";
 import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 import {AuthResponseAssembler} from "../../domain/index.js";
 
-import {JwtProvider} from "../../providers/auth/JwtProvider.js";
+import {JwtService} from "../../infrastructure/security/JwtService.js";
 import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
@@ -20,7 +20,7 @@ export class UserAccountService extends IUserAccountService {
 	/** @type {IUserService} */ #userService;
 	/** @type {IEmailProvider} */ #emailProvider;
 	/** @type {PasswordService} */ #passwordProvider;
-	/** @type {JwtProvider} */ #jwtProvider;
+	/** @type {JwtService} */ #jwtProvider;
 	/** @type {AuthCacheManager} */ #authCacheManager;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
@@ -29,7 +29,7 @@ export class UserAccountService extends IUserAccountService {
 	 * @param {IUserService} userService
 	 * @param {IEmailProvider} emailProvider
 	 * @param {PasswordService} passwordProvider
-	 * @param {JwtProvider} jwtProvider
+	 * @param {JwtService} jwtProvider
 	 * @param {AuthCacheManager} authCacheManager
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper

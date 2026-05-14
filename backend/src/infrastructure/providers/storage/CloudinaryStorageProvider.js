@@ -1,5 +1,5 @@
-import {IStorageProvider} from "../../interfaces/providers/storage/IStorageProvider.js";
-import {SystemError} from "../../errors/index.js";
+import {IStorageProvider} from "./IStorageProvider.js";
+import {SystemError} from "../../../errors/index.ts";
 
 /**
  * Cloudinary implementation of the IStorageService contract.

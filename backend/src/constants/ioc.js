@@ -22,8 +22,6 @@ export const ProviderTypes = Object.freeze({
 	EMAIL_CONTENT: "IEmailContentProvider",
 	EMAIL: "IEmailProvider",
 	PAYMENT: "IPaymentProvider",
-
-	JWT: "IJwtProvider"
 });
 
 export const MapperTypes = Object.freeze({
@@ -70,7 +68,8 @@ export const FactoryTypes = Object.freeze({
 });
 
 export const InfrastructureServiceTypes = Object.freeze({
-	PASSWORD: "IPasswordService"
+	PASSWORD: "IPasswordService",
+	JWT: "IJwtService"
 });
 
 export const ServiceTypes = Object.freeze({

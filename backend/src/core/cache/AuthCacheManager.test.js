@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import {AuthCacheManager} from "./AuthCacheManager.js";
-import {ICacheProvider} from "../../interfaces/providers/cache/ICacheProvider.js";
+import {ICacheProvider} from "../../infrastructure/providers/cache/ICacheProvider.js";
 import {IDateTimeUtility} from "../../interfaces/utilities/IDateTimeUtility.js";
 
 import {createMockFromInterface} from "../../tests/utils/mockFactory.js";

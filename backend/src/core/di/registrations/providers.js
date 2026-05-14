@@ -3,17 +3,14 @@ import {v2 as cloudinary} from "cloudinary";
 import Stripe from "stripe";
 import mongoose from 'mongoose';
 import Redis from "ioredis";
-import jwt from "jsonwebtoken";
 
-import {MongooseDatabaseProvider} from "../../../providers/database/MongooseDatabaseProvider.js";
-import {RedisCacheProvider} from "../../../providers/cache/RedisCacheProvider.js";
-import {MemoryCacheProvider} from "../../../providers/cache/MemoryCacheProvider.js";
-import {CloudinaryStorageProvider} from "../../../providers/storage/CloudinaryStorageProvider.js";
-import {FilesystemEmailContentProvider} from "../../../providers/email/FilesystemEmailContentProvider.js";
-import {MailTrapEmailProvider} from "../../../providers/email/MailTrapEmailProvider.js";
-import {StripeProvider} from "../../../providers/payment/StripeProvider.js";
-
-import {JwtProvider} from "../../../providers/auth/JwtProvider.js";
+import {MongooseDatabaseProvider} from "../../../infrastructure/providers/database/MongooseDatabaseProvider.js";
+import {RedisCacheProvider} from "../../../infrastructure/providers/cache/RedisCacheProvider.js";
+import {MemoryCacheProvider} from "../../../infrastructure/providers/cache/MemoryCacheProvider.js";
+import {CloudinaryStorageProvider} from "../../../infrastructure/providers/storage/CloudinaryStorageProvider.js";
+import {FilesystemEmailContentProvider} from "../../../infrastructure/providers/email/FilesystemEmailContentProvider.js";
+import {MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
+import {StripeProvider} from "../../../infrastructure/providers/payment/StripeProvider.js";
 
 import {CacheTypes} from "../../../constants/app.js";
 import {ProviderTypes} from "../../../constants/ioc.js";
@@ -81,15 +78,6 @@ const registerProviders = (container) => {
         const formURL = (input, base) => new URL(input, base).toString();
 
         return new StripeProvider(stripe, webhookSecret, formURL(successUrl, clientUrl), formURL(cancelUrl, clientUrl));
-    });
-    container.register(ProviderTypes.JWT, () => {
-        return new JwtProvider(
-            jwt,
-            config.auth.access.secret,
-            config.auth.access.ttl,
-            config.auth.refresh.secret,
-            config.auth.refresh.ttl
-        );
     });
 }
 

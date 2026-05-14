@@ -3,7 +3,7 @@ import {IUserService} from "../../interfaces/user/IUserService.js";
 import {PasswordService} from "../../infrastructure/security/PasswordService.js";
 import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 
-import {JwtProvider} from "../../providers/auth/JwtProvider.js";
+import {JwtService} from "../../infrastructure/security/JwtService.js";
 import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
 
 import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js";
@@ -17,13 +17,13 @@ import {TokenTypes} from "../../constants/auth.js";
 export class SessionAuthService extends ISessionAuthService {
 	/** @type {IUserService} */ #userService;
 	/** @type {PasswordService} */ #passwordProvider;
-	/** @type {JwtProvider} */ #jwtProvider;
+	/** @type {JwtService} */ #jwtProvider;
 	/** @type {AuthCacheManager} */ #authCacheManager;
 
 	/**
 	 * @param {IUserService} userService
 	 * @param {PasswordService} passwordProvider
-	 * @param {JwtProvider} jwtProvider
+	 * @param {JwtService} jwtProvider
 	 * @param {AuthCacheManager} authCacheManager
 	 */
 	constructor(userService, passwordProvider, jwtProvider, authCacheManager) {

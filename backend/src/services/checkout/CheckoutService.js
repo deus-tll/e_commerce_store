@@ -1,5 +1,5 @@
 import {ICheckoutService} from "../../interfaces/order/ICheckoutService.js";
-import {IPaymentProvider} from "../../interfaces/providers/payment/IPaymentProvider.js";
+import {IPaymentProvider} from "../../infrastructure/providers/payment/IPaymentProvider.js";
 import {IProductService} from "../../interfaces/product/IProductService.js";
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICartService} from "../../interfaces/cart/ICartService.js";
