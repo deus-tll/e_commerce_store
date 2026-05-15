@@ -11,6 +11,7 @@ import registerCacheManagers from "./registrations/cacheManagers.js";
 import registerStorageManagers from "./registrations/storageManagers.js";
 import registerImageManagers from "./registrations/imageManagers.js";
 import registerValidators from "./registrations/validators.js";
+import registerApplicationServices from "./registrations/applicationServices.js";
 import registerDomainServices from "./registrations/domainServices.js";
 import registerControllers from "./registrations/controllers.js";
 import registerRouters from "./registrations/routers.js";
@@ -30,6 +31,7 @@ const initContainer = () => {
     registerStorageManagers(container);
     registerImageManagers(container);
     registerValidators(container);
+    registerApplicationServices(container);
     registerDomainServices(container);
     registerControllers(container);
     registerRouters(container);

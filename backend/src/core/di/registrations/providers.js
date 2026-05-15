@@ -8,8 +8,7 @@ import {MongooseDatabaseProvider} from "../../../infrastructure/providers/databa
 import {RedisCacheProvider} from "../../../infrastructure/providers/cache/RedisCacheProvider.js";
 import {MemoryCacheProvider} from "../../../infrastructure/providers/cache/MemoryCacheProvider.js";
 import {CloudinaryStorageProvider} from "../../../infrastructure/providers/storage/CloudinaryStorageProvider.js";
-import {FilesystemEmailContentProvider} from "../../../infrastructure/providers/email/FilesystemEmailContentProvider.js";
-import {MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
+import {EmailSender, MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
 import {StripeProvider} from "../../../infrastructure/providers/payment/StripeProvider.js";
 
 import {CacheTypes} from "../../../constants/app.js";
@@ -55,20 +54,16 @@ const registerProviders = (container) => {
 
         return new CloudinaryStorageProvider(cloudinary, isProduction);
     });
-    container.register(ProviderTypes.EMAIL_CONTENT, FilesystemEmailContentProvider, []);
     container.register(ProviderTypes.EMAIL, () => {
         const mailtrapClient = new MailtrapClient({
             token: config.providers.mail.mailtrap.token,
         });
-        const sender = {
-            email: config.providers.mail.mailtrap.sender.email,
-            name: config.providers.mail.mailtrap.sender.name
-        };
+        const sender = new EmailSender(
+            config.providers.mail.mailtrap.sender.email,
+            config.providers.mail.mailtrap.sender.name
+        );
 
-        const emailContentProvider = container.get(ProviderTypes.EMAIL_CONTENT);
-        const resetPasswordUrlBase = new URL(config.providers.password.resetUrl, config.app.clientUrl).toString();
-
-        return new MailTrapEmailProvider(mailtrapClient, sender, emailContentProvider, resetPasswordUrlBase)
+        return new MailTrapEmailProvider(mailtrapClient, sender)
     });
     container.register(ProviderTypes.PAYMENT, () => {
         const stripe = new Stripe(config.providers.payment.stripe.secretKey);

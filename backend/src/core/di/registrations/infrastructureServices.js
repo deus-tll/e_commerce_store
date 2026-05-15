@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import {PasswordService} from "../../../infrastructure/security/PasswordService.js";
 import {JwtService} from "../../../infrastructure/security/JwtService.js";
+import {TemplateService} from "../../../infrastructure/templates/TemplateService.js";
 
 import {InfrastructureServiceTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
@@ -24,6 +25,9 @@ const registerInfrastructureServices = (container) => {
             config.auth.refresh.secret,
             config.auth.refresh.ttl
         );
+    });
+    container.register(InfrastructureServiceTypes.TEMPLATE, () => {
+        return new TemplateService();
     });
 }
 

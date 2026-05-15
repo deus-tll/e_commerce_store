@@ -17,7 +17,7 @@ import {
     RepositoryTypes, ProviderTypes,
     FactoryTypes, CacheManagerTypes, ImageManagerTypes,
     MapperTypes, ParserTypes, ValidatorTypes,
-    ServiceTypes, InfrastructureServiceTypes
+    ServiceTypes, InfrastructureServiceTypes, ApplicationServiceTypes
 } from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
@@ -34,7 +34,7 @@ const registerDomainServices = (container) => {
         [RepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, ParserTypes.USER_QUERY]
     );
     container.register(ServiceTypes.USER_ACCOUNT, UserAccountService,
-        [ServiceTypes.USER, ProviderTypes.EMAIL, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheManagerTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
+        [ServiceTypes.USER, ApplicationServiceTypes.EMAIL_NOTIFICATION, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheManagerTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
     );
     // Session Auth
     container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
