@@ -1,5 +1,5 @@
 import {IProductImageManager} from "../../interfaces/product/IProductImageManager.js";
-import {ProductStorageManager} from "../../core/storage/ProductStorageManager.js";
+import {ProductStorageService} from "../../application/services/storage/AppStorageServices.js";
 import {ProductImage} from "../../domain/index.js";
 
 import {DomainValidationError} from "../../errors/index.js";
@@ -9,14 +9,14 @@ import {DomainValidationError} from "../../errors/index.js";
  * @description Domain manager for Product image workflow.
  */
 export class ProductImageManager extends IProductImageManager {
-	/** @type {ProductStorageManager} */ #productStorageManager;
+	/** @type {ProductStorageService} */ #productStorageService;
 
 	/**
-	 * @param {ProductStorageManager} productStorageManager
+	 * @param {ProductStorageService} productStorageManager
 	 */
 	constructor(productStorageManager) {
 		super();
-		this.#productStorageManager = productStorageManager;
+		this.#productStorageService = productStorageManager;
 	}
 
 	#validatePresence(value) {
@@ -30,7 +30,7 @@ export class ProductImageManager extends IProductImageManager {
 		this.#validatePresence(newMain);
 
 		if (newMain !== existingMain) {
-			const uploadedUrl = await this.#productStorageManager.upload(newMain);
+			const uploadedUrl = await this.#productStorageService.upload(newMain);
 			if (existingMain) urlsToDelete.push(existingMain);
 			return uploadedUrl;
 		}
@@ -55,7 +55,7 @@ export class ProductImageManager extends IProductImageManager {
 		}
 
 		const uploadedUrls = await Promise.all(
-			imagesToUpload.map(img => this.#productStorageManager.upload(img))
+			imagesToUpload.map(img => this.#productStorageService.upload(img))
 		);
 
 		for (const oldUrl of existingAdditionals) {
@@ -81,9 +81,9 @@ export class ProductImageManager extends IProductImageManager {
 	async imageDataUploadOnCreate(imageData) {
 		const additionalImages = imageData.additionalImages || [];
 
-		const mainImagePromise = this.#productStorageManager.upload(imageData.mainImage);
+		const mainImagePromise = this.#productStorageService.upload(imageData.mainImage);
 		const additionalImagePromises = additionalImages.map(rawImage =>
-			this.#productStorageManager.upload(rawImage)
+			this.#productStorageService.upload(rawImage)
 		);
 
 		const uploads = [
@@ -127,7 +127,7 @@ export class ProductImageManager extends IProductImageManager {
 		if (validUrls.length === 0) return;
 
 		const results = await Promise.allSettled(
-			validUrls.map(url => this.#productStorageManager.delete(url))
+			validUrls.map(url => this.#productStorageService.delete(url))
 		);
 
 		results.forEach((result, index) => {

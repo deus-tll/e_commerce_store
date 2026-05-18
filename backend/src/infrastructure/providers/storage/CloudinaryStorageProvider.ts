@@ -1,37 +1,24 @@
+import { v2 as Cloudinary, UploadApiResponse } from "cloudinary";
 import {IStorageProvider} from "./IStorageProvider.js";
-import {SystemError} from "../../../errors/index.ts";
+import {SystemError} from "../../../errors/index.js";
 
-/**
- * Cloudinary implementation of the IStorageService contract.
- * @augments IStorageProvider
- */
 export class CloudinaryStorageProvider extends IStorageProvider {
-	/** @type {import("cloudinary")."module:cloudinary.v2"} */ #cloudinary;
-	/** @type {boolean} */ #isProduction;
+	private readonly cloudinary: typeof Cloudinary;
+	private readonly isProduction: boolean;
 
-	/**
-	 * @param {import("cloudinary")."module:cloudinary.v2"} cloudinary
-	 * @param {boolean} isProduction
-	 */
-	constructor(cloudinary, isProduction) {
+	constructor(cloudinary: typeof Cloudinary, isProduction: boolean) {
 		super();
-		this.#cloudinary = cloudinary;
-		this.#isProduction = isProduction;
+		this.cloudinary = cloudinary;
+		this.isProduction = isProduction;
 	}
 
-	/**
-	 * Extracts the public ID segment (excluding folder and extension) from a secure URL.
-	 * @param {string} fileUrl
-	 * @param {string} folder - The base folder name (e.g., 'categories').
-	 * @returns {string | null} The public ID segment (e.g., 'product-123'), or null if extraction fails.
-	 */
-	#extractPublicIdSegment(fileUrl, folder) {
+	#extractPublicIdSegment(fileUrl: string, folder: string): string | null {
 		// 1. Split the URL path based on the folder name.
 		const urlSegments = fileUrl.split(`${folder}/`);
 
 		if (urlSegments.length < 2) {
 			// Folder path wasn't found in the URL.
-			console.warn(`[Cloudinary] Delete warning: Could not find folder path '${folder}' in URL: ${fileUrl}`);
+			console.warn(`[Cloudinary] Could not find folder path '${folder}' in URL: ${fileUrl}`);
 			return null;
 		}
 
@@ -50,10 +37,10 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 		return publicIdWithExt.substring(0, lastDotIndex);
 	}
 
-	async upload(file, folder) {
+	async upload(file: string, folder: string): Promise<string> {
 		try {
-			const response = await this.#cloudinary.uploader.upload(file, { folder });
-			return response["secure_url"];
+			const response: UploadApiResponse = await this.cloudinary.uploader.upload(file, { folder });
+			return response.secure_url;
 		}
 		catch (error) {
 			console.error("[Cloudinary] Upload failed:", error.message);
@@ -61,7 +48,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 		}
 	}
 
-	async delete(fileUrl, folder) {
+	async delete(fileUrl: string | null, folder: string): Promise<void> {
 		try {
 			if (!fileUrl) return;
 
@@ -70,15 +57,15 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			if (!publicIdSegment) return;
 
 			const fullPublicId = `${folder}/${publicIdSegment}`;
-			await this.#cloudinary.uploader.destroy(fullPublicId);
+			await this.cloudinary.uploader.destroy(fullPublicId);
 		}
 		catch (error) {
 			console.error("[Cloudinary] Delete failed:", error.message);
 		}
 	}
 
-	async deleteAll() {
-		if (this.#isProduction) {
+	async deleteAll(): Promise<void> {
+		if (this.isProduction) {
 			console.warn("[Cloudinary] Cleanup skipped: Production environment detected.");
 			return;
 		}
@@ -90,7 +77,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			let deletedCount = 0;
 
 			while (hasMore) {
-				const result = await this.#cloudinary.api.delete_all_resources({
+				const result = await this.cloudinary.api.delete_all_resources({
 					resource_type: 'image',
 					invalidate: true,
 					max_results: 1000

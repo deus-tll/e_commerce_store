@@ -68,7 +68,9 @@ export const InfrastructureServiceTypes = Object.freeze({
 });
 
 export const ApplicationServiceTypes = Object.freeze({
-	EMAIL_NOTIFICATION: "EmailNotificationService"
+	EMAIL_NOTIFICATION: "EmailNotificationService",
+	CATEGORY_STORAGE: "CategoryStorageService",
+	PRODUCT_STORAGE: "ProductStorageService",
 });
 
 export const ServiceTypes = Object.freeze({

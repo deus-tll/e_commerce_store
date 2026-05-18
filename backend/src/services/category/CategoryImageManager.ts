@@ -1,16 +1,16 @@
 import {ICategoryImageManager} from "../../interfaces/category/ICategoryImageManager.js";
-import {CategoryStorageManager} from "../../core/storage/CategoryStorageManager.js";
+import {CategoryStorageService} from "../../application/services/storage/AppStorageServices.js";
 import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * Implementation of the abstract contract for Category image management operations.
  */
 export class CategoryImageManager extends ICategoryImageManager {
-	private readonly categoryStorageManager: CategoryStorageManager;
+	private readonly categoryStorageService: CategoryStorageService;
 
-	constructor(categoryStorageManager: CategoryStorageManager) {
+	constructor(categoryStorageManager: CategoryStorageService) {
 		super();
-		this.categoryStorageManager = categoryStorageManager;
+		this.categoryStorageService = categoryStorageManager;
 	}
 
 	private validatePresence(value: string | null | undefined): void {
@@ -29,16 +29,16 @@ export class CategoryImageManager extends ICategoryImageManager {
 			return existingImageData as string;
 		}
 
-		const finalImageUrl = await this.categoryStorageManager.upload(newImageData);
+		const finalImageUrl = await this.categoryStorageService.upload(newImageData);
 
 		if (existingImageData) {
-			await this.categoryStorageManager.delete(existingImageData);
+			await this.categoryStorageService.delete(existingImageData);
 		}
 
 		return finalImageUrl;
 	}
 
 	async deleteByUrl(url: string): Promise<void> {
-		return this.categoryStorageManager.delete(url);
+		return this.categoryStorageService.delete(url);
 	}
 }
