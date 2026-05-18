@@ -18,7 +18,7 @@ const RECOMMENDED_PRODUCTS_SIZE = 4;
 export class ProductService extends IProductService {
 	/** @type {IProductRepository} */ #productRepository;
 	/** @type {ICategoryService} */ #categoryService;
-	/** @type {ProductCacheManager} */ #productCacheManager;
+	/** @type {ProductCacheRepository} */ #productCacheRepository;
 	/** @type {IProductImageManager} */ #productImageManager;
 	/** @type {IQueryParser} */ #productQueryParser;
 	/** @type {IProductMapper} */ #productMapper;
@@ -26,16 +26,16 @@ export class ProductService extends IProductService {
 	/**
 	 * @param {IProductRepository} productRepository
 	 * @param {ICategoryService} categoryService
-	 * @param {ProductCacheManager} productCacheManager
+	 * @param {ProductCacheRepository} productCacheRepository
 	 * @param {IProductImageManager} productImageManager
 	 * @param {IQueryParser} productQueryParser
 	 * @param {IProductMapper} productMapper
 	 */
-	constructor(productRepository, categoryService, productCacheManager, productImageManager, productQueryParser, productMapper) {
+	constructor(productRepository, categoryService, productCacheRepository, productImageManager, productQueryParser, productMapper) {
 		super();
 		this.#productRepository = productRepository;
 		this.#categoryService = categoryService;
-		this.#productCacheManager = productCacheManager;
+		this.#productCacheRepository = productCacheRepository;
 		this.#productImageManager = productImageManager;
 		this.#productQueryParser = productQueryParser;
 		this.#productMapper = productMapper;
@@ -65,7 +65,7 @@ export class ProductService extends IProductService {
 	async #refreshFeaturedCache() {
 		const entities = await this.#productRepository.findByFeaturedStatus(true);
 		const dtos = await this.#formProductDTOs(entities);
-		await this.#productCacheManager.setFeaturedProducts(dtos);
+		await this.#productCacheRepository.setFeaturedProducts(dtos);
 
 		return dtos;
 	}
@@ -223,7 +223,7 @@ export class ProductService extends IProductService {
 	}
 
 	async getFeatured() {
-		const cached = await this.#productCacheManager.getFeaturedProducts();
+		const cached = await this.#productCacheRepository.getFeaturedProducts();
 		if (cached) return cached;
 
 		return await this.#refreshFeaturedCache();

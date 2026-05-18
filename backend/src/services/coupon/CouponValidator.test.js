@@ -5,7 +5,7 @@ import {ICouponRepository} from "../../interfaces/repositories/ICouponRepository
 import {CouponEntity} from "../../domain/index.js";
 import {EntityNotFoundError} from "../../errors/index.js";
 
-import {createMockFromInterface} from "../../tests/utils/mockFactory.js";
+import {createMock} from "../../tests/utils/createMock.js";
 
 describe("CouponValidator", () => {
     let mockCouponRepository;
@@ -15,7 +15,7 @@ describe("CouponValidator", () => {
     const COUPON_CODE = "some-coupon-code";
 
     beforeEach(() => {
-        mockCouponRepository = createMockFromInterface(ICouponRepository);
+        mockCouponRepository = createMock(ICouponRepository);
         couponValidator = new CouponValidator(mockCouponRepository);
     });
 

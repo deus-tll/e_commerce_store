@@ -1,7 +1,7 @@
 import {ReviewValidator} from "../../../services/review/ReviewValidator.js";
 import {CouponValidator} from "../../../services/coupon/CouponValidator.js";
 
-import {RepositoryTypes, ValidatorTypes} from "../../../constants/ioc.js";
+import {DatabaseRepositoryTypes, ValidatorTypes} from "../../../constants/ioc.js";
 
 /**
  * @param {DIContainer} container
@@ -9,13 +9,13 @@ import {RepositoryTypes, ValidatorTypes} from "../../../constants/ioc.js";
  */
 const registerValidators = (container) => {
     container.register(ValidatorTypes.REVIEW, ReviewValidator, [
-        RepositoryTypes.PRODUCT,
-        RepositoryTypes.USER,
-        RepositoryTypes.REVIEW,
-        RepositoryTypes.ORDER
+        DatabaseRepositoryTypes.PRODUCT,
+        DatabaseRepositoryTypes.USER,
+        DatabaseRepositoryTypes.REVIEW,
+        DatabaseRepositoryTypes.ORDER
     ]);
     container.register(ValidatorTypes.COUPON, CouponValidator, [
-        RepositoryTypes.COUPON
+        DatabaseRepositoryTypes.COUPON
     ]);
 }
 

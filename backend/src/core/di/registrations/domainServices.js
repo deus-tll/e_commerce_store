@@ -14,10 +14,10 @@ import {SessionAuthService} from "../../../services/auth/SessionAuthService.js";
 import {CheckoutService} from "../../../services/checkout/CheckoutService.js";
 
 import {
-    RepositoryTypes, ProviderTypes,
-    FactoryTypes, CacheManagerTypes, ImageManagerTypes,
+    DatabaseRepositoryTypes, ProviderTypes,
+    FactoryTypes, ImageManagerTypes,
     MapperTypes, ParserTypes, ValidatorTypes,
-    ServiceTypes, InfrastructureServiceTypes, ApplicationServiceTypes
+    ServiceTypes, InfrastructureServiceTypes, ApplicationServiceTypes, CacheRepositoryTypes
 } from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
@@ -28,39 +28,39 @@ import {config} from "../../../config.js";
 const registerDomainServices = (container) => {
     // =============
     // User
-    container.register(ServiceTypes.USER_STATS, UserStatsService, [RepositoryTypes.USER]);
-    container.register(ServiceTypes.USER_TOKEN, UserTokenService, [RepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD]);
+    container.register(ServiceTypes.USER_STATS, UserStatsService, [DatabaseRepositoryTypes.USER]);
+    container.register(ServiceTypes.USER_TOKEN, UserTokenService, [DatabaseRepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD]);
     container.register(ServiceTypes.USER, UserService,
-        [RepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, ParserTypes.USER_QUERY]
+        [DatabaseRepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD, ServiceTypes.USER_TOKEN, MapperTypes.USER, ParserTypes.USER_QUERY]
     );
     container.register(ServiceTypes.USER_ACCOUNT, UserAccountService,
-        [ServiceTypes.USER, ApplicationServiceTypes.EMAIL_NOTIFICATION, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheManagerTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
+        [ServiceTypes.USER, ApplicationServiceTypes.EMAIL_NOTIFICATION, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheRepositoryTypes.AUTH, ServiceTypes.USER_TOKEN, MapperTypes.USER]
     );
     // Session Auth
     container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
-        [ServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheManagerTypes.AUTH]
+        [ServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheRepositoryTypes.AUTH]
     );
     // =============
     // =============
     // Category
     container.register(ServiceTypes.CATEGORY, CategoryService,
-        [RepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY]
+        [DatabaseRepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY]
     );
     // =============
     // Product
     container.register(ServiceTypes.PRODUCT, ProductService,
-        [RepositoryTypes.PRODUCT, ServiceTypes.CATEGORY, CacheManagerTypes.PRODUCT, ImageManagerTypes.PRODUCT, ParserTypes.PRODUCT_QUERY, MapperTypes.PRODUCT]
+        [DatabaseRepositoryTypes.PRODUCT, ServiceTypes.CATEGORY, CacheRepositoryTypes.PRODUCT, ImageManagerTypes.PRODUCT, ParserTypes.PRODUCT_QUERY, MapperTypes.PRODUCT]
     );
-    container.register(ServiceTypes.PRODUCT_STATS, ProductStatsService, [RepositoryTypes.PRODUCT]);
+    container.register(ServiceTypes.PRODUCT_STATS, ProductStatsService, [DatabaseRepositoryTypes.PRODUCT]);
     // =============
     // Cart
     container.register(ServiceTypes.CART, CartService,
-        [RepositoryTypes.CART, ServiceTypes.PRODUCT, MapperTypes.CART]
+        [DatabaseRepositoryTypes.CART, ServiceTypes.PRODUCT, MapperTypes.CART]
     );
     // =============
     // Review
     container.register(ServiceTypes.REVIEW, ReviewService, [
-        RepositoryTypes.REVIEW,
+        DatabaseRepositoryTypes.REVIEW,
         ServiceTypes.USER,
         ServiceTypes.PRODUCT,
         ServiceTypes.PRODUCT_STATS,
@@ -69,11 +69,11 @@ const registerDomainServices = (container) => {
     ]);
     // =============
     // Order
-    container.register(ServiceTypes.ORDER, OrderService, [RepositoryTypes.ORDER, ServiceTypes.USER, MapperTypes.ORDER]);
+    container.register(ServiceTypes.ORDER, OrderService, [DatabaseRepositoryTypes.ORDER, ServiceTypes.USER, MapperTypes.ORDER]);
     // =============
     // Coupon
     container.register(ServiceTypes.COUPON, CouponService, [
-        RepositoryTypes.COUPON,
+        DatabaseRepositoryTypes.COUPON,
         ServiceTypes.USER,
         ValidatorTypes.COUPON,
         FactoryTypes.COUPON,
@@ -82,7 +82,7 @@ const registerDomainServices = (container) => {
     // =============
     // Analytics
     container.register(ServiceTypes.ANALYTICS, AnalyticsService,
-        [RepositoryTypes.ORDER, RepositoryTypes.USER, RepositoryTypes.PRODUCT]
+        [DatabaseRepositoryTypes.ORDER, DatabaseRepositoryTypes.USER, DatabaseRepositoryTypes.PRODUCT]
     );
     // =============
     // Payment

@@ -7,7 +7,6 @@ import registerFactories from "./registrations/factories.js";
 import registerMappers from "./registrations/mappers.js";
 import registerParsers from "./registrations/parsers.js";
 import registerCookieManagers from "./registrations/cookieManagers.js";
-import registerCacheManagers from "./registrations/cacheManagers.js";
 import registerStorageManagers from "./registrations/storageManagers.js";
 import registerImageManagers from "./registrations/imageManagers.js";
 import registerValidators from "./registrations/validators.js";
@@ -27,7 +26,6 @@ const initContainer = () => {
     registerMappers(container);
     registerParsers(container);
     registerCookieManagers(container);
-    registerCacheManagers(container);
     registerStorageManagers(container);
     registerImageManagers(container);
     registerValidators(container);

@@ -1,6 +1,6 @@
 import {ICheckoutService} from "../interfaces/order/ICheckoutService.js";
 
-export const RepositoryTypes = Object.freeze({
+export const DatabaseRepositoryTypes = Object.freeze({
 	CART: "ICartRepository",
 	CATEGORY: "ICategoryRepository",
 	COUPON: "ICouponRepository",
@@ -8,6 +8,11 @@ export const RepositoryTypes = Object.freeze({
 	PRODUCT: "IProductRepository",
 	REVIEW: "IReviewRepository",
 	USER: "IUserRepository"
+});
+
+export const CacheRepositoryTypes = Object.freeze({
+	AUTH: "AuthCacheRepository",
+	PRODUCT: "ProductCacheRepository",
 });
 
 export const ProviderTypes = Object.freeze({
@@ -35,11 +40,6 @@ export const CookieManagerTypes = Object.freeze({
 export const ImageManagerTypes = Object.freeze({
 	PRODUCT: "IProductImageManager",
 	CATEGORY: "ICategoryImageManager"
-});
-
-export const CacheManagerTypes = Object.freeze({
-	AUTH: "IAuthCacheManager",
-	PRODUCT: "IProductCacheManager"
 });
 
 export const StorageManagerTypes = Object.freeze({

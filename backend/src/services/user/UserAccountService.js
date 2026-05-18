@@ -5,7 +5,7 @@ import {PasswordService} from "../../infrastructure/security/PasswordService.js"
 import {AuthResponseAssembler} from "../../domain/index.js";
 
 import {JwtService} from "../../infrastructure/security/JwtService.js";
-import {AuthCacheManager} from "../../core/cache/AuthCacheManager.js";
+import {AuthCacheRepository} from "../../infrastructure/repositories/cache/AuthCacheRepository.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
@@ -21,7 +21,7 @@ export class UserAccountService extends IUserAccountService {
 	/** @type {EmailNotificationService} */ #emailNotificationService;
 	/** @type {PasswordService} */ #passwordProvider;
 	/** @type {JwtService} */ #jwtProvider;
-	/** @type {AuthCacheManager} */ #authCacheManager;
+	/** @type {AuthCacheRepository} */ #authCacheRepository;
 	/** @type {IUserTokenService} */ #userTokenService;
 	/** @type {IUserMapper} */ #userMapper;
 
@@ -30,7 +30,7 @@ export class UserAccountService extends IUserAccountService {
 	 * @param {EmailNotificationService} emailNotificationService
 	 * @param {PasswordService} passwordProvider
 	 * @param {JwtService} jwtProvider
-	 * @param {AuthCacheManager} authCacheManager
+	 * @param {AuthCacheRepository} authCacheRepository
 	 * @param {IUserTokenService} userTokenService
 	 * @param {IUserMapper} userMapper
 	 */
@@ -39,7 +39,7 @@ export class UserAccountService extends IUserAccountService {
 		emailNotificationService,
 		passwordProvider,
 		jwtProvider,
-		authCacheManager,
+		authCacheRepository,
 		userTokenService,
 		userMapper
 	)
@@ -49,7 +49,7 @@ export class UserAccountService extends IUserAccountService {
 		this.#emailNotificationService = emailNotificationService;
 		this.#passwordProvider = passwordProvider;
 		this.#jwtProvider = jwtProvider;
-		this.#authCacheManager = authCacheManager;
+		this.#authCacheRepository = authCacheRepository;
 		this.#userTokenService = userTokenService;
 		this.#userMapper = userMapper;
 	}
@@ -85,7 +85,7 @@ export class UserAccountService extends IUserAccountService {
 
 		await Promise.all(
 			/** @type {Promise<any>[]} */ ([
-				this.#authCacheManager.storeRefreshToken(userId, refreshToken),
+				this.#authCacheRepository.storeRefreshToken(userId, refreshToken),
 				this.#emailNotificationService.sendEmailVerification(email, verificationToken)
 			])
 		);
@@ -98,7 +98,7 @@ export class UserAccountService extends IUserAccountService {
 		const { id: userId } = userEntity;
 
 		const { accessToken, refreshToken } = this.#jwtProvider.generateTokens(userId);
-		await this.#authCacheManager.storeRefreshToken(userId, refreshToken);
+		await this.#authCacheRepository.storeRefreshToken(userId, refreshToken);
 
 		return AuthResponseAssembler.assembleUserWithTokens({
 			user: this.#userMapper.toDTO(userEntity),
@@ -153,7 +153,7 @@ export class UserAccountService extends IUserAccountService {
 
 		await Promise.all(
 			/** @type {Promise<any>[]} */ ([
-				this.#authCacheManager.storeRefreshToken(userId, refreshToken),
+				this.#authCacheRepository.storeRefreshToken(userId, refreshToken),
 				this.#emailNotificationService.sendPasswordResetSuccess(email)
 			])
 		);
@@ -177,7 +177,7 @@ export class UserAccountService extends IUserAccountService {
 		}
 
 		await this.#userService.changePassword(userEntityWithPassword, newPassword);
-		await this.#authCacheManager.invalidateAllSessions(userId);
+		await this.#authCacheRepository.invalidateAllSessions(userId);
 
 		return { message: "Password changed successfully" };
 	}
