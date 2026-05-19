@@ -1,6 +1,6 @@
 import express from "express";
 
-import {CartController} from "../../controllers/CartController.js";
+import {CartController} from "../controllers/CartController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";

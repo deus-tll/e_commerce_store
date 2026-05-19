@@ -1,4 +1,4 @@
-import {CouponFactory} from "../../../services/coupon/CouponFactory.js";
+import {CouponFactory} from "../../../application/coupon/CouponFactory.js";
 import {FactoryTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 

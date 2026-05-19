@@ -1,6 +1,6 @@
 import express from "express";
 
-import {AnalyticsController} from "../../controllers/AnalyticsController.js";
+import {AnalyticsController} from "../controllers/AnalyticsController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";

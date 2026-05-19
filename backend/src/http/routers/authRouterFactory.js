@@ -1,6 +1,6 @@
 import express from "express";
 
-import {AuthController} from "../../controllers/AuthController.js";
+import {AuthController} from "../controllers/AuthController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";

@@ -1,6 +1,6 @@
 import express from "express";
 
-import {CouponController} from "../../controllers/CouponController.js";
+import {CouponController} from "../controllers/CouponController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";

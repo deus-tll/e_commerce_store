@@ -1,4 +1,5 @@
-import {CategoryDTO, PaginationMetadata} from "../index.js";
+import {CategoryDTO} from "../../application/dtos/category.dto.js";
+import {PaginationMetadata} from "../../application/dtos/shared.dto.js";
 
 /**
  * Agnostic class for product attributes (specifications).

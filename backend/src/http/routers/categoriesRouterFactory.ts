@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import {CategoryController} from "../../controllers/CategoryController.js";
+import {CategoryController} from "../controllers/CategoryController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";

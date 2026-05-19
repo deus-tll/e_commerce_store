@@ -10,8 +10,8 @@ import {
 import {SystemError} from "../../../errors/index.js";
 
 import {Currency} from "../../../utils/currency.js";
-import {CheckoutSessionModes, Currencies, PaymentEventTypes, PaymentMethodTypes} from "../../../constants/payment.js";
-import {IdempotencyPrefixes, StripeCouponDurations, StripeEvents, StripeHeaders} from "../../../constants/stripe.js";
+import {CheckoutSessionModes, Currencies, PaymentEventTypes, PaymentMethodTypes} from "../../../enums/payment.js";
+import {IdempotencyPrefixes, StripeCouponDurations, StripeEvents, StripeHeaders} from "../../../enums/stripe.js";
 
 export class StripeProvider extends IPaymentProvider {
 	private readonly stripe: Stripe;

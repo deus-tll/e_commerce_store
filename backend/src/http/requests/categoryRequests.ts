@@ -1,5 +1,5 @@
 import {Request} from "express";
-import {CreateCategoryDTO, UpdateCategoryDTO} from "../../domain/index.js";
+import {CreateCategoryDTO, UpdateCategoryDTO} from "../../application/dtos/category.dto.js";
 
 export interface CreateRequest extends Request {
     body: CreateCategoryDTO;

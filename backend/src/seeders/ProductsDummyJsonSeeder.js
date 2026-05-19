@@ -1,15 +1,16 @@
-import {ICategoryService} from "../interfaces/category/ICategoryService.js";
+import {CategoryService} from "../application/category/CategoryService.js";
 import {IProductService} from "../interfaces/product/IProductService.js";
 import {IUserService} from "../interfaces/user/IUserService.js";
 import {IReviewService} from "../interfaces/review/IReviewService.js";
 
 import {
-    CreateCategoryDTO,
     CreateProductDTO,
     ProductAttribute,
     CreateUserDTO,
     CreateReviewDTO
 } from "../domain/index.js";
+import {CreateCategoryDTO} from "../application/dtos/category.dto.ts";
+
 
 import {BaseSeeder} from "./BaseSeeder.js";
 
@@ -51,7 +52,7 @@ const ALLOWED_ATTRIBUTES = {
 };
 
 export class ProductsDummyJsonSeeder extends BaseSeeder {
-    /** @type {ICategoryService} */ #categoryService;
+    /** @type {CategoryService} */ #categoryService;
     /** @type {IProductService} */ #productService;
     /** @type {IUserService} */ #userService;
     /** @type {IReviewService} */ #reviewService;
@@ -63,7 +64,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
     #userMap = new Map();
 
     /**
-     * @param {ICategoryService} categoryService
+     * @param {CategoryService} categoryService
      * @param {IProductService} productService
      * @param {IUserService} userService
      * @param {IReviewService} reviewService

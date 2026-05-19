@@ -1,13 +1,13 @@
-import {AnalyticsController} from "../../../controllers/AnalyticsController.js";
-import {AuthController} from "../../../controllers/AuthController.js";
-import {CartController} from "../../../controllers/CartController.js";
-import {CategoryController} from "../../../controllers/CategoryController.js";
-import {CouponController} from "../../../controllers/CouponController.js";
-import {OrderController} from "../../../controllers/OrderController.js";
-import {PaymentController} from "../../../controllers/PaymentController.js";
-import {ProductController} from "../../../controllers/ProductController.js";
-import {ReviewController} from "../../../controllers/ReviewController.js";
-import {UserController} from "../../../controllers/UserController.js";
+import {AnalyticsController} from "../../../http/controllers/AnalyticsController.js";
+import {AuthController} from "../../../http/controllers/AuthController.js";
+import {CartController} from "../../../http/controllers/CartController.js";
+import {CategoryController} from "../../../http/controllers/CategoryController.js";
+import {CouponController} from "../../../http/controllers/CouponController.js";
+import {OrderController} from "../../../http/controllers/OrderController.js";
+import {PaymentController} from "../../../http/controllers/PaymentController.js";
+import {ProductController} from "../../../http/controllers/ProductController.js";
+import {ReviewController} from "../../../http/controllers/ReviewController.js";
+import {UserController} from "../../../http/controllers/UserController.js";
 
 import {ControllerTypes, CookieManagerTypes, ServiceTypes} from "../../../constants/ioc.js";
 

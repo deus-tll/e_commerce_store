@@ -1,6 +1,6 @@
 import express from "express";
 
-import {PaymentController} from "../../controllers/PaymentController.js";
+import {PaymentController} from "../controllers/PaymentController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";

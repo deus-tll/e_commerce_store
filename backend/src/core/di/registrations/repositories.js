@@ -1,10 +1,10 @@
-import {CartMongooseRepository} from "../../../repositories/mongoose/CartMongooseRepository.js";
-import {CategoryMongooseRepository} from "../../../repositories/mongoose/CategoryMongooseRepository.js";
-import {CouponMongooseRepository} from "../../../repositories/mongoose/CouponMongooseRepository.js";
-import {OrderMongooseRepository} from "../../../repositories/mongoose/OrderMongooseRepository.js";
-import {ProductMongooseRepository} from "../../../repositories/mongoose/ProductMongooseRepository.js";
-import {ReviewMongooseRepository} from "../../../repositories/mongoose/ReviewMongooseRepository.js";
-import {UserMongooseRepository} from "../../../repositories/mongoose/UserMongooseRepository.js";
+import {CartMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/CartMongooseRepository.js";
+import {CategoryMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/CategoryMongooseRepository.ts";
+import {CouponMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/CouponMongooseRepository.js";
+import {OrderMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/OrderMongooseRepository.js";
+import {ProductMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/ProductMongooseRepository.js";
+import {ReviewMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/ReviewMongooseRepository.js";
+import {UserMongooseRepository} from "../../../infrastructure/repositories/database/mongoose/UserMongooseRepository.js";
 
 import {
     ProviderTypes,

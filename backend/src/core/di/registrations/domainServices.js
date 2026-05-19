@@ -1,17 +1,17 @@
-import {UserTokenService} from "../../../services/user/UserTokenService.js";
-import {UserStatsService} from "../../../services/user/UserStatsService.js";
-import {UserService} from "../../../services/user/UserService.js";
-import {UserAccountService} from "../../../services/user/UserAccountService.js";
-import {CategoryService} from "../../../services/category/CategoryService.js";
-import {ProductService} from "../../../services/product/ProductService.js";
-import {ProductStatsService} from "../../../services/product/ProductStatsService.js";
-import {CartService} from "../../../services/cart/CartService.js";
-import {ReviewService} from "../../../services/review/ReviewService.js";
-import {OrderService} from "../../../services/order/OrderService.js";
-import {CouponService} from "../../../services/coupon/CouponService.js";
-import {AnalyticsService} from "../../../services/analytics/AnalyticsService.js";
-import {SessionAuthService} from "../../../services/auth/SessionAuthService.js";
-import {CheckoutService} from "../../../services/checkout/CheckoutService.js";
+import {UserTokenService} from "../../../application/user/UserTokenService.js";
+import {UserStatsService} from "../../../application/user/UserStatsService.js";
+import {UserService} from "../../../application/user/UserService.js";
+import {UserAccountService} from "../../../application/user/UserAccountService.js";
+import {CategoryService} from "../../../application/category/CategoryService.ts";
+import {ProductService} from "../../../application/product/ProductService.js";
+import {ProductStatsService} from "../../../application/product/ProductStatsService.js";
+import {CartService} from "../../../application/cart/CartService.js";
+import {ReviewService} from "../../../application/review/ReviewService.js";
+import {OrderService} from "../../../application/order/OrderService.js";
+import {CouponService} from "../../../application/coupon/CouponService.js";
+import {AnalyticsService} from "../../../application/analytics/AnalyticsService.js";
+import {SessionAuthService} from "../../../application/auth/SessionAuthService.js";
+import {CheckoutService} from "../../../application/checkout/CheckoutService.js";
 
 import {
     DatabaseRepositoryTypes, ProviderTypes,

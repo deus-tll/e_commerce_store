@@ -1,5 +1,5 @@
-import {ReviewValidator} from "../../../services/review/ReviewValidator.js";
-import {CouponValidator} from "../../../services/coupon/CouponValidator.js";
+import {ReviewValidator} from "../../../application/review/ReviewValidator.js";
+import {CouponValidator} from "../../../application/coupon/CouponValidator.js";
 
 import {DatabaseRepositoryTypes, ValidatorTypes} from "../../../constants/ioc.js";
 

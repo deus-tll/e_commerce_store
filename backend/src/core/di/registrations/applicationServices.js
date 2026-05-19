@@ -1,4 +1,4 @@
-import {EmailNotificationService} from "../../../application/services/notifications/EmailNotificationService.js";
+import {EmailNotificationService} from "../../../application/shared/notifications/EmailNotificationService.js";
 
 import {ApplicationServiceTypes, InfrastructureServiceTypes, ProviderTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";

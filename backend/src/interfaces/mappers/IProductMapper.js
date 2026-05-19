@@ -1,4 +1,5 @@
 import {ProductEntity, ProductDTO, ShortProductDTO} from "../../domain/index.js";
+import {CategoryDTO} from "../../application/dtos/category.dto.js";
 
 /**
  * @interface IProductMapper

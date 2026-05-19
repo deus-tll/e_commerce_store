@@ -24,13 +24,13 @@ export const ProviderTypes = Object.freeze({
 });
 
 export const MapperTypes = Object.freeze({
-	CATEGORY: "ICategoryMapper",
-	PRODUCT: "IProductMapper",
-	CART: "ICartMapper",
-	REVIEW: "IReviewMapper",
-	ORDER: "IOrderMapper",
-	COUPON: "ICouponMapper",
-	USER: "IUserMapper"
+	CATEGORY: "CategoryMapper",
+	PRODUCT: "ProductMapper",
+	CART: "CartMapper",
+	REVIEW: "ReviewMapper",
+	ORDER: "OrderMapper",
+	COUPON: "CouponMapper",
+	USER: "UserMapper"
 });
 
 export const CookieManagerTypes = Object.freeze({
@@ -39,17 +39,17 @@ export const CookieManagerTypes = Object.freeze({
 
 export const ImageManagerTypes = Object.freeze({
 	PRODUCT: "IProductImageManager",
-	CATEGORY: "ICategoryImageManager"
+	CATEGORY: "CategoryImageManager"
 });
 
-export const StorageManagerTypes = Object.freeze({
-	CATEGORY: "ICategoryStorageManager",
-	PRODUCT: "IProductStorageManager"
+export const StorageServiceTypes = Object.freeze({
+	CATEGORY: "CategoryStorageService",
+	PRODUCT: "ProductStorageService"
 });
 
 export const ParserTypes = Object.freeze({
-	PRODUCT_QUERY: "IProductQueryParser",
-	USER_QUERY: "IUserQueryParser"
+	PRODUCT_QUERY: "ProductQueryParser",
+	USER_QUERY: "UserQueryParser"
 });
 
 export const ValidatorTypes = Object.freeze({
@@ -69,8 +69,6 @@ export const InfrastructureServiceTypes = Object.freeze({
 
 export const ApplicationServiceTypes = Object.freeze({
 	EMAIL_NOTIFICATION: "EmailNotificationService",
-	CATEGORY_STORAGE: "CategoryStorageService",
-	PRODUCT_STORAGE: "ProductStorageService",
 });
 
 export const ServiceTypes = Object.freeze({
@@ -78,7 +76,7 @@ export const ServiceTypes = Object.freeze({
 	USER_STATS: "IUserStatsService",
 	USER: "IUserService",
 	USER_ACCOUNT: "IUserAccountService",
-	CATEGORY: "ICategoryService",
+	CATEGORY: "CategoryService",
 	PRODUCT: "IProductService",
 
 	PRODUCT_STATS: "IProductStatsService",

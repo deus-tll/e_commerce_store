@@ -1,6 +1,6 @@
 import express from "express";
 
-import {ReviewController} from "../../controllers/ReviewController.js";
+import {ReviewController} from "../controllers/ReviewController.js";
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";

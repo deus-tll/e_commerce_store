@@ -1,5 +1,5 @@
-import {ProductQueryParser} from "../../../services/product/ProductQueryParser.js";
-import {UserQueryParser} from "../../../services/user/UserQueryParser.js";
+import {ProductQueryParser} from "../../../application/product/ProductQueryParser.js";
+import {UserQueryParser} from "../../../application/user/UserQueryParser.js";
 
 import {ParserTypes} from "../../../constants/ioc.js";
 
