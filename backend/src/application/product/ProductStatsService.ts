@@ -1,26 +1,19 @@
 import {IProductRepository} from "./IProductRepository.js";
-import {IProductStatsService} from "../../interfaces/product/IProductStatsService.js";
 
 /**
- * Concrete implementation of IProductStatsService.
- * Its sole responsibility is the Product Statistics Workflow: translating review actions
+ * Responsible for the Product Statistics Workflow: translating review actions
  * into the required low-level updates on the Product entity's aggregated stats.
- * @augments IProductStatsService
  */
-export class ProductStatsService extends IProductStatsService {
-	/** @type {IProductRepository} */ #productRepository;
+export class ProductStatsService{
+	private readonly productRepository: IProductRepository;
 
-	/**
-	 * @param {IProductRepository} productRepository
-	 */
-	constructor(productRepository) {
-		super();
-		this.#productRepository = productRepository;
+	constructor(productRepository: IProductRepository) {
+		this.productRepository = productRepository;
 	}
 
-	async handleReviewCreation(productId, newRating) {
+	async handleReviewCreation(productId: string, newRating: number): Promise<void> {
 		// New Review: +1 total review count, rating change is the new rating, old rating is 0
-		await this.#productRepository.updateRatingStats(
+		await this.productRepository.updateRatingStats(
 			productId,
 			newRating,
 			1, // totalReviewsChange (+1)
@@ -28,11 +21,11 @@ export class ProductStatsService extends IProductStatsService {
 		);
 	}
 
-	async handleReviewUpdate(productId, newRating, oldRating) {
+	async handleReviewUpdate(productId: string, newRating: number, oldRating: number): Promise<void> {
 		// Only update stats if the rating actually changed
 		if (newRating !== oldRating) {
 			// Updated Review: 0 change in total review count. New rating and old rating are used to calculate the net sum change.
-			await this.#productRepository.updateRatingStats(
+			await this.productRepository.updateRatingStats(
 				productId,
 				newRating,
 				0, // totalReviewsChange (0 for update)
@@ -41,9 +34,9 @@ export class ProductStatsService extends IProductStatsService {
 		}
 	}
 
-	async handleReviewDeletion(productId, oldRating) {
+	async handleReviewDeletion(productId: string, oldRating: number): Promise<void> {
 		// Deleted Review: -1 total review count. The old rating is passed to be subtracted from the rating sum.
-		await this.#productRepository.updateRatingStats(
+		await this.productRepository.updateRatingStats(
 			productId,
 			0, // ratingChange (0, as the rating logic uses oldRating for subtraction)
 			-1, // totalReviewsChange (-1)

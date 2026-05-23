@@ -1,4 +1,4 @@
-import {ShortProductDTO} from "../index.js";
+import {ShortProductDTO} from "../../application/dtos/product.dto.ts";
 
 /**
  * Agnostic class for nested product item data.

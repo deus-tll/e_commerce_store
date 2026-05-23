@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import {Types} from "mongoose";
 import {EntityNotFoundError} from "../../../../errors/index.js";
 
 export type SortObject = Record<string, 1 | -1>;
@@ -35,7 +35,7 @@ export function toObjectId(id: string, entity: string): Types.ObjectId {
 
 export function determineSort(
     sortBy: string = "createdAt",
-    order: "desc" | "asc" = "desc"
+    order: string = "desc"
 ): SortObject {
     const sortOrder: 1 | -1 = order === "desc" ? -1 : 1;
     return { [sortBy]: sortOrder };

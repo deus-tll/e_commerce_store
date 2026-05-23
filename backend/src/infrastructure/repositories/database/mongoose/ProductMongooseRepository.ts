@@ -1,17 +1,24 @@
-import mongoose from "mongoose";
-import Product from "./models/Product.js";
+import mongoose, {FilterQuery, PipelineStage} from "mongoose";
+import Product, {IProductDoc} from "./models/Product.js";
 
 import {IProductRepository} from "../../../../application/product/IProductRepository.js";
-import {AttributeFacetDTO, RepositoryPaginationResult} from "../../../../domain/index.js";
-import {MongooseAdapter} from "./adapters/MongooseAdapter.js";
+import {ProductAdapter} from "./adapters/ProductAdapter.js";
+import {ProductEntity} from "../../../../entities/product/ProductEntity.js";
+import {
+	AttributeFacetDTO,
+	CreateProductPersistence,
+	ProductPersistenceQuery, UpdateProductPersistence
+} from "../../../../application/dtos/product.dto.js";
+import {RepositoryPaginationResult} from "../../../../application/dtos/shared.dto.js";
 
-import {EntityNotFoundError} from "../../../../errors/index.ts";
+import {EntityNotFoundError} from "../../../../errors/index.js";
 
-import {sanitizeSearchTerm} from "../../../../utils/sanitize.ts";
+import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
+import {determineSort} from "./utils.js";
 
 export class ProductMongooseRepository extends IProductRepository {
-	#buildMongooseQuery(query) {
-		const mongooseQuery = {};
+	#buildMongooseQuery(query: ProductPersistenceQuery): FilterQuery<IProductDoc> {
+		const mongooseQuery: FilterQuery<IProductDoc> = {};
 
 		if (query.categoryId) {
 			mongooseQuery.category = query.categoryId;
@@ -32,28 +39,18 @@ export class ProductMongooseRepository extends IProductRepository {
 		return mongooseQuery;
 	}
 
-	async create(data) {
-		const { categoryId, ...rest } = data;
-
-		const createdDoc = await Product.create({
-			...rest,
-			category: categoryId
-		});
-
-		return MongooseAdapter.toProductEntity(createdDoc);
+	async create(data: CreateProductPersistence): Promise<ProductEntity> {
+		const persistenceDoc = ProductAdapter.toCreatePersistenceDoc(data);
+		const createdDoc = await Product.create(persistenceDoc);
+		return ProductAdapter.toEntity(createdDoc);
 	}
 
-	async updateById(id, data) {
-		const { categoryId, ...rest } = { ...data };
-		let updateData = { ...rest };
-
-		if (categoryId) {
-			updateData.category = categoryId;
-		}
+	async updateById(id: string, data: UpdateProductPersistence): Promise<ProductEntity> {
+		const persistenceDoc = ProductAdapter.toUpdatePersistenceDoc(data);
 
 		const updatedDoc = await Product.findByIdAndUpdate(
 			id,
-			{ $set: updateData },
+			persistenceDoc,
 			{ new: true, runValidators: true }
 		).lean();
 
@@ -61,10 +58,10 @@ export class ProductMongooseRepository extends IProductRepository {
 			throw new EntityNotFoundError("Product", { id });
 		}
 
-		return MongooseAdapter.toProductEntity(updatedDoc);
+		return ProductAdapter.toEntity(updatedDoc);
 	}
 
-	async toggleFeatured(id) {
+	async toggleFeatured(id: string): Promise<ProductEntity> {
 		const updatedDoc = await Product.findByIdAndUpdate(
 			id,
 			[
@@ -81,10 +78,10 @@ export class ProductMongooseRepository extends IProductRepository {
 			throw new EntityNotFoundError("Product", { id });
 		}
 
-		return MongooseAdapter.toProductEntity(updatedDoc);
+		return ProductAdapter.toEntity(updatedDoc);
 	}
 
-	async updateRatingStats(productId, ratingChange, totalReviewsChange, oldRating = 0) {
+	async updateRatingStats(productId: string, ratingChange: number, totalReviewsChange: number, oldRating: number = 0): Promise<void> {
 		const ratingSumDelta = ratingChange - oldRating;
 
 		const updatedProduct = await Product.findByIdAndUpdate(
@@ -122,40 +119,42 @@ export class ProductMongooseRepository extends IProductRepository {
 				}
 			],
 			{ new: true, runValidators: true },
-		);
+		).lean();
 
 		if (!updatedProduct) throw new EntityNotFoundError("Product", { id: productId });
-
-		return updatedProduct;
 	}
 
-	async deleteById(id) {
+	async deleteById(id: string): Promise<ProductEntity> {
 		const deletedDoc = await Product.findByIdAndDelete(id).lean();
 
 		if (!deletedDoc) throw new EntityNotFoundError("Product", { id });
 
-		return MongooseAdapter.toProductEntity(deletedDoc);
+		return ProductAdapter.toEntity(deletedDoc);
 	}
 
-	async findById(id) {
+	async findById(id: string): Promise<ProductEntity | null> {
 		const foundDoc = await Product.findById(id).lean();
-		return MongooseAdapter.toProductEntity(foundDoc);
+		return ProductAdapter.toEntity(foundDoc);
 	}
 
-	async findAndCount(query, skip, limit, options = {}) {
+	async findAndCount(
+		query: ProductPersistenceQuery,
+		skip: number,
+		limit: number,
+		options: Record<string, string> = {}
+	): Promise<RepositoryPaginationResult<ProductEntity>> {
 		const { sortBy = "createdAt", order = "desc" } = options;
 
 		const isComplexQuery = !!query.search;
 		const mongooseQuery = this.#buildMongooseQuery(query);
 
-		const sortOrder = order === "desc" ? -1 : 1;
-		const sort = { [sortBy]: sortOrder };
+		const sortObject = determineSort(sortBy, order);
 
 		// --- 1. Simple Find Path (No Search Query) ---
 		if (!isComplexQuery) {
 			const [foundDocs, calculatedTotal] = await Promise.all([
 				Product.find(mongooseQuery)
-					.sort(sort)
+					.sort(sortObject)
 					.skip(skip)
 					.limit(limit)
 					.lean(),
@@ -163,90 +162,96 @@ export class ProductMongooseRepository extends IProductRepository {
 				Product.countDocuments(mongooseQuery),
 			]);
 
-			const productEntities = foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
+			const productEntities = foundDocs.map(doc => ProductAdapter.toEntity(doc));
 			return new RepositoryPaginationResult(productEntities, calculatedTotal);
 		}
 
 		// --- 2. Complex Search Path (Aggregation) ---
 		const sanitizedTerm = sanitizeSearchTerm(query.search);
 		const searchRegex = new RegExp(sanitizedTerm, 'i');
-		const pipeline = [];
+		const basePipeline: PipelineStage[] = [];
 
 		// A. Initial Match (for category filtering, if present)
 		if (Object.keys(mongooseQuery).length > 0) {
-			pipeline.push({ $match: mongooseQuery });
+			basePipeline.push({ $match: mongooseQuery });
 		}
 
-		// B. Lookup/Join the Category to access its name
-		pipeline.push({
-			$lookup: {
-				from: 'categories',
-				localField: 'category',
-				foreignField: '_id',
-				as: 'categoryDetails'
-			}
-		});
+		basePipeline.push(
+			{
+				// B. Lookup/Join the Category to access its name
+				$lookup: {
+					from: 'categories',
+					localField: 'category',
+					foreignField: '_id',
+					as: 'categoryDetails'
+				}
+			},
 
-		// C. Unwind the categoryDetails array to treat it as a single object
-		pipeline.push({ $unwind: '$categoryDetails' });
+			// C. Unwind the categoryDetails array to treat it as a single object
+			{ $unwind: '$categoryDetails' },
 
-		// D. Search Match: Apply the search across product name OR category name
-		pipeline.push({
-			$match: {
-				$or: [
-					{ name: { $regex: searchRegex } }, // Search product name
-					{ 'categoryDetails.name': { $regex: searchRegex } } // Search category name
-				]
+			// D. Search Match: Apply the search across product name OR category name
+			{
+				$match: {
+					$or: [
+						{ name: { $regex: searchRegex } }, // Search product name
+						{ 'categoryDetails.name': { $regex: searchRegex } } // Search category name
+					]
+				}
 			}
-		});
+		);
 
 		// E. Total Count Calculation (run this pipeline up to this point)
 		const [totalResult] = await Product.aggregate([
-			...pipeline,
+			...basePipeline,
 			{ $count: "total" }
 		]);
 		const calculatedTotal = totalResult ? totalResult.total : 0;
 
-		// F. Final Steps: Sort, Skip, Limit, and Project (for Entity conversion)
-		pipeline.push({ $sort: sort });
-		pipeline.push({ $skip: skip });
-		pipeline.push({ $limit: limit });
+		const documentsPipeline: PipelineStage[] = [
+			...basePipeline,
 
-		// Project only the necessary fields for #toEntity conversion (excluding categoryDetails)
-		pipeline.push({
-			$project: {
-				_id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1,
-				attributes: 1, isFeatured: 1, ratingStats: 1, createdAt: 1, updatedAt: 1
+			// F. Final Steps: Sort, Skip, Limit, and Project (for Entity conversion)
+			{ $sort: sortObject },
+			{ $skip: skip },
+			{ $limit: limit },
+
+			// Project only the necessary fields for #toEntity conversion (excluding categoryDetails)
+			{
+				$project: {
+					_id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1,
+					attributes: 1, isFeatured: 1, ratingStats: 1, createdAt: 1, updatedAt: 1
+				}
 			}
-		});
+		];
 
-		const foundDocs = await Product.aggregate(pipeline);
-		const productEntities = foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
+		const foundDocs = await Product.aggregate(documentsPipeline);
+		const productEntities = foundDocs.map(doc => ProductAdapter.toEntity(doc));
 
 		return new RepositoryPaginationResult(productEntities, calculatedTotal);
 	}
 
-	async count(query = {}) {
+	async count(query: ProductPersistenceQuery = {}): Promise<number> {
 		const baseQuery = this.#buildMongooseQuery(query);
-		return await Product.countDocuments(baseQuery);
+		return Product.countDocuments(baseQuery);
 	}
 
-	async findByIds(ids) {
+	async findByIds(ids: string[]): Promise<ProductEntity[]> {
 		const foundDocs = await Product.find({ _id: { $in: ids } }).lean();
-		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
 	}
 
-	async findByFeaturedStatus(isFeatured) {
+	async findByFeaturedStatus(isFeatured: boolean): Promise<ProductEntity[]> {
 		const foundDocs = await Product.find({ isFeatured }).lean();
-		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
 	}
 
-	async exists(id) {
+	async exists(id: string): Promise<boolean> {
 		return Boolean(await Product.exists({ _id: id }));
 	}
 
-	async getAttributeFacets(categoryId) {
-		const pipeline = [
+	async getAttributeFacets(categoryId: string): Promise<AttributeFacetDTO[]> {
+		const pipeline: PipelineStage[] = [
 			// 1. Filter products by the specific category ID
 			{ $match: { category: new mongoose.Types.ObjectId(categoryId) } },
 
@@ -277,7 +282,8 @@ export class ProductMongooseRepository extends IProductRepository {
 		const results = await Product.aggregate(pipeline);
 
 		return results.map(row => {
-			const sortedValues = (row.values || []).sort((a, b) =>
+			const valuesArray = (row.values || []) as string[];
+			const sortedValues = valuesArray.sort((a, b) =>
 				a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 			);
 
@@ -286,15 +292,19 @@ export class ProductMongooseRepository extends IProductRepository {
 	}
 
 
-	async markAsFeaturedRatingBased(minRating) {
+	async markAsFeaturedRatingBased(minRating: number): Promise<void> {
 		await Product.updateMany(
 			{ "ratingStats.averageRating": { $gte: minRating } },
 			{ $set: { isFeatured: true } },
 		);
 	}
 
-	async findRecommended(size, categoryIds = [], excludedIds = []) {
-		const match = {};
+	async findByCategoryIdsExcludingProductIds(
+		size: number,
+		categoryIds: string[] = [],
+		excludedIds: string[] = []
+	): Promise<ProductEntity[]> {
+		const match: FilterQuery<IProductDoc> = {};
 
 		if (categoryIds.length > 0) {
 			match.category = { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) };
@@ -304,13 +314,13 @@ export class ProductMongooseRepository extends IProductRepository {
 			match._id = { $nin: excludedIds.map(id => new mongoose.Types.ObjectId(id)) };
 		}
 
-		const pipeline = [
+		const pipeline: PipelineStage[] = [
 			{ $match: Object.keys(match).length > 0 ? match : { _id: { $exists: true } } },
 			{ $sample: { size: size } },
 			{ $project: { _id: 1, name: 1, description: 1, price: 1, stock: 1, images: 1, category: 1, ratingStats: 1 } }
 		];
 
 		const foundDocs = await Product.aggregate(pipeline);
-		return foundDocs.map(doc => MongooseAdapter.toProductEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
 	}
 }

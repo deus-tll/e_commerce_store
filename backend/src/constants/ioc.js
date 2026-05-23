@@ -25,7 +25,6 @@ export const ProviderTypes = Object.freeze({
 
 export const MapperTypes = Object.freeze({
 	CATEGORY: "CategoryMapper",
-	PRODUCT: "ProductMapper",
 	CART: "CartMapper",
 	REVIEW: "ReviewMapper",
 	ORDER: "OrderMapper",
@@ -38,7 +37,7 @@ export const CookieManagerTypes = Object.freeze({
 });
 
 export const ImageManagerTypes = Object.freeze({
-	PRODUCT: "IProductImageManager",
+	PRODUCT: "ProductImageManager",
 	CATEGORY: "CategoryImageManager"
 });
 
@@ -48,7 +47,6 @@ export const StorageServiceTypes = Object.freeze({
 });
 
 export const ParserTypes = Object.freeze({
-	PRODUCT_QUERY: "ProductQueryParser",
 	USER_QUERY: "UserQueryParser"
 });
 
@@ -69,6 +67,9 @@ export const InfrastructureServiceTypes = Object.freeze({
 
 export const ApplicationServiceTypes = Object.freeze({
 	EMAIL_NOTIFICATION: "EmailNotificationService",
+
+	CATEGORY: "CategoryService",
+	PRODUCT: "ProductService",
 });
 
 export const ServiceTypes = Object.freeze({
@@ -76,10 +77,8 @@ export const ServiceTypes = Object.freeze({
 	USER_STATS: "IUserStatsService",
 	USER: "IUserService",
 	USER_ACCOUNT: "IUserAccountService",
-	CATEGORY: "CategoryService",
-	PRODUCT: "IProductService",
 
-	PRODUCT_STATS: "IProductStatsService",
+	PRODUCT_STATS: "ProductStatsService",
 
 	CART: "ICartService",
 	REVIEW: "IReviewService",

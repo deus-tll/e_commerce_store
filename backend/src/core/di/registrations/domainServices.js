@@ -2,8 +2,6 @@ import {UserTokenService} from "../../../application/user/UserTokenService.js";
 import {UserStatsService} from "../../../application/user/UserStatsService.js";
 import {UserService} from "../../../application/user/UserService.js";
 import {UserAccountService} from "../../../application/user/UserAccountService.js";
-import {CategoryService} from "../../../application/category/CategoryService.ts";
-import {ProductService} from "../../../application/product/ProductService.js";
 import {ProductStatsService} from "../../../application/product/ProductStatsService.js";
 import {CartService} from "../../../application/cart/CartService.js";
 import {ReviewService} from "../../../application/review/ReviewService.js";
@@ -15,7 +13,7 @@ import {CheckoutService} from "../../../application/checkout/CheckoutService.js"
 
 import {
     DatabaseRepositoryTypes, ProviderTypes,
-    FactoryTypes, ImageManagerTypes,
+    FactoryTypes,
     MapperTypes, ParserTypes, ValidatorTypes,
     ServiceTypes, InfrastructureServiceTypes, ApplicationServiceTypes, CacheRepositoryTypes
 } from "../../../constants/ioc.js";
@@ -41,28 +39,19 @@ const registerDomainServices = (container) => {
         [ServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheRepositoryTypes.AUTH]
     );
     // =============
-    // =============
-    // Category
-    container.register(ServiceTypes.CATEGORY, CategoryService,
-        [DatabaseRepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY]
-    );
-    // =============
-    // Product
-    container.register(ServiceTypes.PRODUCT, ProductService,
-        [DatabaseRepositoryTypes.PRODUCT, ServiceTypes.CATEGORY, CacheRepositoryTypes.PRODUCT, ImageManagerTypes.PRODUCT, ParserTypes.PRODUCT_QUERY, MapperTypes.PRODUCT]
-    );
+
     container.register(ServiceTypes.PRODUCT_STATS, ProductStatsService, [DatabaseRepositoryTypes.PRODUCT]);
     // =============
     // Cart
     container.register(ServiceTypes.CART, CartService,
-        [DatabaseRepositoryTypes.CART, ServiceTypes.PRODUCT, MapperTypes.CART]
+        [DatabaseRepositoryTypes.CART, ApplicationServiceTypes.PRODUCT, MapperTypes.CART]
     );
     // =============
     // Review
     container.register(ServiceTypes.REVIEW, ReviewService, [
         DatabaseRepositoryTypes.REVIEW,
         ServiceTypes.USER,
-        ServiceTypes.PRODUCT,
+        ApplicationServiceTypes.PRODUCT,
         ServiceTypes.PRODUCT_STATS,
         ValidatorTypes.REVIEW,
         MapperTypes.REVIEW
@@ -88,13 +77,20 @@ const registerDomainServices = (container) => {
     // Payment
     container.register(ServiceTypes.CHECKOUT, () => {
         const paymentProvider = container.get(ProviderTypes.PAYMENT);
-        const productService = container.get(ServiceTypes.PRODUCT);
+        const productService = container.get(ApplicationServiceTypes.PRODUCT);
         const orderService = container.get(ServiceTypes.ORDER);
         const cartService = container.get(ServiceTypes.CART);
         const couponService = container.get(ServiceTypes.COUPON);
         const minAmountForGrant = config.business.coupon.minAmountForGrant;
 
-        return new CheckoutService(paymentProvider, productService, orderService, cartService, couponService, minAmountForGrant);
+        return new CheckoutService(
+            paymentProvider,
+            productService,
+            orderService,
+            cartService,
+            couponService,
+            minAmountForGrant
+        );
     });
 }
 

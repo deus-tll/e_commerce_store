@@ -3,8 +3,7 @@ import {
 	CartEntity, CartItemEntity,
 	CouponEntity,
 	OrderEntity, OrderProductItem,
-	ProductEntity,
-	ReviewEntity, ProductImage, ProductAttribute, ProductRatingStats
+	ReviewEntity
 } from "../../../../../domain/index.js";
 
 /**
@@ -106,29 +105,6 @@ export class MongooseAdapter {
 			...rest,
 			userId: user ? user.toString() : null,
 			products: products
-		});
-	}
-
-	/**
-	 * Converts a Mongoose Product Document/object to a ProductEntity.
-	 * Handles the mapping of the Mongoose `category` reference field, nested `images`,
-	 * and the nested `ratingStats`.
-	 * @param {object | null} doc
-	 * @returns {ProductEntity | null}
-	 */
-	static toProductEntity(doc) {
-		const plainObject = MongooseAdapter.#toPlainObject(doc);
-
-		if (!plainObject) return null;
-
-		const { category, images, attributes, ratingStats, ...rest } = plainObject;
-
-		return new ProductEntity({
-			...rest,
-			images: new ProductImage(images),
-			categoryId: category?.toString(),
-			attributes: (attributes || []).map(attr => new ProductAttribute(attr)),
-			ratingStats: new ProductRatingStats(ratingStats)
 		});
 	}
 

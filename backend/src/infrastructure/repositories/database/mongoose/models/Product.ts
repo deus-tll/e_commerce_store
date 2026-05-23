@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, model, InferSchemaType } from "mongoose";
 
-const attributeSchema = new mongoose.Schema({
+const attributeSchema = new Schema({
 	name: {
 		type: String,
 		required: true,
@@ -13,7 +13,7 @@ const attributeSchema = new mongoose.Schema({
 	}
 }, { _id: false });
 
-const imageSchema = new mongoose.Schema({
+const imageSchema = new Schema({
 	mainImage: {
 		type: String,
 		required: true
@@ -24,7 +24,7 @@ const imageSchema = new mongoose.Schema({
 	}
 }, { _id: false });
 
-const ratingStatsSchema = new mongoose.Schema({
+const ratingStatsSchema = new Schema({
 	averageRating: {
 		type: Number,
 		default: 0,
@@ -43,7 +43,7 @@ const ratingStatsSchema = new mongoose.Schema({
 	}
 }, { _id: false });
 
-const productSchema = new mongoose.Schema({
+const productSchema = new Schema({
 	name: {
 		type: String,
 		required: true
@@ -85,13 +85,20 @@ const productSchema = new mongoose.Schema({
 		type: ratingStatsSchema,
 		default: {}
 	}
-}, { timestamps: true });
+}, {
+	timestamps: true,
+	toJSON: { virtuals: true },
+	toObject: { virtuals: true },
+});
 
 productSchema.index({ "attributes.name": 1, "attributes.value": 1 });
 
-/**
- * @type {import('mongoose').Model & import('mongoose').Document}
- */
-const Product = mongoose.model("Product", productSchema);
+export type IProductDoc = InferSchemaType<typeof productSchema> & {
+	_id: mongoose.Types.ObjectId;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+const Product = model("Product", productSchema);
 
 export default Product;

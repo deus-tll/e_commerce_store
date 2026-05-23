@@ -1,7 +1,7 @@
-import express from "express";
+import {Router} from "express";
 
 import {ProductController} from "../controllers/ProductController.js";
-import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
+import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
 import {validationMiddleware} from "../middleware/validationMiddleware.js";
@@ -12,14 +12,11 @@ import {
 	productIdSchema, getAllProductsPublicSchema
 } from "../validators/productValidator.js";
 
-/**
- * A factory that creates and configures the Products router, injecting necessary dependencies.
- * @param {ProductController} productController
- * @param {ISessionAuthService} authService - The authentication service instance, required for protectRoute.
- * @returns {express.Router | core.Router} - Configured Express router.
- */
-export function createProductsRouter(productController, authService) {
-	const router = express.Router();
+export function createProductsRouter(
+	productController: ProductController,
+	authService: SessionAuthService
+): Router {
+	const router = Router();
 
 	const protectRoute = createProtectRoute(authService);
 

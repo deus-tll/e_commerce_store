@@ -109,7 +109,8 @@ export const config = {
 			password: process.env.ADMIN_PASSWORD,
 		},
 		product: {
-			featuredProductsMinRating: Number(process.env.FEATURED_PRODUCTS_MIN_RATING)
+			featuredProductsMinRating: Number(process.env.FEATURED_PRODUCTS_MIN_RATING),
+			recommendationsSize: 4
 		}
 	}
 };

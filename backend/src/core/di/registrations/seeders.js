@@ -1,7 +1,7 @@
 import {AdminSeeder} from "../../../seeders/AdminSeeder.js";
 import {ProductsDummyJsonSeeder} from "../../../seeders/ProductsDummyJsonSeeder.js";
 
-import {SeederTypes, ServiceTypes} from "../../../constants/ioc.js";
+import {ApplicationServiceTypes, SeederTypes, ServiceTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
 /**
@@ -16,8 +16,8 @@ const registerSeeders = (container) => {
         return new AdminSeeder(userService, name, email, password);
     });
     container.register(SeederTypes.PRODUCTS_DUMMY_JSON, () => {
-        const categoryService = container.get(ServiceTypes.CATEGORY);
-        const productService = container.get(ServiceTypes.PRODUCT);
+        const categoryService = container.get(ApplicationServiceTypes.CATEGORY);
+        const productService = container.get(ApplicationServiceTypes.PRODUCT);
         const userService = container.get(ServiceTypes.USER);
         const reviewService = container.get(ServiceTypes.REVIEW);
         const productsUrlWithLimit = config.seeding.dummyJson.productsUrlWithLimit;

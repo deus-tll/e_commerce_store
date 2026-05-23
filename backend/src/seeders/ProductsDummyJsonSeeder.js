@@ -1,15 +1,14 @@
 import {CategoryService} from "../application/category/CategoryService.js";
-import {IProductService} from "../interfaces/product/IProductService.js";
+import {ProductService} from "../application/product/ProductService.js";
 import {IUserService} from "../interfaces/user/IUserService.js";
 import {IReviewService} from "../interfaces/review/IReviewService.js";
 
 import {
-    CreateProductDTO,
-    ProductAttribute,
     CreateUserDTO,
     CreateReviewDTO
 } from "../domain/index.js";
-import {CreateCategoryDTO} from "../application/dtos/category.dto.ts";
+import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
+import {CreateCategoryDTO} from "../application/dtos/category.dto.js";
 
 
 import {BaseSeeder} from "./BaseSeeder.js";
@@ -53,7 +52,7 @@ const ALLOWED_ATTRIBUTES = {
 
 export class ProductsDummyJsonSeeder extends BaseSeeder {
     /** @type {CategoryService} */ #categoryService;
-    /** @type {IProductService} */ #productService;
+    /** @type {ProductService} */ #productService;
     /** @type {IUserService} */ #userService;
     /** @type {IReviewService} */ #reviewService;
     /** @type {string} */ #productsUrlWithLimit;
@@ -65,7 +64,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
 
     /**
      * @param {CategoryService} categoryService
-     * @param {IProductService} productService
+     * @param {ProductService} productService
      * @param {IUserService} userService
      * @param {IReviewService} reviewService
      * @param {string} productsUrlWithLimit
@@ -170,7 +169,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         ifPresentThenPush(ALLOWED_ATTRIBUTES.HEIGHT, p.dimensions?.height);
         ifPresentThenPush(ALLOWED_ATTRIBUTES.DEPTH, p.dimensions?.depth);
 
-        const dto = new CreateProductDTO({
+        const dto = {
             name: p.title,
             description: p.description,
             price: p.price,
@@ -182,7 +181,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
                 additionalImages: this.#getAdditionalImages(p.images)
             },
             attributes
-        });
+        };
 
         const created = await this.#productService.create(dto);
         console.log(`[Seeder] Created product: ${created.name}`);

@@ -1,6 +1,6 @@
 import {BaseCacheRepository} from "./BaseCacheRepository.js";
 import {ICacheProvider} from "../../providers/cache/ICacheProvider.js";
-import {ProductDTO} from "../../../domain/index.js";
+import {ProductDTO} from "../../../application/dtos/product.dto.js";
 
 import {CacheKeys, PrefixCacheKeys} from "../../../constants/app.js";
 
@@ -19,9 +19,5 @@ export class ProductCacheRepository extends BaseCacheRepository {
 
 	async setFeaturedProducts(productDTOs: ProductDTO[]): Promise<void> {
 		await this.set(CacheKeys.FEATURED_PRODUCTS, productDTOs);
-	}
-
-	async invalidateFeaturedProducts(): Promise<void> {
-		await this.delete(CacheKeys.FEATURED_PRODUCTS);
 	}
 }

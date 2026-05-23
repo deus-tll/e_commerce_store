@@ -1,4 +1,5 @@
 import {CartEntity, CartDTO} from "../../domain/index.js";
+import {ShortProductDTO} from "../../application/dtos/product.dto.ts";
 
 /**
  * @interface ICartMapper

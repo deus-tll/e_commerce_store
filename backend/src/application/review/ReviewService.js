@@ -1,13 +1,13 @@
 import {IReviewService} from "../../interfaces/review/IReviewService.js";
 import {IReviewRepository} from "./IReviewRepository.js";
 import {IUserService} from "../../interfaces/user/IUserService.js";
-import {IProductService} from "../../interfaces/product/IProductService.js";
+import {ProductService} from "../product/ProductService.js";
 import {IReviewMapper} from "../../interfaces/mappers/IReviewMapper.js";
-import {IProductStatsService} from "../../interfaces/product/IProductStatsService.js";
+import {ProductStatsService} from "../product/ProductStatsService.js";
 import {IReviewValidator} from "../../interfaces/review/IReviewValidator.js";
 import {ReviewPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
-import {EntityNotFoundError} from "../../errors/index.ts";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for review operations.
@@ -17,16 +17,16 @@ import {EntityNotFoundError} from "../../errors/index.ts";
 export class ReviewService extends IReviewService {
 	/** @type {IReviewRepository} */ #reviewRepository;
 	/** @type {IUserService} */ #userService;
-	/** @type {IProductService} */ #productService;
-	/** @type {IProductStatsService} */ #productStatsService;
+	/** @type {ProductService} */ #productService;
+	/** @type {ProductStatsService} */ #productStatsService;
 	/** @type {IReviewValidator} */ #reviewValidator;
 	/** @type {IReviewMapper} */ #reviewMapper;
 
 	/**
 	 * @param {IReviewRepository} reviewRepository
 	 * @param {IUserService} userService
-	 * @param {IProductService} productService
-	 * @param {IProductStatsService} productStatsService
+	 * @param {ProductService} productService
+	 * @param {ProductStatsService} productStatsService
 	 * @param {IReviewValidator} reviewValidator
 	 * @param {IReviewMapper} reviewMapper
 	 */

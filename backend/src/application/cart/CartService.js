@@ -1,9 +1,9 @@
 import {ICartService} from "../../interfaces/cart/ICartService.js";
 import {ICartRepository} from "./ICartRepository.js";
-import {IProductService} from "../../interfaces/product/IProductService.js";
+import {ProductService} from "../product/ProductService.js";
 import {ICartMapper} from "../../interfaces/mappers/ICartMapper.js";
 
-import {DomainValidationError} from "../../errors/index.ts";
+import {DomainValidationError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for cart operations.
@@ -12,12 +12,12 @@ import {DomainValidationError} from "../../errors/index.ts";
  */
 export class CartService extends ICartService {
 	/** @type {ICartRepository} */ #cartRepository;
-	/** @type {IProductService} */ #productService;
+	/** @type {ProductService} */ #productService;
 	/** @type {ICartMapper} */ #cartMapper;
 
 	/**
 	 * @param {ICartRepository} cartRepository
-	 * @param {IProductService} productService
+	 * @param {ProductService} productService
 	 * @param {ICartMapper} cartMapper
 	 */
 	constructor(cartRepository, productService, cartMapper) {

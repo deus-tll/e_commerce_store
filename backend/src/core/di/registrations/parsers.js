@@ -1,4 +1,3 @@
-import {ProductQueryParser} from "../../../application/product/ProductQueryParser.js";
 import {UserQueryParser} from "../../../application/user/UserQueryParser.js";
 
 import {ParserTypes} from "../../../constants/ioc.js";
@@ -8,7 +7,6 @@ import {ParserTypes} from "../../../constants/ioc.js";
  * @returns {void}
  */
 const registerParsers = (container) => {
-    container.register(ParserTypes.PRODUCT_QUERY, ProductQueryParser, []);
     container.register(ParserTypes.USER_QUERY, UserQueryParser, []);
 }
 

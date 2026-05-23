@@ -19,22 +19,19 @@ export const createProtectRoute = (authService: ISessionAuthService) : RequestHa
 
 		const { userId, user } = await authService.validateAccessToken(accessToken);
 
+		req.user = user;
 		// @ts-ignore
 		req.userId = userId;
-		// @ts-ignore
-		req.user = user;
 
 		next();
 	}
 }
 
 export const adminRoute: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
-	// @ts-ignore
 	if (!req.user) {
 		throw new UnauthenticatedError("Authentication required");
 	}
 
-	// @ts-ignore
 	if (req.user.role !== UserRoles.ADMIN) {
 		throw new ForbiddenError("Admin privileges required");
 	}
@@ -43,12 +40,10 @@ export const adminRoute: RequestHandler = async (req: Request, res: Response, ne
 };
 
 export const requireVerified = (req: Request, res: Response, next: NextFunction) => {
-	// @ts-ignore
 	if (!req.user) {
 		throw new UnauthenticatedError("Authentication required");
 	}
 
-	// @ts-ignore
 	if (!req.user.isVerified) {
 		throw new AccountNotVerifiedError("Email verification required");
 	}

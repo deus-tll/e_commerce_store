@@ -1,6 +1,6 @@
 import {ICheckoutService} from "../../interfaces/order/ICheckoutService.js";
 import {IPaymentProvider} from "../../infrastructure/providers/payment/IPaymentProvider.ts";
-import {IProductService} from "../../interfaces/product/IProductService.js";
+import {ProductService} from "../product/ProductService.ts";
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ICartService} from "../../interfaces/cart/ICartService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
@@ -11,19 +11,20 @@ import {
 	OrderProductItem,
 	PaymentMetadataDTO
 } from "../../domain/index.js";
+import {ShortProductDTO} from "../dtos/product.dto.js";
 
-import {EntityNotFoundError} from "../../errors/index.ts";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 import {OrderStatus} from "../../constants/domain.js";
-import {PaymentEventTypes} from "../../enums/payment.ts";
-import {Currency} from "../../utils/currency.ts";
+import {PaymentEventTypes} from "../../enums/payment.js";
+import {Currency} from "../../utils/currency.js";
 
 /**
  * @augments ICheckoutService
  */
 export class CheckoutService extends ICheckoutService {
 	/** @type {IPaymentProvider} */ #paymentProvider;
-	/** @type {IProductService} */ #productService;
+	/** @type {ProductService} */ #productService;
 	/** @type {IOrderService} */ #orderService;
 	/** @type {ICartService} */ #cartService;
 	/** @type {ICouponService} */ #couponService;
@@ -31,7 +32,7 @@ export class CheckoutService extends ICheckoutService {
 
 	/**
 	 * @param {IPaymentProvider} paymentProvider
-	 * @param {IProductService} productService
+	 * @param {ProductService} productService
 	 * @param {IOrderService} orderService
 	 * @param {ICartService} cartService
 	 * @param {ICouponService} couponService
