@@ -2,7 +2,8 @@ import {Request, Response} from "express";
 
 import {ProductService} from "../../application/product/ProductService.js";
 import {CartService} from "../../application/cart/CartService.js";
-import {CreateProductDTO, GetAllProductsQuery, UpdateProductDTO} from "../../application/dtos/product.dto.js";
+import {CreateRequest, GetAllProductsQuery, UpdateRequest} from "../requests/productRequests.js";
+import {ParamsWithIdRequest} from "../requests/sharedRequests.js";
 
 export class ProductController {
 	private readonly productService: ProductService;
@@ -13,26 +14,26 @@ export class ProductController {
 		this.cartService = cartService;
 	}
 
-	create = async (req: Request<{}, {}, CreateProductDTO>, res: Response): Promise<Response> => {
+	create = async (req: CreateRequest, res: Response): Promise<Response> => {
 		const productDTO = await this.productService.create(req.body);
 		return res.status(201).json(productDTO);
 	}
 
-	update = async (req: Request<{ id: string }, {}, UpdateProductDTO>, res: Response): Promise<Response> => {
+	update = async (req: UpdateRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const productDTO = await this.productService.update(id, req.body);
 
 		return res.status(200).json(productDTO);
 	}
 
-	toggleFeatured = async (req: Request<{ id: string }, {}, {}>, res: Response): Promise<Response> => {
+	toggleFeatured = async (req: ParamsWithIdRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const productDTO = await this.productService.toggleFeatured(id);
 
 		return res.status(200).json(productDTO);
 	}
 
-	delete = async (req: Request<{ id: string }, {}, {}>, res: Response): Promise<Response> => {
+	delete = async (req: ParamsWithIdRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		await this.productService.delete(id);
 
@@ -47,7 +48,7 @@ export class ProductController {
 		return res.status(200).json(paginationResult);
 	}
 
-	getById = async (req: Request<{ id: string }, {}, {}>, res: Response): Promise<Response> => {
+	getById = async (req: ParamsWithIdRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const productDTO = await this.productService.getByIdOrFail(id);
 
@@ -63,7 +64,7 @@ export class ProductController {
 	 * Retrieves unique attribute names and values for a specific category.
 	 * Used for building dynamic filter sidebars.
 	 */
-	getFacets = async (req: Request<{ id: string }, {}, {}>, res: Response): Promise<Response> => {
+	getFacets = async (req: ParamsWithIdRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const attributeFacetDTOs = await this.productService.getCategoryFacets(id);
 

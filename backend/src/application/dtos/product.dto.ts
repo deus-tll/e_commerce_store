@@ -33,11 +33,6 @@ export interface ProductFiltersInput {
     order?: 'asc' | 'desc';
 }
 
-export interface GetAllProductsQuery extends ProductFiltersInput {
-    page: number;
-    limit: number;
-}
-
 export interface ProductParserContext {
     categoryId: string | null;
 }
