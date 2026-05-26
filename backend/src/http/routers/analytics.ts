@@ -3,7 +3,7 @@ import {Router} from "express";
 import {AnalyticsController} from "../controllers/AnalyticsController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
+import {adminRoute, createProtectRoute} from "../middleware/auth.js";
 
 export function setupAnalyticsRouter(
 	analyticsController: AnalyticsController,

@@ -3,15 +3,15 @@ import {Router} from "express";
 import {CategoryController} from "../controllers/CategoryController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {adminRoute, createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	createCategorySchema,
 	updateCategorySchema,
 	categoryIdSchema,
 	getAllCategoriesSchema, categorySlugSchema
-} from "../validators/categoryValidator.js";
+} from "../validators/category.js";
 
 export function setupCategoriesRouter(
 	categoryController: CategoryController,

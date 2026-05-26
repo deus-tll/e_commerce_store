@@ -3,8 +3,8 @@ import {Router} from "express";
 import {AuthController} from "../controllers/AuthController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	signupSchema,
@@ -13,7 +13,7 @@ import {
 	forgotPasswordSchema,
 	resetPasswordSchema,
 	changePasswordSchema
-} from "../validators/authValidator.js";
+} from "../validators/auth.js";
 
 export function setupAuthRouter(
 	authController: AuthController,

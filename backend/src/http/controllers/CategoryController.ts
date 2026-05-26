@@ -1,8 +1,8 @@
 import {Request, Response} from "express";
 
 import {CategoryService} from "../../application/category/CategoryService.js";
-import {CategoryCreateRequest, CategoryUpdateRequest, CategoryGetAllQuery} from "../requests/category.request.types.js";
-import {ParamsWithIdRequest, ParamsWithSlugRequest} from "../requests/shared.request.types.js";
+import {CategoryCreateRequest, CategoryUpdateRequest, CategoryGetAllQuery} from "../requests/category.js";
+import {ParamsWithIdRequest, ParamsWithSlugRequest} from "../requests/shared.js";
 
 export class CategoryController {
 	constructor(

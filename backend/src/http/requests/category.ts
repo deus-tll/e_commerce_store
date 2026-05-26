@@ -1,6 +1,6 @@
 import {Request} from "express";
-import {CategoryFiltersInput, CategoryCreateInput, CategoryUpdateInput} from "../../application/types/category.types.js";
-import {ParamsWithIdRequest} from "./shared.request.types.js";
+import {CategoryFiltersInput, CategoryCreateInput, CategoryUpdateInput} from "../../application/types/category.js";
+import {ParamsWithIdRequest} from "./shared.js";
 
 export interface CategoryCreateRequest extends Request {
     body: CategoryCreateInput;

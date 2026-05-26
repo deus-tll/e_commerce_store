@@ -8,8 +8,8 @@ import {
 	CategoryCreateInput,
 	CategoryCreatePersistence,
 	CategoryUpdateInput, CategoryUpdatePersistence
-} from "../types/category.types.js";
-import {PaginationMetadata} from "../types/shared.types.js";
+} from "../types/category.js";
+import {PaginationMetadata} from "../types/shared.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 

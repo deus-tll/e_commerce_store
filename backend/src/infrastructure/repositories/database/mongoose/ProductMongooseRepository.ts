@@ -8,8 +8,8 @@ import {
 	AttributeFacetDTO,
 	ProductCreatePersistence,
 	ProductQueryPersistence, ProductUpdatePersistence
-} from "../../../../application/types/product.types.js";
-import {RepositoryPaginationResult} from "../../../../application/types/shared.types.js";
+} from "../../../../application/types/product.js";
+import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityNotFoundError} from "../../../../errors/index.js";
 

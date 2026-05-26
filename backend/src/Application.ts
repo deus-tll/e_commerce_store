@@ -6,7 +6,7 @@ import {DIContainer} from "./core/di/DIContainer.js";
 
 import {setupAppRouters} from "./http/routers/index.js";
 import {setupPaymentWebhookRouter} from "./http/routers/payment.webhook.js";
-import errorHandler from "./http/middleware/errorHandlerMiddleware.js";
+import errorHandler from "./http/middleware/errorHandler.js";
 
 import {ControllerTypes, ProviderTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
 import {config} from "./config.js";

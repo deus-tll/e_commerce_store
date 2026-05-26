@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { OrderStatus } from "../../constants/domain.js";
-import { emptyParamAndBody } from "./common.joi.js";
+import { emptyParamAndBody } from "./common.js";
 
 const orderIdParam = Joi.string()
 	.trim()

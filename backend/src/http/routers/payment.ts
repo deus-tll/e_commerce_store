@@ -3,12 +3,12 @@ import {Router} from "express";
 import {PaymentController} from "../controllers/PaymentController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	createCheckoutSessionSchema
-} from "../validators/paymentValidator.js";
+} from "../validators/payment.js";
 
 export function setupPaymentRouter(
 	paymentController: PaymentController,

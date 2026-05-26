@@ -1,6 +1,6 @@
 import {ICartMapper} from "../../interfaces/mappers/ICartMapper.js";
 import {CartEntity, CartDTO, CartItemDTO} from "../../domain/index.js";
-import {ShortProductDTO} from "../types/product.types.ts";
+import {ShortProductDTO} from "../types/product.ts";
 
 /**
  * Concrete implementation of the ICartMapper interface.

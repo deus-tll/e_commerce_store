@@ -22,7 +22,7 @@ export const createProtectRoute = (authService: SessionAuthService) : RequestHan
 	}
 }
 
-export const adminRoute: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const adminRoute: RequestHandler = async (req: Request, _: Response, next: NextFunction): Promise<void> => {
 	if (!req.user) {
 		throw new UnauthenticatedError("Authentication required");
 	}
@@ -34,7 +34,7 @@ export const adminRoute: RequestHandler = async (req: Request, res: Response, ne
 	next();
 };
 
-export const requireVerified = (req: Request, res: Response, next: NextFunction) => {
+export const requireVerified = async (req: Request, _: Response, next: NextFunction): Promise<void> => {
 	if (!req.user) {
 		throw new UnauthenticatedError("Authentication required");
 	}

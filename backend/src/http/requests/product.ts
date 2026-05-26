@@ -1,6 +1,6 @@
 import {Request} from "express";
-import {ProductCreateInput, ProductUpdateInput, ProductFiltersInput} from "../../application/types/product.types.js";
-import {ParamsWithIdRequest} from "./shared.request.types.js";
+import {ProductCreateInput, ProductUpdateInput, ProductFiltersInput} from "../../application/types/product.js";
+import {ParamsWithIdRequest} from "./shared.js";
 
 export interface ProductCreateRequest extends Request {
     body: ProductCreateInput;

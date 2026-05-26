@@ -5,7 +5,7 @@ import {
 	emailSchema,
 	passwordSchema,
 	verificationCodeSchema
-} from "./common.joi.js";
+} from "./common.js";
 
 const resetTokenParam = Joi.string()
 	.trim()

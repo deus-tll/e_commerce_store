@@ -3,14 +3,14 @@ import {Router} from "express";
 import {ProductController} from "../controllers/ProductController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {adminRoute, createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	createProductSchema,
 	updateProductSchema,
 	productIdSchema, getAllProductsPublicSchema
-} from "../validators/productValidator.js";
+} from "../validators/product.js";
 
 export function setupProductsRouter(
 	productController: ProductController,

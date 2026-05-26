@@ -6,7 +6,7 @@ import {
 	userNameSchema,
 	emailSchema,
 	passwordSchema
-} from "./common.joi.js";
+} from "./common.js";
 
 import {UserRoles} from "../../constants/app.js";
 

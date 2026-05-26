@@ -3,8 +3,8 @@ import {Router} from "express";
 import {OrderController} from "../controllers/OrderController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {adminRoute, createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	getAllOrdersSchema,
@@ -13,7 +13,7 @@ import {
 	orderIdSchema,
 	orderNumberSchema,
 	paymentSessionIdSchema
-} from "../validators/orderValidator.js";
+} from "../validators/order.js";
 
 export function setupOrdersRouter(
 	orderController: OrderController,

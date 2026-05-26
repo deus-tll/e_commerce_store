@@ -5,7 +5,7 @@ import {
 	reviewIdParam,
 	reviewRatingSchema,
 	reviewCommentSchema
-} from "./common.joi.js";
+} from "./common.js";
 
 /**
  * Joi schema for validating the POST /reviews/product/:id request (Create Review).

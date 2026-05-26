@@ -1,11 +1,11 @@
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
-import {RepositoryPaginationResult} from "../types/shared.types.js";
+import {RepositoryPaginationResult} from "../types/shared.js";
 import {
 	AttributeFacetDTO,
 	ProductCreatePersistence,
 	ProductQueryPersistence,
 	ProductUpdatePersistence
-} from "../types/product.types.js";
+} from "../types/product.js";
 
 export abstract class IProductRepository {
 	abstract create(data: ProductCreatePersistence): Promise<ProductEntity>;

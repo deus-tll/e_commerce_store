@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { productIdParam } from "./common.joi.js";
+import { productIdParam } from "./common.js";
 
 /**
  * Joi schema for validating the POST /cart request (Add Product).

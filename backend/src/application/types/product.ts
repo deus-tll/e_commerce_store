@@ -1,7 +1,7 @@
 import {ProductAttribute, ProductImage, ProductRatingStats} from "../../entities/product/ProductValueObjects.js";
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
-import {CategoryDTO} from "./category.types.js";
-import {PaginationMetadata} from "./shared.types.js";
+import {CategoryDTO} from "./category.js";
+import {PaginationMetadata} from "./shared.js";
 
 // INPUT DATA STRUCTURES
 //=======================

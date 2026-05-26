@@ -3,15 +3,15 @@ import {Router} from "express";
 import {ReviewController} from "../controllers/ReviewController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	createReviewSchema,
 	updateReviewSchema,
 	deleteReviewSchema,
 	getReviewsByProductSchema
-} from "../validators/reviewValidator.js";
+} from "../validators/review.js";
 
 export function setupReviewsRouter(
 	reviewController: ReviewController,

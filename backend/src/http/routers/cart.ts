@@ -3,14 +3,14 @@ import {Router} from "express";
 import {CartController} from "../controllers/CartController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	addProductSchema,
 	removeProductSchema,
 	updateProductQuantitySchema
-} from "../validators/cartValidator.js";
+} from "../validators/cart.js";
 
 export function setupCartRouter(
 	cartController: CartController,

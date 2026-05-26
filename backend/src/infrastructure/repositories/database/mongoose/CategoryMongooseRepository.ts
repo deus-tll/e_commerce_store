@@ -9,8 +9,8 @@ import {
 	CategoryCreatePersistence,
 	CategoryUpdatePersistence,
 	CategoryQueryPersistence
-} from "../../../../application/types/category.types.js";
-import {RepositoryPaginationResult} from "../../../../application/types/shared.types.js";
+} from "../../../../application/types/category.js";
+import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 

@@ -10,7 +10,7 @@ import {
 	attributeItemSchema,
 	createProductImagesSchema,
 	updateProductImagesSchema
-} from "./common.joi.js";
+} from "./common.js";
 
 /**
  * Joi schema for validating the POST /products request (Create Product).

@@ -1,6 +1,6 @@
 import {CategoryEntity} from "../../entities/category/CategoryEntity.js";
-import {CategoryQueryPersistence, CategoryCreatePersistence, CategoryUpdatePersistence} from "../types/category.types.js";
-import {RepositoryPaginationResult} from "../types/shared.types.js";
+import {CategoryQueryPersistence, CategoryCreatePersistence, CategoryUpdatePersistence} from "../types/category.js";
+import {RepositoryPaginationResult} from "../types/shared.js";
 
 export abstract class ICategoryRepository {
 	abstract create(data: CategoryCreatePersistence): Promise<CategoryEntity>;

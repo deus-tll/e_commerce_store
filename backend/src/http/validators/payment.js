@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { checkoutProductItemSchema } from "./common.joi.js";
+import { checkoutProductItemSchema } from "./common.js";
 
 /**
  * Joi schema for validating the POST /create-checkout-session request.

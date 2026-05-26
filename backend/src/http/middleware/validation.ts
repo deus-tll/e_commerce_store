@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import { ObjectSchema } from "joi";
+import {Request, Response, NextFunction, RequestHandler} from "express";
+import {ObjectSchema} from "joi";
 
 import {DomainValidationError} from "../../errors/index.js";
 

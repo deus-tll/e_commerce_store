@@ -1,6 +1,6 @@
 import {BaseCacheRepository} from "./BaseCacheRepository.js";
 import {ICacheProvider} from "../../providers/cache/ICacheProvider.js";
-import {ProductDTO} from "../../../application/types/product.types.js";
+import {ProductDTO} from "../../../application/types/product.js";
 
 import {CacheKeys, PrefixCacheKeys} from "../../../constants/app.js";
 

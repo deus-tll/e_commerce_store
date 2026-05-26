@@ -1,4 +1,4 @@
-import {ProductFiltersInput, ProductParserContext, ProductQueryPersistence} from "../types/product.types.js";
+import {ProductFiltersInput, ProductParserContext, ProductQueryPersistence} from "../types/product.js";
 
 export function parseProductQuery(
 	filters: ProductFiltersInput,

@@ -3,15 +3,15 @@ import {Router} from "express";
 import {UserController} from "../controllers/UserController.js";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
-import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
-import {validationMiddleware} from "../middleware/validationMiddleware.js";
+import {adminRoute, createProtectRoute} from "../middleware/auth.js";
+import {validationMiddleware} from "../middleware/validation.js";
 
 import {
 	getAllUsersSchema,
 	userIdParamSchema,
 	createUserSchema,
 	updateUserSchema
-} from "../validators/userValidator.js";
+} from "../validators/user.js";
 
 export function setupUsersRouter(
 	userController: UserController,

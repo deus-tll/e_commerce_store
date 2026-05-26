@@ -9,9 +9,9 @@ import {
 	AttributeFacetDTO, ProductCreateInput, ProductCreatePersistence,
 	ProductDTO, ProductFiltersInput, ProductPaginationResultDTO,
 	ShortProductDTO, ProductUpdateInput, ProductUpdatePersistence
-} from "../types/product.types.js";
-import {CategoryDTO} from "../types/category.types.js";
-import {PaginationMetadata} from "../types/shared.types.js";
+} from "../types/product.js";
+import {CategoryDTO} from "../types/category.js";
+import {PaginationMetadata} from "../types/shared.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 

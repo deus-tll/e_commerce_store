@@ -2,8 +2,8 @@ import {Request, Response} from "express";
 
 import {ProductService} from "../../application/product/ProductService.js";
 import {CartService} from "../../application/cart/CartService.js";
-import {ProductCreateRequest, ProductGetAllQuery, ProductUpdateRequest} from "../requests/product.request.types.js";
-import {ParamsWithIdRequest} from "../requests/shared.request.types.js";
+import {ProductCreateRequest, ProductGetAllQuery, ProductUpdateRequest} from "../requests/product.js";
+import {ParamsWithIdRequest} from "../requests/shared.js";
 
 export class ProductController {
 	constructor(

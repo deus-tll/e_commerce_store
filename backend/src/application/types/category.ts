@@ -1,5 +1,5 @@
 import {CategoryEntity} from "../../entities/category/CategoryEntity.js";
-import {PaginationMetadata} from "./shared.types.js";
+import {PaginationMetadata} from "./shared.js";
 
 // INPUT DATA STRUCTURES
 //=======================

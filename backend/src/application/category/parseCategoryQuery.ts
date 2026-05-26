@@ -1,4 +1,4 @@
-import {CategoryFiltersInput, CategoryQueryPersistence} from "../types/category.types.js";
+import {CategoryFiltersInput, CategoryQueryPersistence} from "../types/category.js";
 
 export function parseCategoryQuery(filters: CategoryFiltersInput): CategoryQueryPersistence {
     const { search } = filters;

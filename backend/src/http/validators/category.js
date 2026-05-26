@@ -3,7 +3,7 @@ import {
 	categoryNameSchema,
 	categoryIdParam,
 	imageSchema, emptyParamAndBody, allowedAttributesSchema, categorySlugParam
-} from "./common.joi.js";
+} from "./common.js";
 
 /**
  * Joi schema for validating the POST /categories request (Create Category).
