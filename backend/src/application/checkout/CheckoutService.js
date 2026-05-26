@@ -11,7 +11,7 @@ import {
 	OrderProductItem,
 	PaymentMetadataDTO
 } from "../../domain/index.js";
-import {ShortProductDTO} from "../dtos/product.dto.js";
+import {ShortProductDTO} from "../types/product.types.ts";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 

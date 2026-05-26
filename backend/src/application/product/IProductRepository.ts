@@ -1,15 +1,15 @@
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
-import {RepositoryPaginationResult} from "../dtos/shared.dto.js";
+import {RepositoryPaginationResult} from "../types/shared.types.js";
 import {
 	AttributeFacetDTO,
-	CreateProductPersistence,
-	ProductPersistenceQuery,
-	UpdateProductPersistence
-} from "../dtos/product.dto.js";
+	ProductCreatePersistence,
+	ProductQueryPersistence,
+	ProductUpdatePersistence
+} from "../types/product.types.js";
 
 export abstract class IProductRepository {
-	abstract create(data: CreateProductPersistence): Promise<ProductEntity>;
-	abstract updateById(id: string, data: UpdateProductPersistence): Promise<ProductEntity>;
+	abstract create(data: ProductCreatePersistence): Promise<ProductEntity>;
+	abstract updateById(id: string, data: ProductUpdatePersistence): Promise<ProductEntity>;
 
 	/**
 	 * Atomically updates product rating statistics based on a review change.
@@ -40,12 +40,12 @@ export abstract class IProductRepository {
 		excludedIds: string[]
 	): Promise<ProductEntity[]>;
 	abstract findAndCount(
-		query: ProductPersistenceQuery,
+		query: ProductQueryPersistence,
 		skip: number, limit: number,
 		options: Record<string, string>
 	): Promise<RepositoryPaginationResult<ProductEntity>>;
 
-	abstract count(query: ProductPersistenceQuery): Promise<number>;
+	abstract count(query: ProductQueryPersistence): Promise<number>;
 	abstract exists(id: string): Promise<boolean>;
 	abstract getAttributeFacets(categoryId: string): Promise<AttributeFacetDTO[]>;
 }

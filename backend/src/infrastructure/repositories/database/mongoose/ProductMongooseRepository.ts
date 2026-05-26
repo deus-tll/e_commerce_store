@@ -6,10 +6,10 @@ import {ProductAdapter} from "./adapters/ProductAdapter.js";
 import {ProductEntity} from "../../../../entities/product/ProductEntity.js";
 import {
 	AttributeFacetDTO,
-	CreateProductPersistence,
-	ProductPersistenceQuery, UpdateProductPersistence
-} from "../../../../application/dtos/product.dto.js";
-import {RepositoryPaginationResult} from "../../../../application/dtos/shared.dto.js";
+	ProductCreatePersistence,
+	ProductQueryPersistence, ProductUpdatePersistence
+} from "../../../../application/types/product.types.js";
+import {RepositoryPaginationResult} from "../../../../application/types/shared.types.js";
 
 import {EntityNotFoundError} from "../../../../errors/index.js";
 
@@ -17,7 +17,7 @@ import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort} from "./utils.js";
 
 export class ProductMongooseRepository extends IProductRepository {
-	#buildMongooseQuery(query: ProductPersistenceQuery): FilterQuery<IProductDoc> {
+	#buildMongooseQuery(query: ProductQueryPersistence): FilterQuery<IProductDoc> {
 		const mongooseQuery: FilterQuery<IProductDoc> = {};
 
 		if (query.categoryId) {
@@ -39,13 +39,13 @@ export class ProductMongooseRepository extends IProductRepository {
 		return mongooseQuery;
 	}
 
-	async create(data: CreateProductPersistence): Promise<ProductEntity> {
+	async create(data: ProductCreatePersistence): Promise<ProductEntity> {
 		const persistenceDoc = ProductAdapter.toCreatePersistenceDoc(data);
 		const createdDoc = await Product.create(persistenceDoc);
 		return ProductAdapter.toEntity(createdDoc);
 	}
 
-	async updateById(id: string, data: UpdateProductPersistence): Promise<ProductEntity> {
+	async updateById(id: string, data: ProductUpdatePersistence): Promise<ProductEntity> {
 		const persistenceDoc = ProductAdapter.toUpdatePersistenceDoc(data);
 
 		const updatedDoc = await Product.findByIdAndUpdate(
@@ -138,7 +138,7 @@ export class ProductMongooseRepository extends IProductRepository {
 	}
 
 	async findAndCount(
-		query: ProductPersistenceQuery,
+		query: ProductQueryPersistence,
 		skip: number,
 		limit: number,
 		options: Record<string, string> = {}
@@ -231,7 +231,7 @@ export class ProductMongooseRepository extends IProductRepository {
 		return new RepositoryPaginationResult(productEntities, calculatedTotal);
 	}
 
-	async count(query: ProductPersistenceQuery = {}): Promise<number> {
+	async count(query: ProductQueryPersistence = {}): Promise<number> {
 		const baseQuery = this.#buildMongooseQuery(query);
 		return Product.countDocuments(baseQuery);
 	}

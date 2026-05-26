@@ -2,24 +2,21 @@ import {Request, Response} from "express";
 
 import {ProductService} from "../../application/product/ProductService.js";
 import {CartService} from "../../application/cart/CartService.js";
-import {CreateRequest, GetAllProductsQuery, UpdateRequest} from "../requests/productRequests.js";
-import {ParamsWithIdRequest} from "../requests/sharedRequests.js";
+import {ProductCreateRequest, ProductGetAllQuery, ProductUpdateRequest} from "../requests/product.request.types.js";
+import {ParamsWithIdRequest} from "../requests/shared.request.types.js";
 
 export class ProductController {
-	private readonly productService: ProductService;
-	private readonly cartService: CartService;
+	constructor(
+		private readonly productService: ProductService,
+		private readonly cartService: CartService
+	) {}
 
-	constructor(productService: ProductService, cartService: CartService) {
-		this.productService = productService;
-		this.cartService = cartService;
-	}
-
-	create = async (req: CreateRequest, res: Response): Promise<Response> => {
+	create = async (req: ProductCreateRequest, res: Response): Promise<Response> => {
 		const productDTO = await this.productService.create(req.body);
 		return res.status(201).json(productDTO);
 	}
 
-	update = async (req: UpdateRequest, res: Response): Promise<Response> => {
+	update = async (req: ProductUpdateRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const productDTO = await this.productService.update(id, req.body);
 
@@ -41,7 +38,7 @@ export class ProductController {
 	}
 
 	getAll = async (req: Request, res: Response): Promise<Response> => {
-		const query = req.query as unknown as GetAllProductsQuery;
+		const query = req.query as unknown as ProductGetAllQuery;
 		const { page, limit, ...filters } = query;
 		const paginationResult = await this.productService.getAll(page, limit, filters);
 
@@ -72,7 +69,7 @@ export class ProductController {
 	}
 
 	/**
-	 * Retrieves a list of recommended products based on a current cart items.
+	 * Retrieves a list of recommended products based on a current cart items list.
 	 */
 	getRecommended = async (req: Request, res: Response): Promise<Response> => {
 		let categoryIds = [];

@@ -1,16 +1,17 @@
-import {ProductFiltersInput, ProductParserContext, ProductPersistenceQuery} from "../dtos/product.dto.js";
+import {ProductFiltersInput, ProductParserContext, ProductQueryPersistence} from "../types/product.types.js";
 
 export function parseProductQuery(
 	filters: ProductFiltersInput,
 	context: ProductParserContext = { categoryId: null }
-): ProductPersistenceQuery {
-	const attributes: Record<string, string | string[]> = filters.attributes;
+): ProductQueryPersistence {
+	const { search, attributes } = filters;
+	const { categoryId } = context;
 
-	return {
-		...(context.categoryId && {categoryId: context.categoryId}),
-		...(filters.search && {search: filters.search}),
+	return Object.freeze({
+		...(categoryId && { categoryId }),
+		...(search && { search }),
 		...(attributes && Object.keys(attributes).length > 0 && {
 			attributes: structuredClone(attributes)
 		})
-	};
+	});
 }

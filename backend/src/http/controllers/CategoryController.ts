@@ -1,57 +1,42 @@
-import {Response} from "express";
+import {Request, Response} from "express";
 
 import {CategoryService} from "../../application/category/CategoryService.js";
-import {CreateCategoryDTO, UpdateCategoryDTO} from "../../application/dtos/category.dto.js";
-
-import {
-	CreateRequest,
-	UpdateRequest,
-	DeleteRequest,
-	GetAllRequest, GetBySlugRequest,
-} from "../requests/categoryRequests.js";
+import {CategoryCreateRequest, CategoryUpdateRequest, CategoryGetAllQuery} from "../requests/category.request.types.js";
+import {ParamsWithIdRequest, ParamsWithSlugRequest} from "../requests/shared.request.types.js";
 
 export class CategoryController {
-	private readonly categoryService: CategoryService;
+	constructor(
+		private readonly categoryService: CategoryService
+	) {}
 
-	constructor(categoryService: CategoryService) {
-		this.categoryService = categoryService;
-	}
-
-	create = async (req: CreateRequest, res: Response): Promise<Response> => {
-		const createCategoryDTO = new CreateCategoryDTO(req.body);
-		const categoryDTO = await this.categoryService.create(createCategoryDTO);
-
+	create = async (req: CategoryCreateRequest, res: Response): Promise<Response> => {
+		const categoryDTO = await this.categoryService.create(req.body);
 		return res.status(201).json(categoryDTO);
 	}
 
-	update = async (req: UpdateRequest, res: Response): Promise<Response> => {
+	update = async (req: CategoryUpdateRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
-
-		const updateCategoryDTO = new UpdateCategoryDTO(req.body);
-		const categoryDTO = await this.categoryService.update(id, updateCategoryDTO);
+		const categoryDTO = await this.categoryService.update(id, req.body);
 
 		return res.status(200).json(categoryDTO);
 	}
 
-	delete = async (req: DeleteRequest, res: Response): Promise<Response> => {
+	delete = async (req: ParamsWithIdRequest, res: Response): Promise<Response> => {
 		const { id } = req.params;
 		const categoryDTO = await this.categoryService.delete(id);
 
 		return res.status(200).json(categoryDTO);
 	}
 
-	getAll = async (req: GetAllRequest, res: Response): Promise<Response> => {
-		const { page, limit, ...filters } = req.query;
-		const result = await this.categoryService.getAll(
-			page,
-			limit,
-			{ ...filters }
-		);
+	getAll = async (req: Request, res: Response): Promise<Response> => {
+		const query = req.query as unknown as CategoryGetAllQuery;
+		const { page, limit, ...filters } = query;
+		const paginationResult = await this.categoryService.getAll(page, limit, filters);
 
-		return res.status(200).json(result);
+		return res.status(200).json(paginationResult);
 	}
 
-	getBySlug = async (req: GetBySlugRequest, res: Response): Promise<Response> => {
+	getBySlug = async (req: ParamsWithSlugRequest, res: Response): Promise<Response> => {
 		const { slug } = req.params;
 		const categoryDTO = await this.categoryService.getBySlugOrFail(slug);
 

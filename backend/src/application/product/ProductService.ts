@@ -6,12 +6,12 @@ import {ProductImageManager} from "./ProductImageManager.js";
 import {ProductAttribute, ProductImage} from "../../entities/product/ProductValueObjects.js";
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
 import {
-	AttributeFacetDTO, CreateProductDTO, CreateProductPersistence,
+	AttributeFacetDTO, ProductCreateInput, ProductCreatePersistence,
 	ProductDTO, ProductFiltersInput, ProductPaginationResultDTO,
-	ShortProductDTO, UpdateProductDTO, UpdateProductPersistence
-} from "../dtos/product.dto.js";
-import {CategoryDTO} from "../dtos/category.dto.js";
-import {PaginationMetadata} from "../dtos/shared.dto.js";
+	ShortProductDTO, ProductUpdateInput, ProductUpdatePersistence
+} from "../types/product.types.js";
+import {CategoryDTO} from "../types/category.types.js";
+import {PaginationMetadata} from "../types/shared.types.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 
@@ -116,7 +116,7 @@ export class ProductService {
 		};
 	}
 
-	async create(data: CreateProductDTO): Promise<ProductDTO> {
+	async create(data: ProductCreateInput): Promise<ProductDTO> {
 		const categoryDTO = await this.categoryService.getByIdOrFail(data.categoryId);
 
 		const { images, attributes, ...rest } = data;
@@ -124,7 +124,7 @@ export class ProductService {
 		const processedImages = await this.productImageManager.imageDataUploadOnCreate(images);
 		const filteredAttributes = this.filterAttributes(categoryDTO.allowedAttributes, attributes);
 
-		const persistenceData: CreateProductPersistence = {
+		const persistenceData: ProductCreatePersistence = {
 			...rest,
 			images: processedImages,
 			attributes: filteredAttributes
@@ -147,7 +147,7 @@ export class ProductService {
 		}
 	}
 
-	async update(id: string, data: UpdateProductDTO): Promise<ProductDTO> {
+	async update(id: string, data: ProductUpdateInput): Promise<ProductDTO> {
 		const existingEntity = await this.productRepository.findById(id);
 		if (!existingEntity) throw new EntityNotFoundError("Product", { id });
 
@@ -156,7 +156,7 @@ export class ProductService {
 		const attributes: ProductAttribute[] | undefined = await this.determineAttributesUpdate(existingEntity, data.categoryId, newAttributes);
 		const { images, urlsToDelete } = await this.determineImagesUpdate(existingEntity, newImages);
 
-		const persistenceData: UpdateProductPersistence = Object.freeze({
+		const persistenceData: ProductUpdatePersistence = Object.freeze({
 			...removeUndefinedFields(restOfData),
 			...(attributes !== undefined && { attributes }),
 			...(images !== undefined && { images }),

@@ -5,11 +5,10 @@ import {CategoryService} from "../../../application/category/CategoryService.js"
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
     DatabaseRepositoryTypes, ImageManagerTypes,
-    InfrastructureServiceTypes, MapperTypes,
-    ProviderTypes,
+    InfrastructureServiceTypes, ProviderTypes,
 } from "../../../constants/ioc.js";
-import {config} from "../../../config.js";
 
+import {config} from "../../../config.js";
 
 /**
  * @param {DIContainer} container
@@ -25,7 +24,7 @@ const registerApplicationServices = (container) => {
     });
 
     container.register(ApplicationServiceTypes.CATEGORY, CategoryService,
-        [DatabaseRepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY, MapperTypes.CATEGORY]
+        [DatabaseRepositoryTypes.CATEGORY, ImageManagerTypes.CATEGORY]
     );
 
     container.register(ApplicationServiceTypes.PRODUCT, () => {

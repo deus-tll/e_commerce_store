@@ -24,7 +24,6 @@ export const ProviderTypes = Object.freeze({
 });
 
 export const MapperTypes = Object.freeze({
-	CATEGORY: "CategoryMapper",
 	CART: "CartMapper",
 	REVIEW: "ReviewMapper",
 	ORDER: "OrderMapper",

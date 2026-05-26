@@ -1,7 +1,7 @@
 import {UpdateQuery} from "mongoose";
 
 import {IProductDoc} from "../models/Product.js";
-import {CreateProductPersistence, UpdateProductPersistence} from "../../../../../application/dtos/product.dto.js";
+import {ProductCreatePersistence, ProductUpdatePersistence} from "../../../../../application/types/product.types.js";
 import {ProductAttribute, ProductImage, ProductRatingStats} from "../../../../../entities/product/ProductValueObjects.js";
 import {ProductEntity} from "../../../../../entities/product/ProductEntity.js";
 
@@ -10,7 +10,7 @@ import {toObjectId, toPlainObject} from "../utils.js";
 export type CreateProductDocInput = Omit<IProductDoc, "_id" | "createdAt" | "updatedAt" | "ratingStats">;
 
 export class ProductAdapter {
-    static toCreatePersistenceDoc(data: CreateProductPersistence): CreateProductDocInput {
+    static toCreatePersistenceDoc(data: ProductCreatePersistence): CreateProductDocInput {
         const { categoryId, ...rest } = data;
 
         return {
@@ -19,7 +19,7 @@ export class ProductAdapter {
         } as unknown as CreateProductDocInput;
     }
 
-    static toUpdatePersistenceDoc(data: UpdateProductPersistence): UpdateQuery<IProductDoc> {
+    static toUpdatePersistenceDoc(data: ProductUpdatePersistence): UpdateQuery<IProductDoc> {
         const { categoryId, ...rest } = data;
 
         return {

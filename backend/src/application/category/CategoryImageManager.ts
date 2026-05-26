@@ -1,12 +1,11 @@
 import {CategoryStorageService} from "../shared/storage/AppStorageServices.js";
 import {DomainValidationError} from "../../errors/index.js";
+import {ImageTracker, withSafeUpload} from "../shared/utils/withSafeUpload.js";
 
 export class CategoryImageManager {
-	private readonly categoryStorageService: CategoryStorageService;
-
-	constructor(categoryStorageManager: CategoryStorageService) {
-		this.categoryStorageService = categoryStorageManager;
-	}
+	constructor(
+		private readonly categoryStorageService: CategoryStorageService
+	) {}
 
 	private validatePresence(value: string | null | undefined): void {
 		if (!value) {
@@ -24,13 +23,15 @@ export class CategoryImageManager {
 			return existingImageData as string;
 		}
 
-		const finalImageUrl = await this.categoryStorageService.upload(newImageData);
+		return withSafeUpload(this.categoryStorageService, async (track: ImageTracker) => {
+			const finalImageUrl = await track(newImageData);
 
-		if (existingImageData) {
-			await this.categoryStorageService.delete(existingImageData);
-		}
+			if (existingImageData) {
+				await this.categoryStorageService.delete(existingImageData);
+			}
 
-		return finalImageUrl;
+			return finalImageUrl;
+		})
 	}
 
 	async deleteByUrl(url: string): Promise<void> {

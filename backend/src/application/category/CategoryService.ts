@@ -1,102 +1,121 @@
 import {ICategoryRepository} from "./ICategoryRepository.js";
 import {CategoryImageManager} from "./CategoryImageManager.js";
-import {CategoryMapper} from "./CategoryMapper.js";
 
+import {CategoryEntity} from "../../entities/category/CategoryEntity.js";
 import {
-	CategoryDTO,
+	CategoryDTO, CategoryFiltersInput,
 	CategoryPaginationResultDTO,
-	CreateCategoryDTO,
-	CreateCategoryPersistence,
-	UpdateCategoryDTO
-} from "../dtos/category.dto.js";
-import {PaginationMetadata} from "../dtos/shared.dto.js";
+	CategoryCreateInput,
+	CategoryCreatePersistence,
+	CategoryUpdateInput, CategoryUpdatePersistence
+} from "../types/category.types.js";
+import {PaginationMetadata} from "../types/shared.types.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
+
 import {Slug} from "../../utils/slug.js";
+import {removeUndefinedFields} from "../../utils/object.js";
+import {parseCategoryQuery} from "./parseCategoryQuery.js";
 
 export class CategoryService {
-	private readonly categoryRepository: ICategoryRepository;
-	private readonly categoryImageManager: CategoryImageManager;
-	private readonly categoryMapper: CategoryMapper;
-
 	constructor(
-		categoryRepository: ICategoryRepository,
-		categoryImageManager: CategoryImageManager,
-		categoryMapper: CategoryMapper
-	) {
-		this.categoryRepository = categoryRepository;
-		this.categoryImageManager = categoryImageManager;
-		this.categoryMapper = categoryMapper;
+		private readonly categoryRepository: ICategoryRepository,
+		private readonly categoryImageManager: CategoryImageManager
+	) {}
+
+	private toDTO(entity: CategoryEntity): CategoryDTO {
+		return new CategoryDTO(entity);
 	}
 
-	async create(data: CreateCategoryDTO): Promise<CategoryDTO> {
-		const persistenceData: CreateCategoryPersistence = {
-			name: data.name,
-			allowedAttributes: data.allowedAttributes,
-			slug: Slug.generate(data.name),
+	toDTOs(entities: CategoryEntity[]): CategoryDTO[] {
+		return entities.map(entity => this.toDTO(entity));
+	}
+
+	private async getEntityByIdOrFail(id: string): Promise<CategoryEntity> {
+		const category = await this.categoryRepository.findById(id);
+		if (!category) throw new EntityNotFoundError("Category", { id });
+		return category;
+	}
+
+	async create(data: CategoryCreateInput): Promise<CategoryDTO> {
+		const { name, image, ...rest } = data;
+
+		const persistenceData: CategoryCreatePersistence = Object.freeze({
+			...rest,
+			name,
+			slug: Slug.generate(name),
 			image: await this.categoryImageManager.imageDataUploadOnCreateUpdate(
-				data.image,
+				image,
 				null
 			)
-		}
+		} satisfies CategoryCreatePersistence);
 
 		const createdEntity = await this.categoryRepository.create(persistenceData);
-		return this.categoryMapper.toDTO(createdEntity);
+		return this.toDTO(createdEntity);
 	}
 
-	async update(id: string, data: UpdateCategoryDTO): Promise<CategoryDTO> {
-		const existingEntity = await this.categoryRepository.findById(id);
-		if (!existingEntity) throw new EntityNotFoundError("Category", { id });
+	async update(id: string, data: CategoryUpdateInput): Promise<CategoryDTO> {
+		const existingEntity = await this.getEntityByIdOrFail(id);
 
-		const persistenceData = { ...data.toPersistence() };
+		const { name: newName, image: newImage, ...restOfData } = data;
+		const baseData = removeUndefinedFields(restOfData);
 
-		if (data.name !== undefined && data.name !== existingEntity.name) {
-			persistenceData.slug = Slug.generate(data.name);
-		}
+		const nameUpdate = newName !== undefined && newName !== existingEntity.name && {
+			name: newName,
+			slug: Slug.generate(newName)
+		} satisfies Pick<CategoryUpdatePersistence, 'name' | 'slug'>;
 
-		if (data.image !== undefined && data.image !== "") {
-			persistenceData.image = await this.categoryImageManager.imageDataUploadOnCreateUpdate(
-				data.image,
+		const imageUpdate = newImage !== undefined && newImage !== "" && {
+			image: await this.categoryImageManager.imageDataUploadOnCreateUpdate(
+				newImage,
 				existingEntity.image
-			);
-		}
+			),
+		} satisfies Pick<CategoryUpdatePersistence, 'image'>;
+
+		const persistenceData: CategoryUpdatePersistence = Object.freeze({
+			...baseData,
+			...nameUpdate,
+			...imageUpdate
+		} satisfies CategoryUpdatePersistence);
 
 		const updatedCategory = await this.categoryRepository.updateById(id, persistenceData);
-		return this.categoryMapper.toDTO(updatedCategory);
+		return this.toDTO(updatedCategory);
 	}
 
 	async delete(id: string): Promise<CategoryDTO> {
 		const deletedCategory = await this.categoryRepository.deleteById(id);
 		await this.categoryImageManager.deleteByUrl(deletedCategory.image);
-		return this.categoryMapper.toDTO(deletedCategory);
+		return this.toDTO(deletedCategory);
 	}
 
 	async getAll(
 		page: number = 1,
 		limit: number = 10,
-		filters: Record<string, any> = {}
+		filters: CategoryFiltersInput = {}
 	): Promise<CategoryPaginationResultDTO> {
 		const skip = (page - 1) * limit;
 
-		const { results, total } = await this.categoryRepository.findAndCount(filters, skip, limit);
+		const query = parseCategoryQuery(filters);
+
+		const { results, total } = await this.categoryRepository.findAndCount(query, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const categoryDTOs = this.categoryMapper.toDTOs(results);
+		const categoryDTOs = this.toDTOs(results);
 
-		return new CategoryPaginationResultDTO({
-			categories: categoryDTOs,
-			pagination: new PaginationMetadata(page, limit, total, pages)
-		});
+		return new CategoryPaginationResultDTO(
+			categoryDTOs,
+			new PaginationMetadata(page, limit, total, pages)
+		);
 	}
 
 	async getDTOsByIds(ids: string[]): Promise<CategoryDTO[]> {
 		const entities = await this.categoryRepository.findByIds(ids);
-		return this.categoryMapper.toDTOs(entities);
+		return this.toDTOs(entities);
 	}
 
 	async getById(id: string): Promise<CategoryDTO | null> {
 		const category = await this.categoryRepository.findById(id);
-		return category ? this.categoryMapper.toDTO(category) : null;
+		return category ? this.toDTO(category) : null;
 	}
 
 	async getByIdOrFail(id: string): Promise<CategoryDTO> {
@@ -107,7 +126,7 @@ export class CategoryService {
 
 	async getBySlug(slug: string): Promise<CategoryDTO | null> {
 		const category = await this.categoryRepository.findBySlug(slug);
-		return category ? this.categoryMapper.toDTO(category) : null;
+		return category ? this.toDTO(category) : null;
 	}
 
 	async getBySlugOrFail(slug: string): Promise<CategoryDTO> {

@@ -7,7 +7,7 @@ export class CategoryEntity {
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
 
-    constructor(data: { id: string; name: string; slug: string; image: string; allowedAttributes: string[]; createdAt: Date; updatedAt: Date; }) {
+    constructor(data: { id: string; name: string; slug: string; image: string; allowedAttributes: readonly string[]; createdAt: Date; updatedAt: Date; }) {
         this.id = data.id;
         this.name = data.name;
         this.slug = data.slug;

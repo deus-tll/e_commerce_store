@@ -2,17 +2,22 @@ import {FilterQuery} from "mongoose";
 
 import Category, {ICategoryDoc} from "./models/Category.js";
 
-import {CategoryEntity} from "../../../../entities/category/CategoryEntity.js";
 import {ICategoryRepository} from "../../../../application/category/ICategoryRepository.js";
-import {CreateCategoryPersistence, UpdateCategoryPersistence} from "../../../../application/dtos/category.dto.js";
-import {RepositoryPaginationResult} from "../../../../application/dtos/shared.dto.js";
-import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 import {CategoryAdapter} from "./adapters/CategoryAdapter.js";
+import {CategoryEntity} from "../../../../entities/category/CategoryEntity.js";
+import {
+	CategoryCreatePersistence,
+	CategoryUpdatePersistence,
+	CategoryQueryPersistence
+} from "../../../../application/types/category.types.js";
+import {RepositoryPaginationResult} from "../../../../application/types/shared.types.js";
+
+import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 
 import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 
 export class CategoryMongooseRepository extends ICategoryRepository {
-	#buildMongooseQuery(query: Record<string, any>) : FilterQuery<ICategoryDoc> {
+	#buildMongooseQuery(query: CategoryQueryPersistence) : FilterQuery<ICategoryDoc> {
 		const mongooseQuery: FilterQuery<ICategoryDoc> = {};
 
 		if (query.search) {
@@ -23,7 +28,7 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 		return mongooseQuery;
 	}
 
-	async create(data: CreateCategoryPersistence): Promise<CategoryEntity> {
+	async create(data: CategoryCreatePersistence): Promise<CategoryEntity> {
 		try {
 			const createdDoc = await Category.create(data);
 			return CategoryAdapter.toEntity(createdDoc);
@@ -31,14 +36,14 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 		catch (error: any) {
 			if (error.code === 11000) {
 				const keyPattern = error['keyPattern'];
-				const key = Object.keys(keyPattern)[0] as keyof CreateCategoryPersistence;
+				const key = Object.keys(keyPattern)[0] as keyof CategoryCreatePersistence;
 				throw new EntityAlreadyExistsError("Category", { [key]: data[key] });
 			}
 			throw error;
 		}
 	}
 
-	async updateById(id: string, data: UpdateCategoryPersistence): Promise<CategoryEntity> {
+	async updateById(id: string, data: CategoryUpdatePersistence): Promise<CategoryEntity> {
 		const updatedDoc = await Category.findByIdAndUpdate(
 			id,
 			{ $set: data },
@@ -69,7 +74,7 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 	}
 
 	async findAndCount(
-		query: Record<string, any>,
+		query: CategoryQueryPersistence,
 		skip: number,
 		limit: number
 	): Promise<RepositoryPaginationResult<CategoryEntity>> {

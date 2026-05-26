@@ -1,9 +1,12 @@
 import {ProductAttribute, ProductImage, ProductRatingStats} from "../../entities/product/ProductValueObjects.js";
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
-import {CategoryDTO} from "./category.dto.js";
-import {PaginationMetadata} from "./shared.dto.js";
+import {CategoryDTO} from "./category.types.js";
+import {PaginationMetadata} from "./shared.types.js";
 
-export interface CreateProductDTO {
+// INPUT DATA STRUCTURES
+//=======================
+
+export interface ProductCreateInput {
     name: string;
     description: string;
     price: number;
@@ -14,16 +17,7 @@ export interface CreateProductDTO {
     isFeatured: boolean;
 }
 
-export interface UpdateProductDTO {
-    name?: string;
-    description?: string;
-    price?: number;
-    stock?: number;
-    images?: Partial<ProductImage>;
-    categoryId?: string;
-    attributes?: ProductAttribute[];
-    isFeatured?: boolean;
-}
+export type ProductUpdateInput = Partial<ProductCreateInput>;
 
 export interface ProductFiltersInput {
     categorySlug?: string;
@@ -32,24 +26,20 @@ export interface ProductFiltersInput {
     sortBy?: 'price' | 'createdAt' | 'name' | 'ratingStats.averageRating';
     order?: 'asc' | 'desc';
 }
-
 export interface ProductParserContext {
     categoryId: string | null;
 }
 
-export type CreateProductPersistence = Pick<
-    ProductEntity,
-    "name" | "description" | "price" |
-    "stock" | "images" | "categoryId" |
-    "attributes" | "isFeatured"
->;
-export type UpdateProductPersistence = Partial<CreateProductPersistence>;
+export type ProductCreatePersistence = ProductCreateInput;
 
-export interface ProductPersistenceQuery {
-    categoryId?: string;
-    search?: string;
-    attributes?: Record<string, string | string[]>;
-}
+export type ProductUpdatePersistence = Partial<ProductCreatePersistence>;
+
+export type ProductQueryPersistence =
+    Omit<ProductFiltersInput, "categorySlug" | "sortBy" | "order"> &
+    { categoryId?: string };
+
+// OUTPUT DATA STRUCTURES
+//=======================
 
 export class ProductDTO {
     public readonly id: string;

@@ -8,8 +8,6 @@ import {
     CreateReviewDTO
 } from "../domain/index.js";
 import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
-import {CreateCategoryDTO} from "../application/dtos/category.dto.js";
-
 
 import {BaseSeeder} from "./BaseSeeder.js";
 
@@ -120,7 +118,8 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         }
 
         const categoryName = this.#formatName(slug);
-        const dto = new CreateCategoryDTO({
+        // CreateCategoryDTO
+        const dto = {
             name: categoryName,
             image: fallbackImage,
             allowedAttributes: [
@@ -130,7 +129,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
                 ALLOWED_ATTRIBUTES.HEIGHT,
                 ALLOWED_ATTRIBUTES.DEPTH
             ],
-        });
+        };
 
         const created = await this.#categoryService.create(dto);
         this.#categoryMap.set(slug, created.id);
@@ -169,6 +168,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
         ifPresentThenPush(ALLOWED_ATTRIBUTES.HEIGHT, p.dimensions?.height);
         ifPresentThenPush(ALLOWED_ATTRIBUTES.DEPTH, p.dimensions?.depth);
 
+        // CreateProductDTO
         const dto = {
             name: p.title,
             description: p.description,
