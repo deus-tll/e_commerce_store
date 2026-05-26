@@ -12,7 +12,7 @@ import {
 	productIdSchema, getAllProductsPublicSchema
 } from "../validators/productValidator.js";
 
-export function createProductsRouter(
+export function setupProductsRouter(
 	productController: ProductController,
 	authService: SessionAuthService
 ): Router {
@@ -20,48 +20,18 @@ export function createProductsRouter(
 
 	const protectRoute = createProtectRoute(authService);
 
-	// GET
-	router.get("/categories/:id/facets",
-		validationMiddleware(productIdSchema),
-		productController.getFacets
-	);
+	router.get("/categories/:id/facets", validationMiddleware(productIdSchema), productController.getFacets);
 	router.get("/featured", productController.getFeatured);
 	router.get("/recommended", protectRoute, productController.getRecommended);
-	router.get("/",
-		validationMiddleware(getAllProductsPublicSchema),
-		productController.getAll
-	);
+	router.get("/", validationMiddleware(getAllProductsPublicSchema), productController.getAll);
 	router.get("/:id", validationMiddleware(productIdSchema), productController.getById);
 
-	// POST
-	router.post("/",
-		protectRoute,
-		adminRoute,
-		validationMiddleware(createProductSchema),
-		productController.create
-	);
+	router.post("/", protectRoute, adminRoute, validationMiddleware(createProductSchema), productController.create);
 
-	// PATCH
-	router.patch("/:id/featured",
-		protectRoute,
-		adminRoute,
-		validationMiddleware(productIdSchema),
-		productController.toggleFeatured
-	);
-	router.patch("/:id",
-		protectRoute,
-		adminRoute,
-		validationMiddleware(updateProductSchema),
-		productController.update
-	);
+	router.patch("/:id/featured", protectRoute, adminRoute, validationMiddleware(productIdSchema), productController.toggleFeatured);
+	router.patch("/:id", protectRoute, adminRoute, validationMiddleware(updateProductSchema), productController.update);
 
-	// DELETE
-	router.delete("/:id",
-		protectRoute,
-		adminRoute,
-		validationMiddleware(productIdSchema),
-		productController.delete
-	);
+	router.delete("/:id", protectRoute, adminRoute, validationMiddleware(productIdSchema), productController.delete);
 
 	return router;
 }

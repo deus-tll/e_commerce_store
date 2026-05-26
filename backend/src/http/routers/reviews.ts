@@ -1,7 +1,7 @@
-import express from "express";
+import {Router} from "express";
 
 import {ReviewController} from "../controllers/ReviewController.js";
-import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
+import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
 import {createProtectRoute} from "../middleware/authMiddleware.js";
 import {validationMiddleware} from "../middleware/validationMiddleware.js";
@@ -13,19 +13,16 @@ import {
 	getReviewsByProductSchema
 } from "../validators/reviewValidator.js";
 
-/**
- * A factory that creates and configures the Reviews router, injecting necessary dependencies.
- * @param {ReviewController} reviewController
- * @param {ISessionAuthService} authService - The authentication service instance, required for protectRoute.
- * @returns {express.Router | core.Router} - Configured Express router.
- */
-export function createReviewsRouter(reviewController, authService) {
-	const router = express.Router();
+export function setupReviewsRouter(
+	reviewController: ReviewController,
+	authService: SessionAuthService
+): Router {
+	const router = Router();
 
 	const protectRoute = createProtectRoute(authService);
 
-	router.post("/product/:id", protectRoute, validationMiddleware(createReviewSchema), reviewController.create);
 	router.get("/product/:id", validationMiddleware(getReviewsByProductSchema), reviewController.getByProduct);
+	router.post("/product/:id", protectRoute, validationMiddleware(createReviewSchema), reviewController.create);
 	router.patch("/:reviewId", protectRoute, validationMiddleware(updateReviewSchema), reviewController.update);
 	router.delete("/:reviewId", protectRoute, validationMiddleware(deleteReviewSchema), reviewController.delete);
 

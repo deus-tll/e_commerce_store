@@ -85,7 +85,7 @@ export const ServiceTypes = Object.freeze({
 	COUPON: "ICouponService",
 
 	ANALYTICS: "IAnalyticsService",
-	SESSION_AUTH: "ISessionAuthService",
+	SESSION_AUTH: "SessionAuthService",
 
 	CHECKOUT: "ICheckoutService",
 });
@@ -101,20 +101,6 @@ export const ControllerTypes = Object.freeze({
 	PRODUCT: "ProductController",
 	REVIEW: "ReviewController",
 	USER: "UserController"
-});
-
-export const RouterTypes = Object.freeze({
-	AUTH: "authRouter",
-	ANALYTICS: "analyticsRouter",
-	CART: "cartRouter",
-	CATEGORY: "categoriesRouter",
-	COUPON: "couponsRouter",
-	ORDER: "ordersRouter",
-	PAYMENT: "paymentsRouter",
-	PAYMENT_WEBHOOK: "paymentsWebhookRouter",
-	PRODUCT: "productsRouter",
-	REVIEW: "reviewsRouter",
-	USER: "usersRouter",
 });
 
 export const SeederTypes = Object.freeze({

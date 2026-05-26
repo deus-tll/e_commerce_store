@@ -1,15 +1,10 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
+import {Request, Response, NextFunction, RequestHandler} from "express";
+import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
 import {InvalidTokenError, UnauthenticatedError, AccountNotVerifiedError, ForbiddenError} from "../../errors/index.js"
 import {UserRoles} from "../../constants/app.js";
 
-/**
- * A factory that creates the 'protectRoute' middleware, injecting dependencies.
- * @param {ISessionAuthService} authService - Injected authentication service.
- * @returns {function} - Middleware function Express.
- */
-export const createProtectRoute = (authService: ISessionAuthService) : RequestHandler => {
+export const createProtectRoute = (authService: SessionAuthService) : RequestHandler => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const accessToken = req.cookies?.accessToken;
 

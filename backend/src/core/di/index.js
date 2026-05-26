@@ -13,7 +13,6 @@ import registerValidators from "./registrations/validators.js";
 import registerApplicationServices from "./registrations/applicationServices.js";
 import registerDomainServices from "./registrations/domainServices.js";
 import registerControllers from "./registrations/controllers.js";
-import registerRouters from "./registrations/routers.js";
 import registerSeeders from "./registrations/seeders.js";
 
 const initContainer = () => {
@@ -32,7 +31,6 @@ const initContainer = () => {
     registerApplicationServices(container);
     registerDomainServices(container);
     registerControllers(container);
-    registerRouters(container);
     registerSeeders(container);
 
     return container;

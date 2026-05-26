@@ -1,7 +1,7 @@
-import express from "express";
+import {Router} from "express";
 
 import {UserController} from "../controllers/UserController.js";
-import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
+import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
 import {adminRoute, createProtectRoute} from "../middleware/authMiddleware.js";
 import {validationMiddleware} from "../middleware/validationMiddleware.js";
@@ -13,14 +13,11 @@ import {
 	updateUserSchema
 } from "../validators/userValidator.js";
 
-/**
- * A factory that creates and configures the User router, injecting necessary dependencies.
- * @param {UserController} userController
- * @param {ISessionAuthService} authService - The authentication service instance, required for protectRoute.
- * @returns {express.Router | core.Router} - Configured Express router.
- */
-export function createUsersRouter(userController, authService) {
-	const router = express.Router();
+export function setupUsersRouter(
+	userController: UserController,
+	authService: SessionAuthService
+): Router {
+	const router = Router();
 
 	const protectRoute = createProtectRoute(authService);
 
@@ -30,8 +27,11 @@ export function createUsersRouter(userController, authService) {
 	router.get("/", validationMiddleware(getAllUsersSchema), userController.getAll);
 	router.get("/stats", userController.getStats);
 	router.get("/:userId", validationMiddleware(userIdParamSchema), userController.getById);
+
 	router.post("/", validationMiddleware(createUserSchema), userController.create);
+
 	router.patch("/:userId", validationMiddleware(updateUserSchema), userController.update);
+
 	router.delete("/:userId", validationMiddleware(userIdParamSchema), userController.delete);
 
 	return router;
