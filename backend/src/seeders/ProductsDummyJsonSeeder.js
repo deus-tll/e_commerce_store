@@ -1,17 +1,16 @@
+import {BaseSeeder} from "./BaseSeeder.js";
 import {CategoryService} from "../application/category/CategoryService.js";
 import {ProductService} from "../application/product/ProductService.js";
 import {IUserService} from "../interfaces/user/IUserService.js";
 import {IReviewService} from "../interfaces/review/IReviewService.js";
 
+import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
 import {
     CreateUserDTO,
     CreateReviewDTO
 } from "../domain/index.js";
-import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
 
-import {BaseSeeder} from "./BaseSeeder.js";
-
-import {UserRoles} from "../constants/app.js";
+import {UserRole} from "../enums/application.ts";
 
 /**
  * @typedef {Object} DummyJsonProduct
@@ -202,7 +201,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
             name: reviewData.reviewerName,
             email: email,
             password: this.#defaultSeederUserPassword,
-            role: UserRoles.CUSTOMER,
+            role: UserRole.CUSTOMER,
             isVerified: true
         });
 

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import {OrderStatus, OrderStatusValues} from "../../../../../constants/domain.js";
+import {OrderStatus, OrderStatusValues} from "../../../../../enums/application.ts";
+
 
 /**
  * Defines the schema for a single product item within an order.

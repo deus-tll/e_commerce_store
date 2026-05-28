@@ -2,7 +2,7 @@ import {IUserService} from "../interfaces/user/IUserService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
 import {CreateUserDTO} from "../domain/index.js";
 
-import {UserRoles} from "../constants/app.js";
+import {UserRole} from "../enums/application.ts";
 
 export class AdminSeeder  extends BaseSeeder {
 	/** @type {IUserService} */ #userService;
@@ -42,7 +42,7 @@ export class AdminSeeder  extends BaseSeeder {
 				name: this.#adminName,
 				email: this.#adminEmail,
 				password: this.#adminPassword,
-				role: UserRoles.ADMIN,
+				role: UserRole.ADMIN,
 				isVerified: true
 			});
 

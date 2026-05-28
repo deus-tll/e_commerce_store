@@ -9,7 +9,7 @@ import {config} from "../../../config.js";
  */
 const registerCookieManagers = (container) => {
     container.register(CookieManagerTypes.AUTH, () => {
-        return new AuthCookieManager(config.auth.refresh.ttl, config.app.isProduction, config.app.forceDisableSecureCookies);
+        return new AuthCookieManager(config.infrastructure.security.jwt.refresh.ttl, config.server.isProduction, config.server.forceDisableSecureCookies);
     });
 }
 

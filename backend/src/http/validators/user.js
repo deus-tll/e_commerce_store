@@ -8,7 +8,7 @@ import {
 	passwordSchema
 } from "./common.js";
 
-import {UserRoles} from "../../constants/app.js";
+import {UserRole} from "../../enums/application.ts";
 
 /**
  * Joi schema for validating the POST /users request (User Creation).
@@ -20,7 +20,7 @@ export const createUserSchema = Joi.object({
 		email: emailSchema.required().messages({'any.required': 'Email is required.'}),
 		password: passwordSchema.required().messages({'any.required': 'Password is required.'}),
 
-		role: userRole.default(UserRoles.CUSTOMER),
+		role: userRole.default(UserRole.CUSTOMER),
 
 		isVerified: Joi.boolean()
 			.default(false)
@@ -107,10 +107,10 @@ export const getAllUsersSchema = Joi.object({
 
 		role: Joi.string()
 			.trim()
-			.valid(UserRoles.CUSTOMER, UserRoles.ADMIN)
+			.valid(UserRole.CUSTOMER, UserRole.ADMIN)
 			.optional()
 			.messages({
-				'any.only': `Role filter must be one of: ${UserRoles.CUSTOMER}, ${UserRoles.ADMIN}.`
+				'any.only': `Role filter must be one of: ${UserRole.CUSTOMER}, ${UserRole.ADMIN}.`
 			}),
 
 		isVerified: Joi.boolean()

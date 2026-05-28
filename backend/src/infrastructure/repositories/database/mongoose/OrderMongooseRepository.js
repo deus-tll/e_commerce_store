@@ -5,10 +5,11 @@ import {IOrderRepository} from "../../../../application/order/IOrderRepository.j
 import {SalesSummaryDTO, DailySalesSummaryDTO, RepositoryPaginationResult} from "../../../../domain/index.js";
 import {MongooseAdapter} from "./adapters/MongooseAdapter.js";
 
-import {EntityAlreadyExistsError, EntityNotFoundError, SystemError} from "../../../../errors/index.ts";
+import {EntityAlreadyExistsError, EntityNotFoundError, SystemError} from "../../../../errors/index.js";
+
+import {OrderStatus} from "../../../../enums/application.js";
 
 import {determineSort, toObjectId} from "./utils.js";
-import {OrderStatus} from "../../../../constants/domain.js";
 
 export class OrderMongooseRepository extends IOrderRepository {
 	#buildMongooseQuery(query) {

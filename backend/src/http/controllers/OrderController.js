@@ -1,7 +1,7 @@
-import { IOrderService } from "../../interfaces/order/IOrderService.js";
-import {UserRoles} from "../../constants/app.js";
+import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {ForbiddenError} from "../../errors/index.ts";
-import {OrderStatus} from "../../constants/domain.js";
+
+import {OrderStatus, UserRole} from "../../enums/application.ts";
 
 /**
  * Handles incoming HTTP requests related to orders.
@@ -55,7 +55,7 @@ export class OrderController {
 		const { id } = req.params;
 		const { id: userId, role } = req.user;
 
-		const orderDTO = role === UserRoles.ADMIN
+		const orderDTO = role === UserRole.ADMIN
 			? await this.#orderService.getByIdOrFail(id)
 			: await this.#orderService.getByIdAndUserOrFail(id, userId);
 

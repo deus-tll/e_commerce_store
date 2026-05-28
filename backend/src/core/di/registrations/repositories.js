@@ -33,7 +33,7 @@ const registerRepositories = (container) => {
 
         return new AuthCacheRepository(
             cacheProvider,
-            config.auth.refresh.ttl
+            config.infrastructure.security.jwt.refresh.ttl
         );
     });
     container.register(CacheRepositoryTypes.PRODUCT, ProductCacheRepository, [ProviderTypes.CACHE]);

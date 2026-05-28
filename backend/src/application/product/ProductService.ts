@@ -24,7 +24,7 @@ export class ProductService {
 		private readonly categoryService: CategoryService,
 		private readonly productCacheRepository: ProductCacheRepository,
 		private readonly productImageManager: ProductImageManager,
-		private readonly recommendationsSize: number
+		private readonly recommendationsInCartSize: number
 	) {}
 
 	private async formProductDTO(entity: ProductEntity, categoryDTO?: CategoryDTO): Promise<ProductDTO> {
@@ -252,7 +252,7 @@ export class ProductService {
 
 	async getRecommended(categoryIds: string[], excludedProductIds: string[]): Promise<ProductDTO[]> {
 		const entities = await this.productRepository.findByCategoryIdsExcludingProductIds(
-			this.recommendationsSize,
+			this.recommendationsInCartSize,
 			categoryIds,
 			excludedProductIds
 		);

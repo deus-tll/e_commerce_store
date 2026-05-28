@@ -15,7 +15,7 @@ import {ShortProductDTO} from "../types/product.ts";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 
-import {OrderStatus} from "../../constants/domain.js";
+import {OrderStatus} from "../../enums/application.ts";
 import {PaymentEventTypes} from "../../enums/payment.js";
 import {Currency} from "../../utils/currency.js";
 

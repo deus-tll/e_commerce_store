@@ -8,7 +8,7 @@ import {AuthCacheRepository} from "../../infrastructure/repositories/cache/AuthC
 
 import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.ts";
 
-import {TokenTypes} from "../../constants/auth.js";
+import {TokenType} from "../../enums/auth.ts";
 
 /**
  * Implements the ISessionAuthService contract, focusing only on active user
@@ -59,7 +59,7 @@ export class SessionAuthService extends ISessionAuthService {
 	async logout(refreshToken) {
 		if (refreshToken) {
 			try {
-				const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
+				const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenType.REFRESH_TOKEN);
 				await this.#authCacheRepository.removeRefreshToken(decoded.userId);
 			}
 			catch (error) {
@@ -73,7 +73,7 @@ export class SessionAuthService extends ISessionAuthService {
 	}
 
 	async validateAccessToken(token) {
-		const decoded = this.#jwtProvider.verifyToken(token, TokenTypes.ACCESS_TOKEN);
+		const decoded = this.#jwtProvider.verifyToken(token, TokenType.ACCESS_TOKEN);
 		const userDTO = await this.#userService.getByIdOrFail(decoded.userId);
 
 		return new ValidateTokenDTO(decoded.userId, userDTO);
@@ -84,7 +84,7 @@ export class SessionAuthService extends ISessionAuthService {
 			throw new InvalidTokenError("No refresh token provided");
 		}
 
-		const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenTypes.REFRESH_TOKEN);
+		const decoded = this.#jwtProvider.verifyToken(refreshToken, TokenType.REFRESH_TOKEN);
 
 		const { userId } = decoded;
 

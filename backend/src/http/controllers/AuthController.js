@@ -4,7 +4,7 @@ import {CreateUserDTO} from "../../domain/index.js";
 
 import {AuthCookieManager} from "../cookies/AuthCookieManager.js";
 
-import {UserRoles} from "../../constants/app.js";
+import {UserRole} from "../../enums/application.ts";
 
 /**
  * Handles incoming HTTP requests related to user authentication and account management.
@@ -38,7 +38,7 @@ export class AuthController {
 	signup = async (req, res) => {
 		const createUserDTO = new CreateUserDTO({
 			...req.body,
-			role: UserRoles.CUSTOMER,
+			role: UserRole.CUSTOMER,
 			isVerified: false,
 		});
 

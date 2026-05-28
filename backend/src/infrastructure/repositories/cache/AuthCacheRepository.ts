@@ -1,8 +1,9 @@
 import {BaseCacheRepository} from "./BaseCacheRepository.js";
 import {ICacheProvider} from "../../providers/cache/ICacheProvider.js";
 
+import {CacheKey, PrefixCacheKey} from "../../../enums/application.js";
+
 import {DateTime} from "../../../utils/dateTime.js";
-import {CacheKeys, PrefixCacheKeys} from "../../../constants/app.js";
 
 export class AuthCacheRepository extends BaseCacheRepository {
 	private readonly refreshTokenTtlInSeconds: number;
@@ -13,7 +14,7 @@ export class AuthCacheRepository extends BaseCacheRepository {
 	}
 
 	protected override get cacheContextPrefix(): string {
-		return `${PrefixCacheKeys.AUTH}:${CacheKeys.REFRESH_TOKEN}`;
+		return `${PrefixCacheKey.AUTH}:${CacheKey.REFRESH_TOKEN}`;
 	}
 
 	async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {

@@ -18,7 +18,7 @@ const registerApplicationServices = (container) => {
     container.register(ApplicationServiceTypes.EMAIL_NOTIFICATION, () => {
         const emailProvider = container.get(ProviderTypes.EMAIL);
         const templateService = container.get(InfrastructureServiceTypes.TEMPLATE);
-        const resetPasswordUrlBase = new URL(config.providers.password.resetUrl, config.app.clientUrl).toString();
+        const resetPasswordUrlBase = new URL(config.server.passwordResetUrl, config.server.clientUrl).toString();
 
         return new EmailNotificationService(emailProvider, templateService, resetPasswordUrlBase);
     });
@@ -32,14 +32,14 @@ const registerApplicationServices = (container) => {
         const categoryService =  container.get(ApplicationServiceTypes.CATEGORY);
         const productCacheRepository =  container.get(CacheRepositoryTypes.PRODUCT);
         const productImageManager =  container.get(ImageManagerTypes.PRODUCT);
-        const recommendationsSize = config.business.product.recommendationsSize;
+        const recommendationsInCartSize = config.business.product.recommendationsInCartSize;
 
         return new ProductService(
             productDatabaseRepository,
             categoryService,
             productCacheRepository,
             productImageManager,
-            recommendationsSize
+            recommendationsInCartSize
         );
     });
 }

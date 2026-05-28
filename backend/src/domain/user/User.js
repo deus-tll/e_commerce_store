@@ -1,5 +1,5 @@
 import {PaginationMetadata} from "../index.js";
-import {UserRoles} from "../../constants/app.js";
+import {UserRole} from "../../enums/application.ts";
 
 /**
  * Represents the clean, database-agnostic User record (Entity).
@@ -99,16 +99,16 @@ export class UpdateUserDTO {
 
 	/**
 	 * Creates a plain object containing only the fields that were provided for the update.
-	 * @param {UserRoles} [requesterRole]
+	 * @param {UserRole} [requesterRole]
 	 * @returns {Object}
 	 */
-	toPersistence(requesterRole = UserRoles.CUSTOMER) {
+	toPersistence(requesterRole = UserRole.CUSTOMER) {
 		const data = {};
 
 		if (this.name !== undefined) data.name = this.name;
 		if (this.email !== undefined) data.email = this.email;
 
-		if (requesterRole === UserRoles.ADMIN) {
+		if (requesterRole === UserRole.ADMIN) {
 			if (this.role !== undefined) data.role = this.role;
 			if (this.isVerified !== undefined) data.isVerified = this.isVerified;
 		}

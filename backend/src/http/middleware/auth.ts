@@ -2,7 +2,7 @@ import {Request, Response, NextFunction, RequestHandler} from "express";
 import {SessionAuthService} from "../../application/auth/SessionAuthService.js";
 
 import {InvalidTokenError, UnauthenticatedError, AccountNotVerifiedError, ForbiddenError} from "../../errors/index.js"
-import {UserRoles} from "../../constants/app.js";
+import {UserRole} from "../../enums/application.js";
 
 export const createProtectRoute = (authService: SessionAuthService) : RequestHandler => {
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +27,7 @@ export const adminRoute: RequestHandler = async (req: Request, _: Response, next
 		throw new UnauthenticatedError("Authentication required");
 	}
 
-	if (req.user.role !== UserRoles.ADMIN) {
+	if (req.user.role !== UserRole.ADMIN) {
 		throw new ForbiddenError("Admin privileges required");
 	}
 

@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, Mocked } from "vitest";
+import {describe, it, expect, beforeEach, Mocked} from "vitest";
 
 import {AuthCacheRepository} from "../AuthCacheRepository.js";
 import {ICacheProvider} from "../../../providers/cache/ICacheProvider.js";
 
-import {createMock} from "../../../../tests/utils/createMock.js";
-
+import {CacheKey, PrefixCacheKey} from "../../../../enums/application.js";
 import {SECONDS_PER_DAY} from "../../../../constants/time.js";
-import {CacheKeys, PrefixCacheKeys} from "../../../../constants/app.js";
+
+import {createMock} from "../../../../tests/utils/createMock.js";
 
 describe("AuthCacheRepository", () => {
     let mockCacheProvider: Mocked<ICacheProvider>;
@@ -17,7 +17,7 @@ describe("AuthCacheRepository", () => {
     const USER_ID = "user-123";
     const TOKEN = "fake-refresh-token";
 
-    const EXPECTED_KEY = `${PrefixCacheKeys.AUTH}:${CacheKeys.REFRESH_TOKEN}:${USER_ID}`;
+    const EXPECTED_KEY = `${PrefixCacheKey.AUTH}:${CacheKey.REFRESH_TOKEN}:${USER_ID}`;
 
     beforeEach(() => {
         mockCacheProvider = createMock<ICacheProvider>();

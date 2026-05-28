@@ -1,5 +1,5 @@
 import {DateTime} from "../../utils/dateTime.js";
-import {CookieTokenTypes, SameSiteCookieOptions} from "../../constants/auth.js";
+import {CookieTokenType, SameSiteCookieOption} from "../../enums/auth.ts";
 
 export class AuthCookieManager {
 	/** @type {boolean} */ #isProduction;
@@ -26,8 +26,8 @@ export class AuthCookieManager {
 		this.#refreshTokenMaxAge = ttlMs;
 
 		this.#sameSite = (this.#isProduction && !forceDisableSecureCookies)
-			? SameSiteCookieOptions.NONE
-			: SameSiteCookieOptions.LAX;
+			? SameSiteCookieOption.NONE
+			: SameSiteCookieOption.LAX;
 	}
 
 	/**
@@ -68,7 +68,7 @@ export class AuthCookieManager {
 	 * @returns {void}
 	 */
 	setAccessToken(res, accessToken) {
-		res.cookie(CookieTokenTypes.ACCESS_TOKEN, accessToken, this.#getCookieOptions(this.#accessTokenMaxAge));
+		res.cookie(CookieTokenType.ACCESS_TOKEN, accessToken, this.#getCookieOptions(this.#accessTokenMaxAge));
 	}
 
 	/**
@@ -78,7 +78,7 @@ export class AuthCookieManager {
 	 * @returns {void}
 	 */
 	setRefreshToken(res, refreshToken) {
-		res.cookie(CookieTokenTypes.REFRESH_TOKEN, refreshToken, this.#getCookieOptions(this.#refreshTokenMaxAge));
+		res.cookie(CookieTokenType.REFRESH_TOKEN, refreshToken, this.#getCookieOptions(this.#refreshTokenMaxAge));
 	}
 
 	/**
@@ -101,7 +101,7 @@ export class AuthCookieManager {
 	clearTokens(res) {
 		const baseOptions = this.#getBaseClearOptions();
 
-		res.clearCookie(CookieTokenTypes.ACCESS_TOKEN, baseOptions);
-		res.clearCookie(CookieTokenTypes.REFRESH_TOKEN, baseOptions);
+		res.clearCookie(CookieTokenType.ACCESS_TOKEN, baseOptions);
+		res.clearCookie(CookieTokenType.REFRESH_TOKEN, baseOptions);
 	}
 }

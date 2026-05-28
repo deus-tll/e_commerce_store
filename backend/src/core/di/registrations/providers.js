@@ -11,7 +11,7 @@ import {CloudinaryStorageProvider} from "../../../infrastructure/providers/stora
 import {EmailSender, MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
 import {StripeProvider} from "../../../infrastructure/providers/payment/StripeProvider.js";
 
-import {CacheTypes} from "../../../constants/app.js";
+import {CacheType} from "../../../enums/infrastructure.ts";
 import {ProviderTypes} from "../../../constants/ioc.js";
 
 import {config} from "../../../config.js";
@@ -22,16 +22,16 @@ import {config} from "../../../config.js";
  */
 const registerProviders = (container) => {
     container.register(ProviderTypes.DATABASE, () => {
-        const uri = config.providers.database.mongo.uri;
-        const isProduction = config.app.isProduction;
+        const uri = config.infrastructure.providers.database.mongo.uri;
+        const isProduction = config.server.isProduction;
 
         return new MongooseDatabaseProvider(mongoose, uri, isProduction)
     });
     container.register(ProviderTypes.CACHE, () => {
-        const cacheType = config.providers.cache.type;
+        const cacheType = config.infrastructure.providers.cache.type;
 
-        if (cacheType === CacheTypes.REDIS) {
-            const client = new Redis(config.providers.cache.redis.url, {
+        if (cacheType === CacheType.REDIS) {
+            const client = new Redis(config.infrastructure.providers.cache.redis.url, {
                 lazyConnect: true,
                 maxRetriesPerRequest: 1,
                 retryStrategy(times) {
@@ -46,30 +46,30 @@ const registerProviders = (container) => {
     });
     container.register(ProviderTypes.STORAGE, () => {
         cloudinary.config({
-            cloud_name: config.providers.storage.cloudinary.cloudName,
-            api_key: config.providers.storage.cloudinary.apiKey,
-            api_secret: config.providers.storage.cloudinary.apiSecret,
+            cloud_name: config.infrastructure.providers.storage.cloudinary.cloudName,
+            api_key: config.infrastructure.providers.storage.cloudinary.apiKey,
+            api_secret: config.infrastructure.providers.storage.cloudinary.apiSecret,
         });
-        const isProduction = config.app.isProduction;
+        const isProduction = config.server.isProduction;
 
         return new CloudinaryStorageProvider(cloudinary, isProduction);
     });
     container.register(ProviderTypes.EMAIL, () => {
         const mailtrapClient = new MailtrapClient({
-            token: config.providers.mail.mailtrap.token,
+            token: config.infrastructure.providers.mail.mailtrap.token,
         });
         const sender = new EmailSender(
-            config.providers.mail.mailtrap.sender.email,
-            config.providers.mail.mailtrap.sender.name
+            config.infrastructure.providers.mail.mailtrap.sender.email,
+            config.infrastructure.providers.mail.mailtrap.sender.name
         );
 
         return new MailTrapEmailProvider(mailtrapClient, sender)
     });
     container.register(ProviderTypes.PAYMENT, () => {
-        const stripe = new Stripe(config.providers.payment.stripe.secretKey);
-        const webhookSecret = config.providers.payment.stripe.webhookSecret;
-        const {clientUrl} = config.app;
-        const {successUrl, cancelUrl} = config.providers.payment.stripe;
+        const stripe = new Stripe(config.infrastructure.providers.payment.stripe.secretKey);
+        const webhookSecret = config.infrastructure.providers.payment.stripe.webhookSecret;
+        const {clientUrl} = config.server;
+        const {successUrl, cancelUrl} = config.infrastructure.providers.payment.stripe;
         const formURL = (input, base) => new URL(input, base).toString();
 
         return new StripeProvider(stripe, webhookSecret, formURL(successUrl, clientUrl), formURL(cancelUrl, clientUrl));

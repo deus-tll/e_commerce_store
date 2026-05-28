@@ -7,7 +7,7 @@ import {MongooseAdapter} from "./adapters/MongooseAdapter.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.ts";
 
-import {UserRoles} from "../../../../constants/app.js";
+import {UserRole} from "../../../../enums/application.ts";
 
 export class UserMongooseRepository extends IUserRepository {
 	#buildMongooseQuery(query) {
@@ -140,10 +140,10 @@ export class UserMongooseRepository extends IUserRepository {
 						$sum: { $cond: [{ $eq: ["$isVerified", true] }, 1, 0] }
 					},
 					admins: {
-						$sum: { $cond: [{ $eq: ["$role", UserRoles.ADMIN] }, 1, 0]  }
+						$sum: { $cond: [{ $eq: ["$role", UserRole.ADMIN] }, 1, 0]  }
 					},
 					customers: {
-						$sum: { $cond: [{ $eq: ["$role", UserRoles.CUSTOMER] }, 1, 0]  }
+						$sum: { $cond: [{ $eq: ["$role", UserRole.CUSTOMER] }, 1, 0]  }
 					}
 				}
 			},

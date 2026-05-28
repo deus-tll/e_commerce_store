@@ -11,8 +11,8 @@ import errorHandler from "./http/middleware/errorHandler.js";
 import {ControllerTypes, ProviderTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
 import {config} from "./config.js";
 
-const JSON_LIMIT = config.app.jsonLimit;
-const API_BASE = config.app.apiBaseUrl;
+const JSON_LIMIT = config.server.jsonLimit;
+const API_BASE = config.server.apiBaseUrl;
 
 /**
  * Encapsulates the configuration and execution of the Express application.
@@ -25,7 +25,7 @@ export class Application {
 
 	constructor(container: DIContainer) {
 		this.app = express();
-		this.port = config.app.port;
+		this.port = config.server.port;
 		this.dependencies = this.resolveDependencies(container);
 		this.container = container;
 	}
@@ -60,7 +60,7 @@ export class Application {
 	configureMiddleware() {
 		this.app.use(
 			cors({
-				origin: config.app.clientUrl,
+				origin: config.server.clientUrl,
 				credentials: true,
 			})
 		);
@@ -104,7 +104,7 @@ export class Application {
 	}
 
 	async dropDatabase() {
-		if (config.providers.database.dropOnStartup) {
+		if (config.infrastructure.providers.database.dropOnStartup) {
 			await this.dependencies.database.drop();
 		}
 		else {
@@ -113,7 +113,7 @@ export class Application {
 	}
 
 	async dropStorage() {
-		if (config.providers.storage.dropOnStartup) {
+		if (config.infrastructure.providers.storage.dropOnStartup) {
 			await this.dependencies.storage.deleteAll();
 		}
 		else {
@@ -129,7 +129,7 @@ export class Application {
 				await this.dependencies.cache.connect();
 			}
 			catch (error) {
-				if (config.app.isProduction) throw error;
+				if (config.server.isProduction) throw error;
 				console.warn(`[Server] Cache not available: ${error.message}`);
 			}
 
@@ -149,7 +149,7 @@ export class Application {
 
 			this.app.listen(this.port, () => {
 				console.log(`[Server] Running on port ${this.port}`);
-				console.log(`[Server] Environment: ${config.app.nodeEnv}`);
+				console.log(`[Server] Environment: ${config.server.nodeEnv}`);
 			});
 		} catch (error) {
 			console.error("[Server] Fatal error during server startup:", error);

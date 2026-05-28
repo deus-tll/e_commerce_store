@@ -1,6 +1,6 @@
 import {InvalidTokenError, TokenExpiredError} from "../../errors/index.js";
 
-import {TokenTypes} from "../../constants/auth.js";
+import {TokenType} from "../../enums/auth.ts";
 
 /**
  * Handles all technical JWT signing and verification details.
@@ -63,18 +63,18 @@ export class JwtService {
 	/**
 	 * Verifies a token and handles JWT-specific errors.
 	 * @param {string} token
-	 * @param {TokenTypes} type - The type of token being verified (Access or Refresh).
+	 * @param {TokenType} type - The type of token being verified (Access or Refresh).
 	 * @returns {object} - The decoded payload.
 	 * @throws {TokenExpiredError|InvalidTokenError}
 	 */
 	verifyToken(token, type) {
-		const secret = type === TokenTypes.ACCESS_TOKEN ? this.#accessTokenSecret : this.#refreshTokenSecret;
+		const secret = type === TokenType.ACCESS_TOKEN ? this.#accessTokenSecret : this.#refreshTokenSecret;
 
 		try {
 			return this.#jwt.verify(token, secret);
 		}
 		catch (error) {
-			const tokenName = type === TokenTypes.ACCESS_TOKEN ? "Access token" : "Refresh token";
+			const tokenName = type === TokenType.ACCESS_TOKEN ? "Access token" : "Refresh token";
 
 			if (error.name === 'TokenExpiredError') {
 				throw new TokenExpiredError(`${tokenName} expired`);

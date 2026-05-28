@@ -4,7 +4,7 @@ import {
 	DailySalesSummaryDTO,
 	RepositoryPaginationResult
 } from "../../domain/index.js";
-import {OrderStatus} from "../../constants/domain.js";
+import {OrderStatus} from "../../enums/application.ts";
 
 /**
  * @typedef {import("../../domain/index.js").OrderEntity} OrderEntity

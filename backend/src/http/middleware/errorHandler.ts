@@ -20,7 +20,7 @@ import {config} from "../../config.js";
 const errorHandler: ErrorRequestHandler = (
 	err: Error | DomainError, req: Request, res: Response, _next: NextFunction
 ) => {
-	const { isProduction } = config.app;
+	const { isProduction } = config.server;
 
 	if (!(err instanceof DomainError) || err instanceof SystemError) {
 		console.error("[Runtime/System Error]:", err);

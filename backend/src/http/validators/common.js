@@ -1,6 +1,5 @@
 import Joi from "joi";
-
-import {UserRoles} from "../../constants/app.js";
+import {UserRole} from "../../enums/application.ts";
 
 // --- Exported Reusable Joi Schemas ---
 
@@ -22,9 +21,9 @@ export const userIdParam = Joi.string()
 // 2. User Role
 export const userRole = Joi.string()
 	.trim()
-	.valid(UserRoles.CUSTOMER, UserRoles.ADMIN)
+	.valid(UserRole.CUSTOMER, UserRole.ADMIN)
 	.messages({
-		'any.only': `Role must be one of: ${UserRoles.CUSTOMER}, ${UserRoles.ADMIN}.`,
+		'any.only': `Role must be one of: ${UserRole.CUSTOMER}, ${UserRole.ADMIN}.`,
 		'string.base': 'Role must be a string.'
 	});
 

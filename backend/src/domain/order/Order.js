@@ -1,5 +1,5 @@
 import {ShortUserDTO, PaginationMetadata} from "../index.js";
-import {OrderStatus} from "../../constants/domain.js";
+import {OrderStatus} from "../../enums/application.ts";
 
 /**
  * Agnostic class for nested product item data.
