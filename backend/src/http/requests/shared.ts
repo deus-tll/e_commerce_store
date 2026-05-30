@@ -7,3 +7,9 @@ export interface ParamsWithIdRequest extends Request {
 export interface ParamsWithSlugRequest extends Request {
     params: { slug: string };
 }
+
+export interface ParamsWithProductIdRequest extends Request {
+    params: {
+        productId: string;
+    }
+}

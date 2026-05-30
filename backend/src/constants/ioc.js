@@ -24,7 +24,6 @@ export const ProviderTypes = Object.freeze({
 });
 
 export const MapperTypes = Object.freeze({
-	CART: "CartMapper",
 	REVIEW: "ReviewMapper",
 	ORDER: "OrderMapper",
 	COUPON: "CouponMapper",
@@ -69,6 +68,7 @@ export const ApplicationServiceTypes = Object.freeze({
 
 	CATEGORY: "CategoryService",
 	PRODUCT: "ProductService",
+	CART: "CartService",
 });
 
 export const ServiceTypes = Object.freeze({
@@ -79,7 +79,6 @@ export const ServiceTypes = Object.freeze({
 
 	PRODUCT_STATS: "ProductStatsService",
 
-	CART: "ICartService",
 	REVIEW: "IReviewService",
 	ORDER: "IOrderService",
 	COUPON: "ICouponService",

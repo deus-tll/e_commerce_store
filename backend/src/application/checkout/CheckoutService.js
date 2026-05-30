@@ -1,8 +1,8 @@
 import {ICheckoutService} from "../../interfaces/order/ICheckoutService.js";
-import {IPaymentProvider} from "../../infrastructure/providers/payment/IPaymentProvider.ts";
-import {ProductService} from "../product/ProductService.ts";
+import {IPaymentProvider} from "../../infrastructure/providers/payment/IPaymentProvider.js";
+import {ProductService} from "../product/ProductService.js";
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
-import {ICartService} from "../../interfaces/cart/ICartService.js";
+import {CartService} from "../cart/CartService.js";
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
 
 import {
@@ -17,6 +17,7 @@ import {EntityNotFoundError} from "../../errors/index.js";
 
 import {OrderStatus} from "../../enums/application.ts";
 import {PaymentEventTypes} from "../../enums/payment.js";
+
 import {Currency} from "../../utils/currency.js";
 
 /**
@@ -26,7 +27,7 @@ export class CheckoutService extends ICheckoutService {
 	/** @type {IPaymentProvider} */ #paymentProvider;
 	/** @type {ProductService} */ #productService;
 	/** @type {IOrderService} */ #orderService;
-	/** @type {ICartService} */ #cartService;
+	/** @type {CartService} */ #cartService;
 	/** @type {ICouponService} */ #couponService;
 	/** @type {number} */ #minAmountForGrant;
 
@@ -34,7 +35,7 @@ export class CheckoutService extends ICheckoutService {
 	 * @param {IPaymentProvider} paymentProvider
 	 * @param {ProductService} productService
 	 * @param {IOrderService} orderService
-	 * @param {ICartService} cartService
+	 * @param {CartService} cartService
 	 * @param {ICouponService} couponService
 	 * @param {number} minAmountForGrant
 	 */

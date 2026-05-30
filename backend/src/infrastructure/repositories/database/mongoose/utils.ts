@@ -4,22 +4,25 @@ import {EntityNotFoundError} from "../../../../errors/index.js";
 export type SortObject = Record<string, 1 | -1>;
 
 /**
- * Converts a Mongoose Document or a lean object into a plain JavaScript object.
+ * Converts a Mongoose Document or a lean object into a normalized JavaScript object
+ * by removing some mongoose specific fields and methods that are the same between entities.
  */
-export function toPlainObject(doc: any): any {
+export function normalizePersistence<T extends { _id?: any; __v?: any, toObject?: (...args: any[]) => any } | null>(
+    doc: T
+): T extends null ? null : Omit<T, "_id" | "__v"> & { id: string } {
     if (!doc) return null;
 
-    const plainObject = typeof doc.toObject === "function"
+    const normalizedObject = typeof doc.toObject === "function"
     ? doc.toObject({ getters: true, virtuals: false })
-    : { ...doc };
+    : { ...(doc as any) };
 
-    if (plainObject._id) {
-        plainObject.id = plainObject._id.toString();
-        delete plainObject._id;
+    if (normalizedObject._id) {
+        normalizedObject.id = normalizedObject._id.toString();
+        delete normalizedObject._id;
     }
 
-    delete plainObject["__v"];
-    return plainObject;
+    delete normalizedObject["__v"];
+    return normalizedObject;
 }
 
 /**

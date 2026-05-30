@@ -7,9 +7,9 @@ import {createProtectRoute} from "../middleware/auth.js";
 import {validationMiddleware} from "../middleware/validation.js";
 
 import {
-	addProductSchema,
-	removeProductSchema,
-	updateProductQuantitySchema
+	addItemSchema,
+	removeItemSchema,
+	updateItemQuantitySchema
 } from "../validators/cart.js";
 
 export function setupCartRouter(
@@ -22,14 +22,14 @@ export function setupCartRouter(
 
 	router.use(protectRoute);
 
-	router.get("/", cartController.getCartItems);
+	router.get("/", cartController.getItems);
 
-	router.post("/", validationMiddleware(addProductSchema), cartController.addProduct);
+	router.post("/", validationMiddleware(addItemSchema), cartController.addItem);
 
-	router.patch("/:productId", validationMiddleware(updateProductQuantitySchema), cartController.updateProductQuantity);
+	router.patch("/:productId", validationMiddleware(updateItemQuantitySchema), cartController.updateItemQuantity);
 
 	router.delete("/", cartController.clear);
-	router.delete("/:productId", validationMiddleware(removeProductSchema), cartController.removeProduct);
+	router.delete("/:productId", validationMiddleware(removeItemSchema), cartController.removeItem);
 
 	return router;
 }

@@ -5,7 +5,7 @@ import {ProductCreatePersistence, ProductUpdatePersistence} from "../../../../..
 import {ProductAttribute, ProductImage, ProductRatingStats} from "../../../../../entities/product/ProductValueObjects.js";
 import {ProductEntity} from "../../../../../entities/product/ProductEntity.js";
 
-import {toObjectId, toPlainObject} from "../utils.js";
+import {toObjectId, normalizePersistence} from "../utils.js";
 
 export type CreateProductDocInput = Omit<IProductDoc, "_id" | "createdAt" | "updatedAt" | "ratingStats">;
 
@@ -28,8 +28,8 @@ export class ProductAdapter {
         }
     }
 
-    static toEntity(doc: IProductDoc | object | null): ProductEntity | null {
-        const data = toPlainObject(doc);
+    static toEntity(doc: IProductDoc | null): ProductEntity | null {
+        const data = normalizePersistence(doc);
         if (!data) return null;
 
         const { category, images, attributes, ratingStats, ...rest } = data;

@@ -2,6 +2,7 @@ import {Request, Response} from "express";
 
 import {ProductService} from "../../application/product/ProductService.js";
 import {CartService} from "../../application/cart/CartService.js";
+
 import {ProductCreateRequest, ProductGetAllQuery, ProductUpdateRequest} from "../requests/product.js";
 import {ParamsWithIdRequest} from "../requests/shared.js";
 

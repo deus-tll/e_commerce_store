@@ -1,6 +1,7 @@
 import {EmailNotificationService} from "../../../application/shared/notifications/EmailNotificationService.js";
 import {ProductService} from "../../../application/product/ProductService.js";
 import {CategoryService} from "../../../application/category/CategoryService.js";
+import {CartService} from "../../../application/cart/CartService.js";
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
@@ -42,6 +43,10 @@ const registerApplicationServices = (container) => {
             recommendationsInCartSize
         );
     });
+
+    container.register(ApplicationServiceTypes.CART, CartService,
+        [DatabaseRepositoryTypes.CART, ApplicationServiceTypes.PRODUCT]
+    );
 }
 
 export default registerApplicationServices;

@@ -4,7 +4,7 @@ import { productIdParam } from "./common.js";
 /**
  * Joi schema for validating the POST /cart request (Add Product).
  */
-export const addProductSchema = Joi.object({
+export const addItemSchema = Joi.object({
 	body: Joi.object({
 		productId: productIdParam.messages({
 			'any.required': 'Product ID is required in the request body.',
@@ -25,7 +25,7 @@ export const addProductSchema = Joi.object({
 /**
  * Joi schema for validating the DELETE /cart/:productId request (Remove single product).
  */
-export const removeProductSchema = Joi.object({
+export const removeItemSchema = Joi.object({
 	params: Joi.object({
 		productId: productIdParam,
 	}).required().unknown(false)
@@ -34,7 +34,7 @@ export const removeProductSchema = Joi.object({
 /**
  * Joi schema for validating the PATCH /cart/:productId request (Update quantity).
  */
-export const updateProductQuantitySchema = Joi.object({
+export const updateItemQuantitySchema = Joi.object({
 	params: Joi.object({
 		productId: productIdParam,
 	}).required().unknown(false),

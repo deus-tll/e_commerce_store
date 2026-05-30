@@ -1,12 +1,15 @@
 import Cart from "./models/Cart.js";
 
 import {ICartRepository} from "../../../../application/cart/ICartRepository.js";
-import {MongooseAdapter} from "./adapters/MongooseAdapter.js";
+import {CartAdapter} from "./adapters/CartAdapter.js";
 
-import {EntityNotFoundError} from "../../../../errors/index.ts";
+import {CartEntity} from "../../../../entities/cart/CartEntity.js";
+import {CartItem} from "../../../../entities/cart/CartValueObjects.js";
+
+import {EntityNotFoundError} from "../../../../errors/index.js";
 
 export class CartMongooseRepository extends ICartRepository {
-	async addProductOrIncrement(userId, productId) {
+	async addItemOrIncrementQuantity(userId: string, productId: string): Promise<CartEntity | null> {
 		let updatedDoc = await Cart.findOneAndUpdate(
 			{ user: userId, "items.product": productId },
 			{ $inc: { "items.$.quantity": 1 } },
@@ -21,20 +24,20 @@ export class CartMongooseRepository extends ICartRepository {
 			);
 		}
 
-		return MongooseAdapter.toCartEntity(updatedDoc);
+		return CartAdapter.toEntity(updatedDoc);
 	}
 
-	async removeProduct(userId, productId) {
+	async removeItem(userId: string, productId: string): Promise<CartEntity | null> {
 		const updatedDoc = await Cart.findOneAndUpdate(
 			{ user: userId },
 			{ $pull: { items: { product: productId } } },
 			{ new: true, lean: true }
 		);
 
-		return MongooseAdapter.toCartEntity(updatedDoc);
+		return CartAdapter.toEntity(updatedDoc);
 	}
 
-	async updateProductQuantity(userId, productId, quantity) {
+	async updateItemQuantity(userId: string, productId: string, quantity: number): Promise<CartEntity | null> {
 		const updatedDoc = await Cart.findOneAndUpdate(
 			{ user: userId, "items.product": productId },
 			{ $set: { "items.$.quantity": quantity } },
@@ -42,14 +45,13 @@ export class CartMongooseRepository extends ICartRepository {
 		);
 
 		if (!updatedDoc) {
-			throw new EntityNotFoundError("CartItem", { productId });
+			throw new EntityNotFoundError("Cart", { productId });
 		}
 
-		return MongooseAdapter.toCartEntity(updatedDoc);
+		return CartAdapter.toEntity(updatedDoc);
 	}
 
-
-	async updateItemsByUserId(userId, newItems) {
+	async updateItemsByUserId(userId: string, newItems: CartItem[]): Promise<CartEntity | null> {
 		const updateOptions = { new: true, runValidators: true, upsert: false, lean: true };
 
 		const mongooseItems = newItems.map(item => ({
@@ -63,11 +65,11 @@ export class CartMongooseRepository extends ICartRepository {
 			updateOptions
 		);
 
-		return MongooseAdapter.toCartEntity(updatedDoc);
+		return CartAdapter.toEntity(updatedDoc);
 	}
 
-	async findByUserId(userId) {
+	async findByUserId(userId: string): Promise<CartEntity | null> {
 		const foundDoc = await Cart.findOne({ user: userId }).lean();
-		return MongooseAdapter.toCartEntity(foundDoc);
+		return CartAdapter.toEntity(foundDoc);
 	}
 }

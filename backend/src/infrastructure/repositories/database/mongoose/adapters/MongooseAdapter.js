@@ -1,10 +1,10 @@
 import {
 	UserEntity,
-	CartEntity, CartItemEntity,
 	CouponEntity,
 	OrderEntity, OrderProductItem,
 	ReviewEntity
 } from "../../../../../domain/index.js";
+
 
 /**
  * Utility class responsible for translating data between the Mongoose layer (Models/Documents)
@@ -35,31 +35,6 @@ export class MongooseAdapter {
 		delete plainObject["__v"];
 
 		return plainObject;
-	}
-
-	/**
-	 * Converts a Mongoose Cart Document/object to a CartEntity.
-	 * Handles the nested conversion of cart items.
-	 * @param {object | null} doc
-	 * @returns {CartEntity | null}
-	 */
-	static toCartEntity(doc) {
-		const plainObject = MongooseAdapter.#toPlainObject(doc);
-
-		if (!plainObject) return null;
-
-		const { user, items, ...rest } = plainObject;
-
-		const processedItems = items.map(item => new CartItemEntity({
-			productId: item.product?.toString(),
-			quantity: item.quantity
-		}));
-
-		return new CartEntity({
-			...rest,
-			userId: user?.toString(),
-			items: processedItems
-		});
 	}
 
 	/**
