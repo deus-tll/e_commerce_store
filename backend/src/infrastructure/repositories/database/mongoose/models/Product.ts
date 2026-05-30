@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, InferSchemaType } from "mongoose";
+import { Schema, model, InferSchemaType, Types } from "mongoose";
 
 const attributeSchema = new Schema({
 	name: {
@@ -68,7 +68,7 @@ const productSchema = new Schema({
 		required: [true, "Product must have images data."]
 	},
 	category: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref: "Category",
 		required: true,
 		index: true
@@ -94,7 +94,7 @@ const productSchema = new Schema({
 productSchema.index({ "attributes.name": 1, "attributes.value": 1 });
 
 export type IProductDoc = InferSchemaType<typeof productSchema> & {
-	_id: mongoose.Types.ObjectId;
+	_id: Types.ObjectId;
 	createdAt: Date;
 	updatedAt: Date;
 }

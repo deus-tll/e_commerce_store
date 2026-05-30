@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, InferSchemaType } from "mongoose";
+import { Schema, model, InferSchemaType, Types } from "mongoose";
 
 const categorySchema = new Schema({
 	name: {
@@ -29,7 +29,7 @@ const categorySchema = new Schema({
 });
 
 export type ICategoryDoc = InferSchemaType<typeof categorySchema> & {
-	_id: mongoose.Types.ObjectId;
+	_id: Types.ObjectId;
 	createdAt: Date;
 	updatedAt: Date;
 };
