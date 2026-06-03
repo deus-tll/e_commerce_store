@@ -1,5 +1,5 @@
 import {CategoryEntity} from "../../entities/category/CategoryEntity.js";
-import {CategoryQueryPersistence, CategoryCreatePersistence, CategoryUpdatePersistence} from "../types/category.js";
+import {CategoryFiltersPersistence, CategoryCreatePersistence, CategoryUpdatePersistence} from "../types/category.js";
 import {RepositoryPaginationResult} from "../types/shared.js";
 
 export abstract class ICategoryRepository {
@@ -10,7 +10,7 @@ export abstract class ICategoryRepository {
 	abstract findBySlug(slug: string): Promise<CategoryEntity | null>
 	abstract findByIds(ids: string[]): Promise<CategoryEntity[]>;
 	abstract findAndCount(
-		query: CategoryQueryPersistence,
+		filters: CategoryFiltersPersistence,
 		skip: number,
 		limit: number
 	): Promise<RepositoryPaginationResult<CategoryEntity>>;

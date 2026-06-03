@@ -1,5 +1,6 @@
 import {ICategoryRepository} from "./ICategoryRepository.js";
 import {CategoryImageManager} from "./CategoryImageManager.js";
+import {CategoryMapper} from "./CategoryMapper.js";
 
 import {CategoryEntity} from "../../entities/category/CategoryEntity.js";
 import {
@@ -15,21 +16,12 @@ import {EntityNotFoundError} from "../../errors/index.js";
 
 import {Slug} from "../../utils/slug.js";
 import {removeUndefinedFields} from "../../utils/object.js";
-import {parseCategoryQuery} from "./parseCategoryQuery.js";
 
 export class CategoryService {
 	constructor(
 		private readonly categoryRepository: ICategoryRepository,
 		private readonly categoryImageManager: CategoryImageManager
 	) {}
-
-	private toDTO(entity: CategoryEntity): CategoryDTO {
-		return new CategoryDTO(entity);
-	}
-
-	toDTOs(entities: CategoryEntity[]): CategoryDTO[] {
-		return entities.map(entity => this.toDTO(entity));
-	}
 
 	private async getEntityByIdOrFail(id: string): Promise<CategoryEntity> {
 		const category = await this.categoryRepository.findById(id);
@@ -51,7 +43,7 @@ export class CategoryService {
 		} satisfies CategoryCreatePersistence);
 
 		const createdEntity = await this.categoryRepository.create(persistenceData);
-		return this.toDTO(createdEntity);
+		return CategoryMapper.toDTO(createdEntity);
 	}
 
 	async update(id: string, data: CategoryUpdateInput): Promise<CategoryDTO> {
@@ -79,13 +71,13 @@ export class CategoryService {
 		} satisfies CategoryUpdatePersistence);
 
 		const updatedCategory = await this.categoryRepository.updateById(id, persistenceData);
-		return this.toDTO(updatedCategory);
+		return CategoryMapper.toDTO(updatedCategory);
 	}
 
 	async delete(id: string): Promise<CategoryDTO> {
 		const deletedCategory = await this.categoryRepository.deleteById(id);
 		await this.categoryImageManager.deleteByUrl(deletedCategory.image);
-		return this.toDTO(deletedCategory);
+		return CategoryMapper.toDTO(deletedCategory);
 	}
 
 	async getAll(
@@ -95,12 +87,10 @@ export class CategoryService {
 	): Promise<CategoryPaginationResultDTO> {
 		const skip = (page - 1) * limit;
 
-		const query = parseCategoryQuery(filters);
-
-		const { results, total } = await this.categoryRepository.findAndCount(query, skip, limit);
+		const { results, total } = await this.categoryRepository.findAndCount(filters, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const categoryDTOs = this.toDTOs(results);
+		const categoryDTOs = CategoryMapper.toDTOs(results);
 
 		return new CategoryPaginationResultDTO(
 			categoryDTOs,
@@ -110,12 +100,12 @@ export class CategoryService {
 
 	async getDTOsByIds(ids: string[]): Promise<CategoryDTO[]> {
 		const entities = await this.categoryRepository.findByIds(ids);
-		return this.toDTOs(entities);
+		return CategoryMapper.toDTOs(entities);
 	}
 
 	async getById(id: string): Promise<CategoryDTO | null> {
 		const category = await this.categoryRepository.findById(id);
-		return category ? this.toDTO(category) : null;
+		return category ? CategoryMapper.toDTO(category) : null;
 	}
 
 	async getByIdOrFail(id: string): Promise<CategoryDTO> {
@@ -126,7 +116,7 @@ export class CategoryService {
 
 	async getBySlug(slug: string): Promise<CategoryDTO | null> {
 		const category = await this.categoryRepository.findBySlug(slug);
-		return category ? this.toDTO(category) : null;
+		return category ? CategoryMapper.toDTO(category) : null;
 	}
 
 	async getBySlugOrFail(slug: string): Promise<CategoryDTO> {

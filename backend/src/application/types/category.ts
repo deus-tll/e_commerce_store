@@ -25,7 +25,10 @@ export type CategoryCreatePersistence =
 
 export type CategoryUpdatePersistence = Partial<CategoryCreatePersistence>;
 
-export type CategoryQueryPersistence = CategoryFiltersInput;
+export type CategoryFiltersPersistence = CategoryFiltersInput & {
+    sortBy?: "name",
+    order?: "asc" | "desc"
+};
 
 // OUTPUT DATA STRUCTURES
 //=======================

@@ -1,4 +1,5 @@
-import {OrderEntity, OrderDTO, ShortUserDTO} from "../../domain/index.js";
+import {OrderEntity, OrderDTO} from "../../domain/index.js";
+import {ShortUserDTO} from "../../application/types/user.js";
 
 /**
  * @interface IOrderMapper

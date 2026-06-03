@@ -1,5 +1,6 @@
 import {ICouponService} from "../../interfaces/coupon/ICouponService.js";
 import {ICouponRepository} from "./ICouponRepository.js";
+import {UserService} from "../user/UserService.js";
 import {ICouponValidator} from "../../interfaces/coupon/ICouponValidator.js";
 import {ICouponFactory} from "../../interfaces/coupon/ICouponFactory.js";
 import {ICouponMapper} from "../../interfaces/mappers/ICouponMapper.js";
@@ -11,14 +12,14 @@ import {ICouponMapper} from "../../interfaces/mappers/ICouponMapper.js";
  */
 export class CouponService extends ICouponService {
 	/** @type {ICouponRepository} */ #couponRepository;
-	/** @type {IUserService} */ #userService;
+	/** @type {UserService} */ #userService;
 	/** @type {ICouponValidator} */ #couponValidator;
 	/** @type {ICouponFactory} */ #couponFactory;
 	/** @type {ICouponMapper} */ #couponMapper;
 
 	/**
 	 * @param {ICouponRepository} couponRepository
-	 * @param {IUserService} userService
+	 * @param {UserService} userService
 	 * @param {ICouponValidator} couponValidator
 	 * @param {ICouponFactory} couponFactory
 	 * @param {ICouponMapper} couponMapper

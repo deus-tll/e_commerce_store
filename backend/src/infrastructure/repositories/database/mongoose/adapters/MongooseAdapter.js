@@ -1,5 +1,4 @@
 import {
-	UserEntity,
 	CouponEntity,
 	OrderEntity, OrderProductItem,
 	ReviewEntity
@@ -101,15 +100,5 @@ export class MongooseAdapter {
 			productId: product?.toString(),
 			userId: user?.toString()
 		});
-	}
-
-	/**
-	 * Converts a Mongoose User Document/object to a UserEntity.
-	 * @param {object | null} doc
-	 * @returns {UserEntity | null}
-	 */
-	static toUserEntity(doc) {
-		const data = MongooseAdapter.#toPlainObject(doc);
-		return data ? new UserEntity(data) : null;
 	}
 }

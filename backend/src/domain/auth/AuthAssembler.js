@@ -1,4 +1,5 @@
-import { TokensDTO, UserWithTokensDTO, UserDTO } from "../index.js";
+import { TokensDTO, UserWithTokensDTO } from "../index.js";
+import {UserDTO} from "../../application/types/user.js";
 
 /**
  * Provides static methods to assemble raw data into complex, structured DTOs

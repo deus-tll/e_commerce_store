@@ -23,20 +23,20 @@ export interface ProductFiltersInput {
     categorySlug?: string;
     search?: string;
     attributes?: Record<string, string | string[]>;
-    sortBy?: 'price' | 'createdAt' | 'name' | 'ratingStats.averageRating';
-    order?: 'asc' | 'desc';
-}
-export interface ProductParserContext {
-    categoryId: string | null;
+    sortBy?: "price" | "createdAt" | "name" | "ratingStats.averageRating";
+    order?: "asc" | "desc";
 }
 
 export type ProductCreatePersistence = ProductCreateInput;
 
-export type ProductUpdatePersistence = Partial<ProductCreatePersistence>;
+export type ProductUpdatePersistence = ProductUpdateInput;
 
-export type ProductQueryPersistence =
-    Omit<ProductFiltersInput, "categorySlug" | "sortBy" | "order"> &
+export type ProductFiltersPersistence =
+    Omit<ProductFiltersInput, "categorySlug"> &
     { categoryId?: string };
+
+export type ProductCountFilters =
+    Omit<ProductFiltersPersistence, "search" | "sortBy" | "order">;
 
 // OUTPUT DATA STRUCTURES
 //=======================

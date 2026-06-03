@@ -2,13 +2,10 @@ import Bcrypt from "bcryptjs";
 import {SystemError} from "../../errors/index.js";
 
 export class PasswordService {
-    private readonly bcrypt: typeof Bcrypt;
-    private readonly saltRounds: number;
-
-    constructor(bcrypt: typeof Bcrypt, saltRounds: number) {
-        this.bcrypt = bcrypt;
-        this.saltRounds = saltRounds;
-    }
+    constructor(
+        private readonly bcrypt: typeof Bcrypt,
+        private readonly saltRounds: number
+    ) {}
 
     async hashPassword(password: string): Promise<string> {
         try {

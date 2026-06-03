@@ -8,8 +8,8 @@ const userApi = {
 	getStats: () => api.get(pathWithBase(`/stats`)),
 
 	create: (userData) => api.post(pathWithBase(), userData),
-	update: (userId, userData) => api.patch(pathWithBase(userId), userData),
-	delete: (userId) => api.delete(pathWithBase(userId))
+	update: (id, userData) => api.patch(pathWithBase(id), userData),
+	delete: (id) => api.delete(pathWithBase(id))
 };
 
 export default userApi;

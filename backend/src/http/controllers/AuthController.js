@@ -1,10 +1,9 @@
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
-import {IUserAccountService} from "../../interfaces/user/IUserAccountService.js";
-import {CreateUserDTO} from "../../domain/index.js";
+import {UserAccountService} from "../../application/user/UserAccountService.js";
 
 import {AuthCookieManager} from "../cookies/AuthCookieManager.js";
 
-import {UserRole} from "../../enums/application.ts";
+import {UserRole} from "../../enums/application.js";
 
 /**
  * Handles incoming HTTP requests related to user authentication and account management.
@@ -12,12 +11,12 @@ import {UserRole} from "../../enums/application.ts";
  */
 export class AuthController {
 	/** @type {ISessionAuthService} */ #sessionAuthService;
-	/** @type {IUserAccountService} */ #userAccountService;
+	/** @type {UserAccountService} */ #userAccountService;
 	/** @type {AuthCookieManager} */ #authCookieManager;
 
 	/**
 	 * @param {ISessionAuthService} sessionAuthService
-	 * @param {IUserAccountService} userAccountService
+	 * @param {UserAccountService} userAccountService
 	 * @param {AuthCookieManager} authCookieManager
 	 */
 	constructor(sessionAuthService, userAccountService, authCookieManager) {
@@ -36,13 +35,14 @@ export class AuthController {
 	 * @returns {Promise<void>} - Responds with status 201 and the created UserDTO. Sets access/refresh tokens as cookies.
 	 */
 	signup = async (req, res) => {
-		const createUserDTO = new CreateUserDTO({
+		// UserCreateInput
+		const userCreateInput = {
 			...req.body,
 			role: UserRole.CUSTOMER,
 			isVerified: false,
-		});
+		};
 
-		const { user, tokens } = await this.#userAccountService.signup(createUserDTO);
+		const { user, tokens } = await this.#userAccountService.signup(userCreateInput);
 
 		this.#authCookieManager.setTokens(res, tokens.accessToken, tokens.refreshToken);
 

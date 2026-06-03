@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
+import { Schema, model, InferSchemaType, Types } from "mongoose";
+import {UserRole, UserRoleValues} from "../../../../../enums/application.js";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
 	name: {
 		type: String,
 		required: [true, "Name is required"],
@@ -20,8 +21,8 @@ const userSchema = new mongoose.Schema({
 	},
 	role: {
 		type: String,
-		enum: ["customer", "admin"],
-		default: "customer",
+		enum: UserRoleValues,
+		default: UserRole.CUSTOMER,
 	},
 	lastLogin: {
 		type: Date,
@@ -35,13 +36,18 @@ const userSchema = new mongoose.Schema({
 	resetPasswordTokenExpiresAt: Date,
 	verificationToken: String,
 	verificationTokenExpiresAt: Date,
-},
-	{ timestamps: true }
-);
+}, {
+	timestamps: true,
+	toJSON: { virtuals: true },
+	toObject: { virtuals: true },
+});
 
-/**
- * @type {import('mongoose').Model & import('mongoose').Document}
- */
-const User = mongoose.model("User", userSchema);
+export type IUserDoc = InferSchemaType<typeof userSchema> & {
+	_id: Types.ObjectId;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+const User = model("User", userSchema);
 
 export default User;

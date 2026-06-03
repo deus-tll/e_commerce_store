@@ -53,7 +53,7 @@ export class ProductController {
 		return res.status(200).json(productDTO);
 	}
 
-	getFeatured = async (_: any, res: Response): Promise<Response> => {
+	getFeatured = async (_: Request, res: Response): Promise<Response> => {
 		const productDTOs = await this.productService.getFeatured();
 		return res.status(200).json(productDTOs);
 	}

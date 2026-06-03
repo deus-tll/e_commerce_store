@@ -2,8 +2,9 @@ import {ProductEntity} from "../../entities/product/ProductEntity.js";
 import {RepositoryPaginationResult} from "../types/shared.js";
 import {
 	AttributeFacetDTO,
+	ProductCountFilters,
 	ProductCreatePersistence,
-	ProductQueryPersistence,
+	ProductFiltersPersistence,
 	ProductUpdatePersistence
 } from "../types/product.js";
 
@@ -40,12 +41,12 @@ export abstract class IProductRepository {
 		excludedIds: string[]
 	): Promise<ProductEntity[]>;
 	abstract findAndCount(
-		query: ProductQueryPersistence,
-		skip: number, limit: number,
-		options: Record<string, string>
+		filters: ProductFiltersPersistence,
+		skip: number,
+		limit: number,
 	): Promise<RepositoryPaginationResult<ProductEntity>>;
 
-	abstract count(query: ProductQueryPersistence): Promise<number>;
+	abstract count(filters: ProductCountFilters): Promise<number>;
 	abstract exists(id: string): Promise<boolean>;
 	abstract getAttributeFacets(categoryId: string): Promise<AttributeFacetDTO[]>;
 }

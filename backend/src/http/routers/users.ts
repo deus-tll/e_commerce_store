@@ -26,13 +26,13 @@ export function setupUsersRouter(
 
 	router.get("/", validationMiddleware(getAllUsersSchema), userController.getAll);
 	router.get("/stats", userController.getStats);
-	router.get("/:userId", validationMiddleware(userIdParamSchema), userController.getById);
+	router.get("/:id", validationMiddleware(userIdParamSchema), userController.getById);
 
 	router.post("/", validationMiddleware(createUserSchema), userController.create);
 
-	router.patch("/:userId", validationMiddleware(updateUserSchema), userController.update);
+	router.patch("/:id", validationMiddleware(updateUserSchema), userController.update);
 
-	router.delete("/:userId", validationMiddleware(userIdParamSchema), userController.delete);
+	router.delete("/:id", validationMiddleware(userIdParamSchema), userController.delete);
 
 	return router;
 }

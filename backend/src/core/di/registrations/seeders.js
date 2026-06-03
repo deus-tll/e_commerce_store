@@ -10,7 +10,7 @@ import {config} from "../../../config.js";
  */
 const registerSeeders = (container) => {
     container.register(SeederTypes.ADMIN, () => {
-        const userService = container.get(ServiceTypes.USER);
+        const userService = container.get(ApplicationServiceTypes.USER);
         const { name, email, password } = config.business.initialAdmin;
 
         return new AdminSeeder(userService, name, email, password);
@@ -18,7 +18,7 @@ const registerSeeders = (container) => {
     container.register(SeederTypes.PRODUCTS_DUMMY_JSON, () => {
         const categoryService = container.get(ApplicationServiceTypes.CATEGORY);
         const productService = container.get(ApplicationServiceTypes.PRODUCT);
-        const userService = container.get(ServiceTypes.USER);
+        const userService = container.get(ApplicationServiceTypes.USER);
         const reviewService = container.get(ServiceTypes.REVIEW);
         const productsUrlWithLimit = config.seeding.dummyJson.productsUrlWithLimit;
         const defaultSeederUserPassword = config.seeding.defaultSeederUserPassword;

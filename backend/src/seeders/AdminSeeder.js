@@ -1,17 +1,16 @@
-import {IUserService} from "../interfaces/user/IUserService.js";
+import {UserService} from "../application/user/UserService.js";
 import {BaseSeeder} from "./BaseSeeder.js";
-import {CreateUserDTO} from "../domain/index.js";
 
 import {UserRole} from "../enums/application.ts";
 
 export class AdminSeeder  extends BaseSeeder {
-	/** @type {IUserService} */ #userService;
+	/** @type {UserService} */ #userService;
 	/** @type {string} */ #adminName;
 	/** @type {string} */ #adminEmail;
 	/** @type {string} */ #adminPassword;
 
 	/**
-	 * @param {IUserService} userService
+	 * @param {UserService} userService
 	 * @param {string} adminName
 	 * @param {string} adminEmail
 	 * @param {string} adminPassword
@@ -38,15 +37,16 @@ export class AdminSeeder  extends BaseSeeder {
 				return;
 			}
 
-			const createAdminDTO = new CreateUserDTO({
+			// UserCreateInput
+			const userCreateInput = {
 				name: this.#adminName,
 				email: this.#adminEmail,
 				password: this.#adminPassword,
 				role: UserRole.ADMIN,
 				isVerified: true
-			});
+			};
 
-			await this.#userService.create(createAdminDTO);
+			await this.#userService.create(userCreateInput);
 
 			console.log("[Seeder] Admin account seeded successfully.");
 		}

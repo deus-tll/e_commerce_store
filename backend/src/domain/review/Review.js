@@ -1,4 +1,5 @@
-import {ShortUserDTO, PaginationMetadata} from "../index.js";
+import {ShortUserDTO} from "../../application/types/user.js";
+import {PaginationMetadata} from "../../application/types/shared.js";
 
 /**
  * Agnostic class representing the core Review Entity, used by the Repository layer.

@@ -1,6 +1,6 @@
 import {IReviewService} from "../../interfaces/review/IReviewService.js";
 import {IReviewRepository} from "./IReviewRepository.js";
-import {IUserService} from "../../interfaces/user/IUserService.js";
+import {UserService} from "../user/UserService.js";
 import {ProductService} from "../product/ProductService.js";
 import {IReviewMapper} from "../../interfaces/mappers/IReviewMapper.js";
 import {ProductStatsService} from "../product/ProductStatsService.js";
@@ -16,7 +16,7 @@ import {EntityNotFoundError} from "../../errors/index.js";
  */
 export class ReviewService extends IReviewService {
 	/** @type {IReviewRepository} */ #reviewRepository;
-	/** @type {IUserService} */ #userService;
+	/** @type {UserService} */ #userService;
 	/** @type {ProductService} */ #productService;
 	/** @type {ProductStatsService} */ #productStatsService;
 	/** @type {IReviewValidator} */ #reviewValidator;
@@ -24,7 +24,7 @@ export class ReviewService extends IReviewService {
 
 	/**
 	 * @param {IReviewRepository} reviewRepository
-	 * @param {IUserService} userService
+	 * @param {UserService} userService
 	 * @param {ProductService} productService
 	 * @param {ProductStatsService} productStatsService
 	 * @param {IReviewValidator} reviewValidator

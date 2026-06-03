@@ -1,5 +1,5 @@
 import * as express from "express";
-import {UserDTO} from "../domain/index.js";
+import {UserDTO} from "../application/types/user.js";
 
 declare global {
     namespace Express {

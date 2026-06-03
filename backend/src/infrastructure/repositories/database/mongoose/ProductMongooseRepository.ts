@@ -6,8 +6,10 @@ import {ProductAdapter} from "./adapters/ProductAdapter.js";
 import {ProductEntity} from "../../../../entities/product/ProductEntity.js";
 import {
 	AttributeFacetDTO,
+	ProductCountFilters,
 	ProductCreatePersistence,
-	ProductQueryPersistence, ProductUpdatePersistence
+	ProductFiltersPersistence,
+	ProductUpdatePersistence
 } from "../../../../application/types/product.js";
 import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
@@ -17,26 +19,23 @@ import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort} from "./utils.js";
 
 export class ProductMongooseRepository extends IProductRepository {
-	#buildMongooseQuery(query: ProductQueryPersistence): FilterQuery<IProductDoc> {
-		const mongooseQuery: FilterQuery<IProductDoc> = {};
+	private buildQuery(filters: ProductFiltersPersistence): FilterQuery<IProductDoc> {
+		const { categoryId, attributes } = filters;
 
-		if (query.categoryId) {
-			mongooseQuery.category = query.categoryId;
-		}
+		return {
+			...(categoryId && {categoryId}),
+			...(attributes && Object.keys(attributes).length > 0 && {
+				$and: Object.entries(attributes).map(([name, value]) => {
+					const matchValue = Array.isArray(value) ? {$in: value} : value;
 
-		if (query.attributes && Object.keys(query.attributes).length > 0) {
-			mongooseQuery.$and = Object.entries(query.attributes).map(([name, value]) => {
-				const matchValue = Array.isArray(value) ? { $in: value } : value;
-
-				return {
-					attributes: {
-						$elemMatch: { name, value: matchValue }
-					}
-				};
-			});
-		}
-
-		return mongooseQuery;
+					return {
+						attributes: {
+							$elemMatch: {name, value: matchValue}
+						}
+					};
+				})
+			}),
+		};
 	}
 
 	async create(data: ProductCreatePersistence): Promise<ProductEntity> {
@@ -138,15 +137,14 @@ export class ProductMongooseRepository extends IProductRepository {
 	}
 
 	async findAndCount(
-		query: ProductQueryPersistence,
+		filters: ProductFiltersPersistence,
 		skip: number,
-		limit: number,
-		options: Record<string, string> = {}
+		limit: number
 	): Promise<RepositoryPaginationResult<ProductEntity>> {
-		const { sortBy = "createdAt", order = "desc" } = options;
+		const { search, sortBy = "createdAt", order = "desc", ...queryFilters } = filters;
 
-		const isComplexQuery = !!query.search;
-		const mongooseQuery = this.#buildMongooseQuery(query);
+		const isComplexQuery = !!search;
+		const mongooseQuery = this.buildQuery(queryFilters);
 
 		const sortObject = determineSort(sortBy, order);
 
@@ -167,7 +165,7 @@ export class ProductMongooseRepository extends IProductRepository {
 		}
 
 		// --- 2. Complex Search Path (Aggregation) ---
-		const sanitizedTerm = sanitizeSearchTerm(query.search);
+		const sanitizedTerm = sanitizeSearchTerm(filters.search);
 		const searchRegex = new RegExp(sanitizedTerm, 'i');
 		const basePipeline: PipelineStage[] = [];
 
@@ -231,8 +229,8 @@ export class ProductMongooseRepository extends IProductRepository {
 		return new RepositoryPaginationResult(productEntities, calculatedTotal);
 	}
 
-	async count(query: ProductQueryPersistence = {}): Promise<number> {
-		const baseQuery = this.#buildMongooseQuery(query);
+	async count(filters: ProductCountFilters = {}): Promise<number> {
+		const baseQuery = this.buildQuery(filters);
 		return Product.countDocuments(baseQuery);
 	}
 

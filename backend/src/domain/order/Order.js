@@ -1,4 +1,6 @@
-import {ShortUserDTO, PaginationMetadata} from "../index.js";
+import {ShortUserDTO} from "../../application/types/user.js";
+import {PaginationMetadata} from "../../application/types/shared.js";
+
 import {OrderStatus} from "../../enums/application.ts";
 
 /**

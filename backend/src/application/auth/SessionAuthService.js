@@ -1,27 +1,28 @@
 import {ISessionAuthService} from "../../interfaces/auth/ISessionAuthService.js";
-import {IUserService} from "../../interfaces/user/IUserService.js";
-import {PasswordService} from "../../infrastructure/security/PasswordService.ts";
+import {UserService} from "../user/UserService.js";
+import {PasswordService} from "../../infrastructure/security/PasswordService.js";
+import {JwtService} from "../../infrastructure/security/JwtService.js";
+import {AuthCacheRepository} from "../../infrastructure/repositories/cache/AuthCacheRepository.js";
+
+import {UserDTO} from "../types/user.js";
 import {AuthResponseAssembler, ValidateTokenDTO} from "../../domain/index.js";
 
-import {JwtService} from "../../infrastructure/security/JwtService.js";
-import {AuthCacheRepository} from "../../infrastructure/repositories/cache/AuthCacheRepository.ts";
+import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js";
 
-import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.ts";
-
-import {TokenType} from "../../enums/auth.ts";
+import {TokenType} from "../../enums/auth.js";
 
 /**
  * Implements the ISessionAuthService contract, focusing only on active user
  * session management (login, tokens, logout).
  */
 export class SessionAuthService extends ISessionAuthService {
-	/** @type {IUserService} */ #userService;
+	/** @type {UserService} */ #userService;
 	/** @type {PasswordService} */ #passwordProvider;
 	/** @type {JwtService} */ #jwtProvider;
 	/** @type {AuthCacheRepository} */ #authCacheRepository;
 
 	/**
-	 * @param {IUserService} userService
+	 * @param {UserService} userService
 	 * @param {PasswordService} passwordProvider
 	 * @param {JwtService} jwtProvider
 	 * @param {AuthCacheRepository} authCacheRepository

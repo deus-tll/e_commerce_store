@@ -1,4 +1,5 @@
 export function sanitizeSearchTerm(term: string): string {
 	if (!term) return "";
-	return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const result = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	return result.trim();
 }

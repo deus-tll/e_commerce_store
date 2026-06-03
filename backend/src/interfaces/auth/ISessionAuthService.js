@@ -1,4 +1,5 @@
-import {UserWithTokensDTO, ValidateTokenDTO, UserDTO} from "../../domain/index.js";
+import {UserWithTokensDTO, ValidateTokenDTO} from "../../domain/index.js";
+import {UserDTO} from "../../application/types/user.js";
 
 /**
  * @interface ISessionAuthService

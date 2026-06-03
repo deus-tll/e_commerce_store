@@ -8,15 +8,15 @@ import {ProductEntity} from "../../entities/product/ProductEntity.js";
 import {
 	AttributeFacetDTO, ProductCreateInput, ProductCreatePersistence,
 	ProductDTO, ProductFiltersInput, ProductPaginationResultDTO,
-	ShortProductDTO, ProductUpdateInput, ProductUpdatePersistence
+	ShortProductDTO, ProductUpdateInput, ProductUpdatePersistence, ProductFiltersPersistence
 } from "../types/product.js";
 import {CategoryDTO} from "../types/category.js";
 import {PaginationMetadata} from "../types/shared.js";
 
 import {EntityNotFoundError} from "../../errors/index.js";
 
-import {parseProductQuery} from "./parseProductQuery.js";
 import {removeUndefinedFields} from "../../utils/object.js";
+import {ProductMapper} from "./ProductMapper.js";
 
 export class ProductService {
 	constructor(
@@ -32,7 +32,7 @@ export class ProductService {
 			? categoryDTO
 			: await this.categoryService.getById(entity.categoryId);
 
-		return new ProductDTO(entity, finalCategoryDTO);
+		return ProductMapper.toDTO(entity, finalCategoryDTO);
 	}
 
 	private async formProductDTOs(entities: ProductEntity[]): Promise<ProductDTO[]> {
@@ -40,12 +40,8 @@ export class ProductService {
 			...new Set(entities.map(entity => entity.categoryId).filter(Boolean))
 		];
 		const categoryDTOs = await this.categoryService.getDTOsByIds(uniqueCategoryIds);
-		const categoryMap = new Map(categoryDTOs.map(dto => [dto.id, dto]));
 
-		return entities.map(entity => {
-			const categoryDTO = categoryMap.get(entity.categoryId);
-			return new ProductDTO(entity, categoryDTO);
-		});
+		return ProductMapper.toDTOs(entities, categoryDTOs);
 	}
 
 	/**
@@ -128,7 +124,7 @@ export class ProductService {
 			...rest,
 			images: processedImages,
 			attributes: filteredAttributes
-		};
+		} satisfies ProductCreatePersistence;
 
 		try {
 			const createdEntity = await this.productRepository.create(persistenceData);
@@ -160,7 +156,7 @@ export class ProductService {
 			...removeUndefinedFields(restOfData),
 			...(attributes !== undefined && { attributes }),
 			...(images !== undefined && { images }),
-		});
+		} satisfies ProductUpdatePersistence);
 
 		const updatedEntity = await this.productRepository.updateById(id, persistenceData);
 
@@ -197,10 +193,11 @@ export class ProductService {
 	async getAll(page: number = 1, limit: number = 10, filters: ProductFiltersInput = {}): Promise<ProductPaginationResultDTO> {
 		const skip = (page - 1) * limit;
 
+		const { categorySlug, ...restFilters } = filters;
 		let categoryId: string | null = null;
 
-		if (filters.categorySlug) {
-			const categoryDTO = await this.categoryService.getBySlug(filters.categorySlug);
+		if (categorySlug) {
+			const categoryDTO = await this.categoryService.getBySlug(categorySlug);
 
 			if (!categoryDTO) {
 				return new ProductPaginationResultDTO([], new PaginationMetadata(page, limit, 0, 0));
@@ -208,11 +205,12 @@ export class ProductService {
 			categoryId = categoryDTO.id;
 		}
 
-		const query = parseProductQuery(filters, {categoryId});
+		const finalFilters: ProductFiltersPersistence = {
+			...restFilters,
+			...(categoryId && { categoryId })
+		};
 
-		const { sortBy, order } = filters;
-
-		const { results, total } = await this.productRepository.findAndCount(query, skip, limit, { sortBy, order });
+		const { results, total } = await this.productRepository.findAndCount(finalFilters, skip, limit);
 
 		const pages = Math.ceil(total / limit);
 		const productDTOs = await this.formProductDTOs(results);

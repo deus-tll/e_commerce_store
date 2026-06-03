@@ -1,5 +1,4 @@
 import {FilterQuery} from "mongoose";
-
 import Category, {ICategoryDoc} from "./models/Category.js";
 
 import {ICategoryRepository} from "../../../../application/category/ICategoryRepository.js";
@@ -8,24 +7,28 @@ import {CategoryEntity} from "../../../../entities/category/CategoryEntity.js";
 import {
 	CategoryCreatePersistence,
 	CategoryUpdatePersistence,
-	CategoryQueryPersistence
+	CategoryFiltersPersistence
 } from "../../../../application/types/category.js";
 import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 
 import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
+import {determineSort} from "./utils.js";
 
 export class CategoryMongooseRepository extends ICategoryRepository {
-	#buildMongooseQuery(query: CategoryQueryPersistence) : FilterQuery<ICategoryDoc> {
-		const mongooseQuery: FilterQuery<ICategoryDoc> = {};
+	private buildMongooseQuery(filters: CategoryFiltersPersistence) : FilterQuery<ICategoryDoc> {
+		const { search } = filters;
+		const query: FilterQuery<ICategoryDoc> = {};
 
-		if (query.search) {
-			const sanitizedTerm = sanitizeSearchTerm(query.search);
-			mongooseQuery.name = new RegExp(sanitizedTerm, "i");
+		if (search) {
+			const sanitizedTerm = sanitizeSearchTerm(search);
+			if (sanitizedTerm) {
+				query.name = new RegExp(sanitizedTerm, "i");
+			}
 		}
 
-		return mongooseQuery;
+		return query;
 	}
 
 	async create(data: CategoryCreatePersistence): Promise<CategoryEntity> {
@@ -74,20 +77,23 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 	}
 
 	async findAndCount(
-		query: CategoryQueryPersistence,
+		filters: CategoryFiltersPersistence,
 		skip: number,
 		limit: number
 	): Promise<RepositoryPaginationResult<CategoryEntity>> {
-		const mongooseQuery = this.#buildMongooseQuery(query);
-		const sort = { name: 1 as const };
+		const { sortBy = "name", order = "asc", ...restFilters } = filters;
+
+		const query = this.buildMongooseQuery(restFilters);
+
+		const sortObject = determineSort(sortBy, order);
 
 		const [foundDocs, total] = await Promise.all([
-			Category.find(mongooseQuery)
-				.sort(sort)
+			Category.find(query)
+				.sort(sortObject)
 				.skip(skip)
 				.limit(limit)
 				.lean(),
-			Category.countDocuments(mongooseQuery),
+			Category.countDocuments(query),
 		]);
 
 		const categoryEntities = foundDocs.map(doc => CategoryAdapter.toEntity(doc));

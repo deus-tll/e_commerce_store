@@ -1,4 +1,4 @@
-import {UserDTO} from "../index.js";
+import {UserDTO} from "../../application/types/user.js";
 
 /**
  * JWT-specific DTO for the response tokens.

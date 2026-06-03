@@ -1,10 +1,10 @@
 import {IOrderService} from "../../interfaces/order/IOrderService.js";
 import {IOrderRepository} from "./IOrderRepository.js";
-import {IUserService} from "../../interfaces/user/IUserService.js";
+import {UserService} from "../user/UserService.js";
 import {IOrderMapper} from "../../interfaces/mappers/IOrderMapper.js";
 import {OrderPaginationResultDTO, PaginationMetadata} from "../../domain/index.js";
 
-import {EntityNotFoundError} from "../../errors/index.ts";
+import {EntityNotFoundError} from "../../errors/index.js";
 
 /**
  * Agnostic business logic layer for order operations.
@@ -13,12 +13,12 @@ import {EntityNotFoundError} from "../../errors/index.ts";
  */
 export class OrderService extends IOrderService {
 	/** @type {IOrderRepository} */ #orderRepository;
-	/** @type {IUserService} */ #userService;
+	/** @type {UserService} */ #userService;
 	/** @type {IOrderMapper} */ #orderMapper;
 
 	/**
 	 * @param {IOrderRepository} orderRepository
-	 * @param {IUserService} userService
+	 * @param {UserService} userService
 	 * @param {IOrderMapper} orderMapper
 	 */
 	constructor(orderRepository, userService, orderMapper) {

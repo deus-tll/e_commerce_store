@@ -2,6 +2,11 @@ import {EmailNotificationService} from "../../../application/shared/notification
 import {ProductService} from "../../../application/product/ProductService.js";
 import {CategoryService} from "../../../application/category/CategoryService.js";
 import {CartService} from "../../../application/cart/CartService.js";
+import {UserService} from "../../../application/user/UserService.js";
+import {UserStatsService} from "../../../application/user/UserStatsService.js";
+import {UserTokenService} from "../../../application/user/UserTokenService.js";
+import {UserAccountService} from "../../../application/user/UserAccountService.js";
+import {ProductStatsService} from "../../../application/product/ProductStatsService.js";
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
@@ -43,9 +48,26 @@ const registerApplicationServices = (container) => {
             recommendationsInCartSize
         );
     });
+    container.register(ApplicationServiceTypes.PRODUCT_STATS, ProductStatsService, [DatabaseRepositoryTypes.PRODUCT]);
 
     container.register(ApplicationServiceTypes.CART, CartService,
         [DatabaseRepositoryTypes.CART, ApplicationServiceTypes.PRODUCT]
+    );
+
+    container.register(ApplicationServiceTypes.USER, UserService,
+        [DatabaseRepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD]
+    );
+    container.register(ApplicationServiceTypes.USER_STATS, UserStatsService, [DatabaseRepositoryTypes.USER]);
+    container.register(ApplicationServiceTypes.USER_TOKEN, UserTokenService, [DatabaseRepositoryTypes.USER, InfrastructureServiceTypes.PASSWORD]);
+    container.register(ApplicationServiceTypes.USER_ACCOUNT, UserAccountService,
+        [
+            ApplicationServiceTypes.USER,
+            ApplicationServiceTypes.EMAIL_NOTIFICATION,
+            InfrastructureServiceTypes.PASSWORD,
+            InfrastructureServiceTypes.JWT,
+            CacheRepositoryTypes.AUTH,
+            ApplicationServiceTypes.USER_TOKEN
+        ]
     );
 }
 

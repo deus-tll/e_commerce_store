@@ -1,7 +1,6 @@
 import Joi from "joi";
 
 import {
-	userIdParam,
 	userRole,
 	userNameSchema,
 	emailSchema,
@@ -9,6 +8,15 @@ import {
 } from "./common.js";
 
 import {UserRole} from "../../enums/application.ts";
+
+const userIdParam = Joi.string()
+	.trim()
+	.required()
+	.messages({
+		'any.required': 'User ID is required in URL parameters.',
+		'string.empty': 'User ID cannot be empty.',
+		'string.base': 'User ID must be a string.'
+	});
 
 /**
  * Joi schema for validating the POST /users request (User Creation).
@@ -34,13 +42,13 @@ export const createUserSchema = Joi.object({
 });
 
 /**
- * Joi schema for validating the GET /users/:userId request (Get By ID)
- * and DELETE /users/:userId request (Delete User).
- * Checks only params for userId.
+ * Joi schema for validating the GET /users/:id request (Get By ID)
+ * and DELETE /users/:id request (Delete User).
+ * Checks only params for id.
  */
 export const userIdParamSchema = Joi.object({
 	params: Joi.object({
-		userId: userIdParam,
+		id: userIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({}).optional(),
@@ -48,12 +56,12 @@ export const userIdParamSchema = Joi.object({
 });
 
 /**
- * Joi schema for validating the PATCH /users/:userId request (User Update).
- * Checks params for userId and body for optional name, email, role, isVerified.
+ * Joi schema for validating the PATCH /users/:id request (User Update).
+ * Checks params for id and body for optional name, email, role, isVerified.
  */
 export const updateUserSchema = Joi.object({
 	params: Joi.object({
-		userId: userIdParam,
+		id: userIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({

@@ -18,6 +18,8 @@ export enum UserRole {
     ADMIN = "admin"
 }
 
+export const UserRoleValues = Object.values(UserRole);
+
 export enum OrderStatus {
     AWAITING_PAYMENT = "awaiting_payment",
     PENDING = "pending",

@@ -8,15 +8,6 @@ export const imageSchema = Joi.string().trim().uri().messages({
 	'string.uri': 'Image must be a valid URL.'
 });
 
-// 1. User ID (for params)
-export const userIdParam = Joi.string()
-	.trim()
-	.required()
-	.messages({
-		'any.required': 'User ID is required in URL parameters.',
-		'string.empty': 'User ID cannot be empty.',
-		'string.base': 'User ID must be a string.'
-	});
 
 // 2. User Role
 export const userRole = Joi.string()

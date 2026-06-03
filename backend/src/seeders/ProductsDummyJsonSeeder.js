@@ -1,16 +1,13 @@
 import {BaseSeeder} from "./BaseSeeder.js";
 import {CategoryService} from "../application/category/CategoryService.js";
 import {ProductService} from "../application/product/ProductService.js";
-import {IUserService} from "../interfaces/user/IUserService.js";
+import {UserService} from "../application/user/UserService.js";
 import {IReviewService} from "../interfaces/review/IReviewService.js";
 
 import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
-import {
-    CreateUserDTO,
-    CreateReviewDTO
-} from "../domain/index.js";
+import {CreateReviewDTO} from "../domain/index.js";
 
-import {UserRole} from "../enums/application.ts";
+import {UserRole} from "../enums/application.js";
 
 /**
  * @typedef {Object} DummyJsonProduct
@@ -50,7 +47,7 @@ const ALLOWED_ATTRIBUTES = {
 export class ProductsDummyJsonSeeder extends BaseSeeder {
     /** @type {CategoryService} */ #categoryService;
     /** @type {ProductService} */ #productService;
-    /** @type {IUserService} */ #userService;
+    /** @type {UserService} */ #userService;
     /** @type {IReviewService} */ #reviewService;
     /** @type {string} */ #productsUrlWithLimit;
     /** @type {string} */ #defaultSeederUserPassword;
@@ -62,7 +59,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
     /**
      * @param {CategoryService} categoryService
      * @param {ProductService} productService
-     * @param {IUserService} userService
+     * @param {UserService} userService
      * @param {IReviewService} reviewService
      * @param {string} productsUrlWithLimit
      * @param {string} defaultSeederUserPassword
@@ -197,15 +194,16 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
             return this.#userMap.get(email);
         }
 
-        const dto = new CreateUserDTO({
+        // UserCreateInput
+        const userCreateInput = {
             name: reviewData.reviewerName,
             email: email,
             password: this.#defaultSeederUserPassword,
             role: UserRole.CUSTOMER,
             isVerified: true
-        });
+        };
 
-        const created = await this.#userService.create(dto);
+        const created = await this.#userService.create(userCreateInput);
         this.#userMap.set(email, created.id);
         return created.id;
     }

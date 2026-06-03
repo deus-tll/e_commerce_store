@@ -1,9 +1,9 @@
 import {ICartRepository} from "./ICartRepository.js";
 import {ProductService} from "../product/ProductService.js";
+import {CartMapper} from "./CartMapper.js";
 
 import {CartEntity} from "../../entities/cart/CartEntity.js";
-import {CartDTO, CartItemDTO} from "../types/cart.js";
-import {ShortProductDTO} from "../types/product.js";
+import {CartItemDTO} from "../types/cart.js";
 
 import {DomainValidationError} from "../../errors/index.js";
 
@@ -13,27 +13,11 @@ export class CartService {
 		private readonly productService: ProductService
 	) {}
 
-	private toDTO(entity: CartEntity, shortProductDTOs: ShortProductDTO[]): CartDTO {
-		const productMap = new Map(shortProductDTOs.map(p => [p.id, p]));
-
-		const itemDTOs = entity.items.map(item => {
-			const product = productMap.get(item.productId);
-			if (!product) return null;
-
-			return new CartItemDTO({
-				product: product,
-				quantity: item.quantity
-			});
-		}).filter(Boolean);
-
-		return new CartDTO(entity, itemDTOs);
-	}
-
 	private async formItemDTOs(entity: CartEntity): Promise<readonly CartItemDTO[]> {
 		const productIds = entity.items.map(item => item.productId);
 		const shortProductDTOs = await this.productService.getShortDTOsByIds(productIds);
 
-		const cartDTO = this.toDTO(entity, shortProductDTOs);
+		const cartDTO = CartMapper.toDTO(entity, shortProductDTOs);
 
 		return cartDTO.items;
 	}

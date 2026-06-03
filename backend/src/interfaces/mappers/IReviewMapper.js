@@ -1,4 +1,5 @@
 import {ReviewEntity, ReviewDTO} from "../../domain/index.js";
+import {ShortUserDTO} from "../../application/types/user.js";
 
 /**
  * @interface IReviewMapper

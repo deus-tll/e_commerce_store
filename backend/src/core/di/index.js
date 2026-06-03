@@ -5,7 +5,6 @@ import registerInfrastructureServices from "./registrations/infrastructureServic
 import registerProviders from "./registrations/providers.js";
 import registerFactories from "./registrations/factories.js";
 import registerMappers from "./registrations/mappers.js";
-import registerParsers from "./registrations/parsers.js";
 import registerCookieManagers from "./registrations/cookieManagers.js";
 import registerStorageServices from "./registrations/storageServices.js";
 import registerImageManagers from "./registrations/imageManagers.js";
@@ -23,7 +22,6 @@ const initContainer = () => {
     registerProviders(container);
     registerFactories(container);
     registerMappers(container);
-    registerParsers(container);
     registerCookieManagers(container);
     registerStorageServices(container);
     registerImageManagers(container);
