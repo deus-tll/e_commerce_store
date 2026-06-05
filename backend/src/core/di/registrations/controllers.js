@@ -16,7 +16,7 @@ import {ApplicationServiceTypes, ControllerTypes, CookieManagerTypes, ServiceTyp
  * @returns {void}
  */
 const registerControllers = (container) => {
-    container.register(ControllerTypes.ANALYTICS, AnalyticsController, [ServiceTypes.ANALYTICS]);
+    container.register(ControllerTypes.ANALYTICS, AnalyticsController, [ApplicationServiceTypes.ANALYTICS]);
     container.register(ControllerTypes.AUTH, AuthController, [ApplicationServiceTypes.SESSION_AUTH, ApplicationServiceTypes.USER_ACCOUNT, CookieManagerTypes.AUTH]);
     container.register(ControllerTypes.CART, CartController, [ApplicationServiceTypes.CART]);
     container.register(ControllerTypes.CATEGORY, CategoryController, [ApplicationServiceTypes.CATEGORY]);

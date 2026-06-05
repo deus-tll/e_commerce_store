@@ -76,13 +76,13 @@ export const ApplicationServiceTypes = Object.freeze({
 	SESSION_AUTH: "SessionAuthService",
 
 	REVIEW: "ReviewService",
+
+	ANALYTICS: "AnalyticsService",
 });
 
 export const ServiceTypes = Object.freeze({
 	ORDER: "IOrderService",
 	COUPON: "ICouponService",
-
-	ANALYTICS: "IAnalyticsService",
 
 	CHECKOUT: "ICheckoutService",
 });

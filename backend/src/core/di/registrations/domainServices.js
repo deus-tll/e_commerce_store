@@ -28,11 +28,6 @@ const registerDomainServices = (container) => {
         MapperTypes.COUPON
     ]);
     // =============
-    // Analytics
-    container.register(ServiceTypes.ANALYTICS, AnalyticsService,
-        [DatabaseRepositoryTypes.ORDER, DatabaseRepositoryTypes.USER, DatabaseRepositoryTypes.PRODUCT]
-    );
-    // =============
     // Payment
     container.register(ServiceTypes.CHECKOUT, () => {
         const paymentProvider = container.get(ProviderTypes.PAYMENT);

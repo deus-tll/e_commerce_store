@@ -9,6 +9,7 @@ import {UserAccountService} from "../../../application/user/UserAccountService.j
 import {ProductStatsService} from "../../../application/product/ProductStatsService.js";
 import {SessionAuthService} from "../../../application/auth/SessionAuthService.js";
 import {ReviewService} from "../../../application/review/ReviewService.js";
+import {AnalyticsService} from "../../../application/analytics/AnalyticsService.js";
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
@@ -83,6 +84,10 @@ const registerApplicationServices = (container) => {
         ApplicationServiceTypes.PRODUCT_STATS,
         ValidatorTypes.REVIEW
     ]);
+
+    container.register(ApplicationServiceTypes.ANALYTICS, AnalyticsService,
+        [DatabaseRepositoryTypes.ORDER, DatabaseRepositoryTypes.USER, DatabaseRepositoryTypes.PRODUCT]
+    );
 }
 
 export default registerApplicationServices;
