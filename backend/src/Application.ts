@@ -8,7 +8,7 @@ import {setupAppRouters} from "./http/routers/index.js";
 import {setupPaymentWebhookRouter} from "./http/routers/payment.webhook.js";
 import errorHandler from "./http/middleware/errorHandler.js";
 
-import {ControllerTypes, ProviderTypes, SeederTypes, ServiceTypes} from "./constants/ioc.js";
+import {ApplicationServiceTypes, ControllerTypes, ProviderTypes, SeederTypes} from "./constants/ioc.js";
 import {config} from "./config.js";
 
 const JSON_LIMIT = config.server.jsonLimit;
@@ -36,7 +36,7 @@ export class Application {
 			cache: container.get(ProviderTypes.CACHE),
 			storage: container.get(ProviderTypes.STORAGE),
 
-			authService: container.get(ServiceTypes.SESSION_AUTH),
+			authService: container.get(ApplicationServiceTypes.SESSION_AUTH),
 
 			analyticsController: container.get(ControllerTypes.ANALYTICS),
 			authController: container.get(ControllerTypes.AUTH),

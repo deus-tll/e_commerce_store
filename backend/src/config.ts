@@ -107,6 +107,9 @@ export const config = {
 		product: {
 			featuredProductsMinRating: parseNum(process.env.FEATURED_PRODUCTS_MIN_RATING, 4.5),
 			recommendationsInCartSize: parseNum(process.env.RECOMMENDATIONS_IN_CART_SIZE, 4)
+		},
+		review : {
+			requirePurchaseForReview: !parseBool(process.env.DISABLE_PURCHASE_FOR_REVIEW)
 		}
 	},
 	seeding: {

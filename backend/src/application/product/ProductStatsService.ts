@@ -5,11 +5,9 @@ import {IProductRepository} from "./IProductRepository.js";
  * into the required low-level updates on the Product entity's aggregated stats.
  */
 export class ProductStatsService{
-	private readonly productRepository: IProductRepository;
-
-	constructor(productRepository: IProductRepository) {
-		this.productRepository = productRepository;
-	}
+	constructor(
+		private readonly productRepository: IProductRepository
+	) {}
 
 	async handleReviewCreation(productId: string, newRating: number): Promise<void> {
 		// New Review: +1 total review count, rating change is the new rating, old rating is 0

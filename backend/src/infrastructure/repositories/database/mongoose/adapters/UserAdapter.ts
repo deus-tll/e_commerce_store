@@ -4,7 +4,7 @@ import {IUserDoc} from "../models/User.js";
 import {normalizePersistence} from "../utils.js";
 
 export class UserAdapter {
-    static toEntity(doc: IUserDoc | null) {
+    static toEntity(doc: IUserDoc | null): UserEntity | null {
         const data = normalizePersistence(doc);
         return data ? new UserEntity(data) : null;
     }

@@ -7,11 +7,13 @@ import {UserStatsService} from "../../../application/user/UserStatsService.js";
 import {UserTokenService} from "../../../application/user/UserTokenService.js";
 import {UserAccountService} from "../../../application/user/UserAccountService.js";
 import {ProductStatsService} from "../../../application/product/ProductStatsService.js";
+import {SessionAuthService} from "../../../application/auth/SessionAuthService.js";
+import {ReviewService} from "../../../application/review/ReviewService.js";
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
     DatabaseRepositoryTypes, ImageManagerTypes,
-    InfrastructureServiceTypes, ProviderTypes,
+    InfrastructureServiceTypes, ProviderTypes, ValidatorTypes,
 } from "../../../constants/ioc.js";
 
 import {config} from "../../../config.js";
@@ -69,6 +71,18 @@ const registerApplicationServices = (container) => {
             ApplicationServiceTypes.USER_TOKEN
         ]
     );
+
+    container.register(ApplicationServiceTypes.SESSION_AUTH, SessionAuthService,
+        [ApplicationServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheRepositoryTypes.AUTH]
+    );
+
+    container.register(ApplicationServiceTypes.REVIEW, ReviewService, [
+        DatabaseRepositoryTypes.REVIEW,
+        ApplicationServiceTypes.USER,
+        ApplicationServiceTypes.PRODUCT,
+        ApplicationServiceTypes.PRODUCT_STATS,
+        ValidatorTypes.REVIEW
+    ]);
 }
 
 export default registerApplicationServices;

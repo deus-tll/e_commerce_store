@@ -30,7 +30,7 @@ export const MapperTypes = Object.freeze({
 });
 
 export const CookieManagerTypes = Object.freeze({
-	AUTH: "IAuthCookieManager"
+	AUTH: "AuthCookieManager"
 });
 
 export const ImageManagerTypes = Object.freeze({
@@ -44,8 +44,8 @@ export const StorageServiceTypes = Object.freeze({
 });
 
 export const ValidatorTypes = Object.freeze({
-	COUPON: "ICouponValidator",
-	REVIEW: "IReviewValidator"
+	COUPON: "CouponValidator",
+	REVIEW: "ReviewValidator"
 });
 
 export const FactoryTypes = Object.freeze({
@@ -72,15 +72,17 @@ export const ApplicationServiceTypes = Object.freeze({
 	USER_STATS: "UserStatsService",
 	USER_TOKEN: "UserTokenService",
 	USER_ACCOUNT: "UserAccountService",
+
+	SESSION_AUTH: "SessionAuthService",
+
+	REVIEW: "ReviewService",
 });
 
 export const ServiceTypes = Object.freeze({
-	REVIEW: "IReviewService",
 	ORDER: "IOrderService",
 	COUPON: "ICouponService",
 
 	ANALYTICS: "IAnalyticsService",
-	SESSION_AUTH: "SessionAuthService",
 
 	CHECKOUT: "ICheckoutService",
 });

@@ -17,14 +17,14 @@ import {ApplicationServiceTypes, ControllerTypes, CookieManagerTypes, ServiceTyp
  */
 const registerControllers = (container) => {
     container.register(ControllerTypes.ANALYTICS, AnalyticsController, [ServiceTypes.ANALYTICS]);
-    container.register(ControllerTypes.AUTH, AuthController, [ServiceTypes.SESSION_AUTH, ApplicationServiceTypes.USER_ACCOUNT, CookieManagerTypes.AUTH]);
+    container.register(ControllerTypes.AUTH, AuthController, [ApplicationServiceTypes.SESSION_AUTH, ApplicationServiceTypes.USER_ACCOUNT, CookieManagerTypes.AUTH]);
     container.register(ControllerTypes.CART, CartController, [ApplicationServiceTypes.CART]);
     container.register(ControllerTypes.CATEGORY, CategoryController, [ApplicationServiceTypes.CATEGORY]);
     container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
     container.register(ControllerTypes.ORDER, OrderController, [ServiceTypes.ORDER]);
     container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.CHECKOUT]);
     container.register(ControllerTypes.PRODUCT, ProductController, [ApplicationServiceTypes.PRODUCT, ApplicationServiceTypes.CART]);
-    container.register(ControllerTypes.REVIEW, ReviewController, [ServiceTypes.REVIEW]);
+    container.register(ControllerTypes.REVIEW, ReviewController, [ApplicationServiceTypes.REVIEW]);
     container.register(ControllerTypes.USER, UserController, [ApplicationServiceTypes.USER, ApplicationServiceTypes.USER_STATS]);
 }
 

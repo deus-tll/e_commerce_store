@@ -7,6 +7,7 @@ import {TemplateService} from "../../../infrastructure/templates/TemplateService
 
 import {InfrastructureServiceTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
+import {DateTime} from "../../../utils/dateTime.ts";
 
 /**
  * @param {DIContainer} container
@@ -21,9 +22,9 @@ const registerInfrastructureServices = (container) => {
         return new JwtService(
             jwt,
             config.infrastructure.security.jwt.access.secret,
-            config.infrastructure.security.jwt.access.ttl,
+            DateTime.ttlToSeconds(config.infrastructure.security.jwt.access.ttl),
             config.infrastructure.security.jwt.refresh.secret,
-            config.infrastructure.security.jwt.refresh.ttl
+            DateTime.ttlToSeconds(config.infrastructure.security.jwt.refresh.ttl)
         );
     });
     container.register(InfrastructureServiceTypes.TEMPLATE, () => {

@@ -21,10 +21,10 @@ export function setupReviewsRouter(
 
 	const protectRoute = createProtectRoute(authService);
 
-	router.get("/product/:id", validationMiddleware(getReviewsByProductSchema), reviewController.getByProduct);
+	router.get("/product/:id", validationMiddleware(getReviewsByProductSchema), reviewController.getAllByProduct);
 	router.post("/product/:id", protectRoute, validationMiddleware(createReviewSchema), reviewController.create);
-	router.patch("/:reviewId", protectRoute, validationMiddleware(updateReviewSchema), reviewController.update);
-	router.delete("/:reviewId", protectRoute, validationMiddleware(deleteReviewSchema), reviewController.delete);
+	router.patch("/:id", protectRoute, validationMiddleware(updateReviewSchema), reviewController.update);
+	router.delete("/:id", protectRoute, validationMiddleware(deleteReviewSchema), reviewController.delete);
 
 	return router;
 }

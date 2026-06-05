@@ -1,7 +1,7 @@
 import {AdminSeeder} from "../../../seeders/AdminSeeder.js";
 import {ProductsDummyJsonSeeder} from "../../../seeders/ProductsDummyJsonSeeder.js";
 
-import {ApplicationServiceTypes, SeederTypes, ServiceTypes} from "../../../constants/ioc.js";
+import {ApplicationServiceTypes, SeederTypes} from "../../../constants/ioc.js";
 import {config} from "../../../config.js";
 
 /**
@@ -19,7 +19,7 @@ const registerSeeders = (container) => {
         const categoryService = container.get(ApplicationServiceTypes.CATEGORY);
         const productService = container.get(ApplicationServiceTypes.PRODUCT);
         const userService = container.get(ApplicationServiceTypes.USER);
-        const reviewService = container.get(ServiceTypes.REVIEW);
+        const reviewService = container.get(ApplicationServiceTypes.REVIEW);
         const productsUrlWithLimit = config.seeding.dummyJson.productsUrlWithLimit;
         const defaultSeederUserPassword = config.seeding.defaultSeederUserPassword;
         const featuredProductsMinRating = config.business.product.featuredProductsMinRating;

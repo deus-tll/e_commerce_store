@@ -1,9 +1,7 @@
 import {
 	CouponEntity,
-	OrderEntity, OrderProductItem,
-	ReviewEntity
+	OrderEntity, OrderProductItem
 } from "../../../../../domain/index.js";
-
 
 /**
  * Utility class responsible for translating data between the Mongoose layer (Models/Documents)
@@ -79,26 +77,6 @@ export class MongooseAdapter {
 			...rest,
 			userId: user ? user.toString() : null,
 			products: products
-		});
-	}
-
-	/**
-	 * Converts a Mongoose Review Document/object to a ReviewEntity.
-	 * Handles the mapping of the Mongoose `product` and `user` reference fields.
-	 * @param {object | null} doc
-	 * @returns {ReviewEntity | null}
-	 */
-	static toReviewEntity(doc) {
-		const plainObject = MongooseAdapter.#toPlainObject(doc);
-
-		if (!plainObject) return null;
-
-		const { product, user, ...rest } = plainObject;
-
-		return new ReviewEntity({
-			...rest,
-			productId: product?.toString(),
-			userId: user?.toString()
 		});
 	}
 }

@@ -8,11 +8,12 @@ import {UserTokenService} from "./UserTokenService.js";
 import {UserMapper} from "./UserMapper.js";
 
 import {UserCreateInput} from "../types/user.js";
-import {AuthResponseAssembler, UserWithTokensDTO} from "../../domain/index.js";
+import {UserWithTokensDTO} from "../types/auth.js";
 
 import {ActionNotAllowedError, EntityNotFoundError, InvalidCredentialsError} from "../../errors/index.js";
 
 import {MS_PER_DAY, MS_PER_HOUR} from "../../constants/time.js";
+import {AuthMapper} from "../auth/AuthMapper.js";
 
 interface TokenResult {
 	token: string;
@@ -60,14 +61,12 @@ export class UserAccountService {
 
 		await this.userTokenService.setVerificationToken(userId, verificationToken, verificationTokenExpiresAt);
 
-		await Promise.all(
-			/** @type {Promise<any>[]} */ ([
-				this.authCacheRepository.storeRefreshToken(userId, refreshToken),
-				this.emailNotificationService.sendEmailVerification(email, verificationToken)
-			])
-		);
+		await Promise.all([
+			this.authCacheRepository.storeRefreshToken(userId, refreshToken),
+			this.emailNotificationService.sendEmailVerification(email, verificationToken)
+		]);
 
-		return AuthResponseAssembler.assembleUserWithTokens({ user: userDTO, accessToken, refreshToken });
+		return AuthMapper.toUserWithTokensDTO(userDTO, accessToken, refreshToken);
 	}
 
 	async verifyEmail(token: string): Promise<UserWithTokensDTO> {
@@ -77,11 +76,11 @@ export class UserAccountService {
 		const { accessToken, refreshToken } = this.jwtService.generateTokens(userId);
 		await this.authCacheRepository.storeRefreshToken(userId, refreshToken);
 
-		return AuthResponseAssembler.assembleUserWithTokens({
-			user: UserMapper.toDTO(userEntity),
+		return AuthMapper.toUserWithTokensDTO(
+			UserMapper.toDTO(userEntity),
 			accessToken,
 			refreshToken
-		});
+		);
 	}
 
 	async resendVerificationEmail(userId: string): Promise<MessageResult> {
@@ -128,17 +127,16 @@ export class UserAccountService {
 
 		const { accessToken, refreshToken } = this.jwtService.generateTokens(userId);
 
-		await Promise.all(
-			/** @type {Promise<any>[]} */ ([
-				this.authCacheRepository.storeRefreshToken(userId, refreshToken),
-				this.emailNotificationService.sendPasswordResetSuccess(email)
-			])
-		);
+		await Promise.all([
+			this.authCacheRepository.storeRefreshToken(userId, refreshToken),
+			this.emailNotificationService.sendPasswordResetSuccess(email)
+		]);
 
-		return AuthResponseAssembler.assembleUserWithTokens({
-			user: UserMapper.toDTO(userEntity),
-			accessToken, refreshToken
-		});
+		return AuthMapper.toUserWithTokensDTO(
+			UserMapper.toDTO(userEntity),
+			accessToken,
+			refreshToken
+		);
 	}
 
 	async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<MessageResult> {

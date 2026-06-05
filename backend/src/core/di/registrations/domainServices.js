@@ -1,15 +1,14 @@
-import {ReviewService} from "../../../application/review/ReviewService.js";
 import {OrderService} from "../../../application/order/OrderService.js";
 import {CouponService} from "../../../application/coupon/CouponService.js";
 import {AnalyticsService} from "../../../application/analytics/AnalyticsService.js";
-import {SessionAuthService} from "../../../application/auth/SessionAuthService.js";
 import {CheckoutService} from "../../../application/checkout/CheckoutService.js";
 
 import {
     DatabaseRepositoryTypes, ProviderTypes, FactoryTypes,
     MapperTypes, ValidatorTypes,
-    ServiceTypes, InfrastructureServiceTypes, ApplicationServiceTypes, CacheRepositoryTypes
+    ServiceTypes, ApplicationServiceTypes
 } from "../../../constants/ioc.js";
+
 import {config} from "../../../config.js";
 
 /**
@@ -17,24 +16,6 @@ import {config} from "../../../config.js";
  * @returns {void}
  */
 const registerDomainServices = (container) => {
-    // Session Auth
-    container.register(ServiceTypes.SESSION_AUTH, SessionAuthService,
-        [ApplicationServiceTypes.USER, InfrastructureServiceTypes.PASSWORD, InfrastructureServiceTypes.JWT, CacheRepositoryTypes.AUTH]
-    );
-    // =============
-
-
-    // =============
-    // Review
-    container.register(ServiceTypes.REVIEW, ReviewService, [
-        DatabaseRepositoryTypes.REVIEW,
-        ApplicationServiceTypes.USER,
-        ApplicationServiceTypes.PRODUCT,
-        ApplicationServiceTypes.PRODUCT_STATS,
-        ValidatorTypes.REVIEW,
-        MapperTypes.REVIEW
-    ]);
-    // =============
     // Order
     container.register(ServiceTypes.ORDER, OrderService, [DatabaseRepositoryTypes.ORDER, ApplicationServiceTypes.USER, MapperTypes.ORDER]);
     // =============

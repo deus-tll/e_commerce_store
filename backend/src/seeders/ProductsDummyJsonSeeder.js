@@ -2,10 +2,9 @@ import {BaseSeeder} from "./BaseSeeder.js";
 import {CategoryService} from "../application/category/CategoryService.js";
 import {ProductService} from "../application/product/ProductService.js";
 import {UserService} from "../application/user/UserService.js";
-import {IReviewService} from "../interfaces/review/IReviewService.js";
+import {ReviewService} from "../application/review/ReviewService.js";
 
 import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
-import {CreateReviewDTO} from "../domain/index.js";
 
 import {UserRole} from "../enums/application.js";
 
@@ -48,7 +47,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
     /** @type {CategoryService} */ #categoryService;
     /** @type {ProductService} */ #productService;
     /** @type {UserService} */ #userService;
-    /** @type {IReviewService} */ #reviewService;
+    /** @type {ReviewService} */ #reviewService;
     /** @type {string} */ #productsUrlWithLimit;
     /** @type {string} */ #defaultSeederUserPassword;
     /** @type {number} */ #featuredProductsMinRating;
@@ -60,7 +59,7 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
      * @param {CategoryService} categoryService
      * @param {ProductService} productService
      * @param {UserService} userService
-     * @param {IReviewService} reviewService
+     * @param {ReviewService} reviewService
      * @param {string} productsUrlWithLimit
      * @param {string} defaultSeederUserPassword
      * @param {number} featuredProductsMinRating
@@ -223,10 +222,11 @@ export class ProductsDummyJsonSeeder extends BaseSeeder {
                 continue;
             }
 
-            const dto = new CreateReviewDTO({
+            // ReviewCreateInput
+            const dto = {
                 rating: reviewData.rating,
                 comment: reviewData.comment
-            });
+            };
 
             try {
                 await this.#reviewService.create(productId, userId, dto);

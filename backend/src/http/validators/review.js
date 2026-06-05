@@ -24,11 +24,11 @@ export const createReviewSchema = Joi.object({
 });
 
 /**
- * Joi schema for validating the PATCH /reviews/:reviewId request (Update Review).
+ * Joi schema for validating the PATCH /reviews/:id request (Update Review).
  */
 export const updateReviewSchema = Joi.object({
 	params: Joi.object({
-		reviewId: reviewIdParam,
+		id: reviewIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({
@@ -50,7 +50,7 @@ export const updateReviewSchema = Joi.object({
  */
 export const getReviewsByProductSchema = Joi.object({
 	params: Joi.object({
-		id: productIdParam, // The product ID is aliased as 'id' in the route
+		id: productIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({}).optional(),
@@ -62,11 +62,11 @@ export const getReviewsByProductSchema = Joi.object({
 });
 
 /**
- * Joi schema for validating the DELETE /reviews/:reviewId request (Delete Review).
+ * Joi schema for validating the DELETE /reviews/:id request (Delete Review).
  */
 export const deleteReviewSchema = Joi.object({
 	params: Joi.object({
-		reviewId: reviewIdParam,
+		id: reviewIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({}).optional(),

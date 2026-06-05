@@ -12,11 +12,9 @@ export const createProtectRoute = (authService: SessionAuthService) : RequestHan
 			throw new InvalidTokenError("No access token provided");
 		}
 
-		const { userId, user } = await authService.validateAccessToken(accessToken);
-
-		req.user = user;
+		req.user = await authService.validateAccessToken(accessToken);
 		// @ts-ignore
-		req.userId = userId;
+		req.userId = user.id;
 
 		next();
 	}
