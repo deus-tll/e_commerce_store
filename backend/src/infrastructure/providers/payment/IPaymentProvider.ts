@@ -1,9 +1,7 @@
+import {OrderProductItem} from "../../../entities/order/types/OrderProductItem.js";
+import {PaymentMetadataDTO, CheckoutSessionDTO, WebhookPaymentEventDTO} from "../../../application/types/payment.js";
 import {
-	OrderProductItem,
 	CouponDTO,
-	PaymentMetadataDTO,
-	WebhookPaymentEventDTO,
-	CheckoutSessionDTO
 } from "../../../domain/index.js";
 
 export abstract class IPaymentProvider {
@@ -11,7 +9,7 @@ export abstract class IPaymentProvider {
 	 * Creates a new Checkout Session.
 	 */
 	abstract createSession(
-		orderItems: OrderProductItem[],
+		orderItems: readonly OrderProductItem[],
 		metadata: PaymentMetadataDTO,
 		appliedCoupon?: CouponDTO | null
 	): Promise<CheckoutSessionDTO>;

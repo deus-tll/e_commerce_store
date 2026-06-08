@@ -9,7 +9,7 @@ import {ProductController} from "../../../http/controllers/ProductController.js"
 import {ReviewController} from "../../../http/controllers/ReviewController.js";
 import {UserController} from "../../../http/controllers/UserController.js";
 
-import {ApplicationServiceTypes, ControllerTypes, CookieManagerTypes, ServiceTypes} from "../../../constants/ioc.js";
+import {ApplicationServiceTypes, ControllerTypes, CookieManagerTypes} from "../../../constants/ioc.js";
 
 /**
  * @param {DIContainer} container
@@ -20,9 +20,9 @@ const registerControllers = (container) => {
     container.register(ControllerTypes.AUTH, AuthController, [ApplicationServiceTypes.SESSION_AUTH, ApplicationServiceTypes.USER_ACCOUNT, CookieManagerTypes.AUTH]);
     container.register(ControllerTypes.CART, CartController, [ApplicationServiceTypes.CART]);
     container.register(ControllerTypes.CATEGORY, CategoryController, [ApplicationServiceTypes.CATEGORY]);
-    container.register(ControllerTypes.COUPON, CouponController, [ServiceTypes.COUPON]);
-    container.register(ControllerTypes.ORDER, OrderController, [ServiceTypes.ORDER]);
-    container.register(ControllerTypes.PAYMENT, PaymentController, [ServiceTypes.CHECKOUT]);
+    container.register(ControllerTypes.COUPON, CouponController, [ApplicationServiceTypes.COUPON]);
+    container.register(ControllerTypes.ORDER, OrderController, [ApplicationServiceTypes.ORDER]);
+    container.register(ControllerTypes.PAYMENT, PaymentController, [ApplicationServiceTypes.CHECKOUT]);
     container.register(ControllerTypes.PRODUCT, ProductController, [ApplicationServiceTypes.PRODUCT, ApplicationServiceTypes.CART]);
     container.register(ControllerTypes.REVIEW, ReviewController, [ApplicationServiceTypes.REVIEW]);
     container.register(ControllerTypes.USER, UserController, [ApplicationServiceTypes.USER, ApplicationServiceTypes.USER_STATS]);

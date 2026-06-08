@@ -1,5 +1,3 @@
-import {ICheckoutService} from "../interfaces/order/ICheckoutService.js";
-
 export const DatabaseRepositoryTypes = Object.freeze({
 	CART: "ICartRepository",
 	CATEGORY: "ICategoryRepository",
@@ -78,13 +76,12 @@ export const ApplicationServiceTypes = Object.freeze({
 	REVIEW: "ReviewService",
 
 	ANALYTICS: "AnalyticsService",
-});
 
-export const ServiceTypes = Object.freeze({
-	ORDER: "IOrderService",
-	COUPON: "ICouponService",
+	ORDER: "OrderService",
 
-	CHECKOUT: "ICheckoutService",
+	COUPON: "CouponService",
+
+	CHECKOUT: "CheckoutService",
 });
 
 export const ControllerTypes = Object.freeze({

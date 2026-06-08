@@ -12,6 +12,10 @@ export interface ReviewCreateInput {
 
 export type ReviewUpdateInput = Partial<ReviewCreateInput>;
 
+export interface ReviewFiltersPersistence {
+    productId?: string;
+}
+
 export type ReviewCreatePersistence = ReviewCreateInput;
 
 export type ReviewUpdatePersistence = ReviewUpdateInput;

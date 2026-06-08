@@ -4,7 +4,7 @@ import {ICartRepository} from "../../../../application/cart/ICartRepository.js";
 import {CartAdapter} from "./adapters/CartAdapter.js";
 
 import {CartEntity} from "../../../../entities/cart/CartEntity.js";
-import {CartItem} from "../../../../entities/cart/CartValueObjects.js";
+import {CartItem} from "../../../../entities/cart/types/CartItem.js";
 
 import {EntityNotFoundError} from "../../../../errors/index.js";
 

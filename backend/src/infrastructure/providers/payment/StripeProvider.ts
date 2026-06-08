@@ -1,12 +1,13 @@
 import Stripe from "stripe";
 
 import {IPaymentProvider} from "./IPaymentProvider.js";
+
+import {OrderProductItem} from "../../../entities/order/types/OrderProductItem.js";
+import {PaymentMetadataDTO, CheckoutSessionDTO, PaymentEventDataDTO, WebhookPaymentEventDTO} from "../../../application/types/payment.js";
 import {
-	CheckoutSessionDTO, CouponDTO,
-	OrderProductItem,
-	PaymentEventDataDTO, PaymentMetadataDTO,
-	WebhookPaymentEventDTO
+	CouponDTO
 } from "../../../domain/index.js";
+
 import {SystemError} from "../../../errors/index.js";
 
 import {Currency} from "../../../utils/currency.js";

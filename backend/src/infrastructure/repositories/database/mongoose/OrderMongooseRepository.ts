@@ -1,9 +1,18 @@
-import Order from "./models/Order.js";
+import mongoose, {FilterQuery} from "mongoose";
+import Order, {IOrderDoc} from "./models/Order.js";
 import Counter from "./models/Counter.js";
 
 import {IOrderRepository} from "../../../../application/order/IOrderRepository.js";
-import {SalesSummaryDTO, DailySalesSummaryDTO, RepositoryPaginationResult} from "../../../../domain/index.js";
-import {MongooseAdapter} from "./adapters/MongooseAdapter.js";
+import {OrderAdapter} from "./adapters/OrderAdapter.js";
+
+import {OrderEntity} from "../../../../entities/order/OrderEntity.js";
+import {
+	DailySalesSummaryDTO,
+	OrderCreatePersistence,
+	OrderFiltersPersistence,
+	SalesSummaryDTO
+} from "../../../../application/types/order.js";
+import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError, SystemError} from "../../../../errors/index.js";
 
@@ -11,18 +20,23 @@ import {OrderStatus} from "../../../../enums/application.js";
 
 import {determineSort, toObjectId} from "./utils.js";
 
+type OrderAggregationResult = {
+	metadata: { total: number }[];
+	data: mongoose.FlattenMaps<IOrderDoc>[];
+}[];
+
 export class OrderMongooseRepository extends IOrderRepository {
-	#buildMongooseQuery(query) {
-		const mongooseQuery = {};
+	private buildQuery(filters: OrderFiltersPersistence): FilterQuery<IOrderDoc> {
+		const { userId, status } = filters;
 
-		if (query.userId) mongooseQuery.user = toObjectId(query.userId, "Order")
-		if (query.status) mongooseQuery.status = query.status;
-
-		return mongooseQuery;
+		return {
+			...(userId && { user: toObjectId(userId, "User") }),
+			...(status && { status }),
+		};
 	}
 
-	async create(userId, data) {
-		let newOrderNumber;
+	async create(userId: string, data: OrderCreatePersistence): Promise<OrderEntity> {
+		let newOrderNumber: string;
 
 		try {
 			const counter = await Counter.findByIdAndUpdate(
@@ -43,24 +57,25 @@ export class OrderMongooseRepository extends IOrderRepository {
 			...rest,
 			user: userId,
 			orderNumber: newOrderNumber,
-			products: data.products.map(item => ({
-				product: item.id,
-				quantity: item.quantity,
-				price: item.price,
-				name: item.name,
-				image: item.image
-			}))
+			products: products.map(item => {
+				const { id: itemId, ...restOfItem } = item;
+
+				return {
+					...restOfItem,
+					product: itemId,
+				}
+			})
 		};
 
 		try {
 			const createdDoc = await Order.create(docData);
-			return MongooseAdapter.toOrderEntity(createdDoc);
+			return OrderAdapter.toEntity(createdDoc);
 		}
 		catch (error) {
-			const keyPattern = error['keyPattern'];
-
-			if (error.code === 11000 && keyPattern)
+			if (error.code === 11000)
 			{
+				const keyPattern = error['keyPattern'];
+
 				if (keyPattern.paymentSessionId) {
 					throw new EntityAlreadyExistsError("Order", { paymentSessionId: data.paymentSessionId } );
 				}
@@ -73,7 +88,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 		}
 	}
 
-	async updateStatus(id, status) {
+	async updateStatus(id: string, status: OrderStatus): Promise<OrderEntity> {
 		const updatedDoc = await Order.findByIdAndUpdate(
 			id,
 			{ $set: { status } },
@@ -84,10 +99,10 @@ export class OrderMongooseRepository extends IOrderRepository {
 			throw new EntityNotFoundError("Order", { id });
 		}
 
-		return MongooseAdapter.toOrderEntity(updatedDoc);
+		return OrderAdapter.toEntity(updatedDoc);
 	}
 
-	async updatePaymentSessionId(id, paymentSessionId) {
+	async updatePaymentSessionId(id: string, paymentSessionId: string): Promise<OrderEntity> {
 		const updatedDoc = await Order.findByIdAndUpdate(
 			id,
 			{ $set: { paymentSessionId } },
@@ -98,35 +113,37 @@ export class OrderMongooseRepository extends IOrderRepository {
 			throw new EntityNotFoundError("Order", { id });
 		}
 
-		return MongooseAdapter.toOrderEntity(updatedDoc);
+		return OrderAdapter.toEntity(updatedDoc);
 	}
 
-	async findById(id) {
+	async findById(id: string): Promise<OrderEntity | null> {
 		const foundDoc = await Order.findById(id).lean();
-		return MongooseAdapter.toOrderEntity(foundDoc);
+		return OrderAdapter.toEntity(foundDoc);
 	}
 
-	async findByIdAndUser(id, userId) {
+	async findByIdAndUser(id: string, userId: string): Promise<OrderEntity | null> {
 		const foundDoc = await Order.findOne({ _id: id, user: userId }).lean();
-		return foundDoc ? MongooseAdapter.toOrderEntity(foundDoc) : null;
+		return foundDoc ? OrderAdapter.toEntity(foundDoc) : null;
 	}
 
-	async findByPaymentSessionId(sessionId) {
+	async findByPaymentSessionId(sessionId: string): Promise<OrderEntity | null> {
 		const foundDoc = await Order.findOne({ paymentSessionId: sessionId }).lean();
-		return MongooseAdapter.toOrderEntity(foundDoc);
+		return OrderAdapter.toEntity(foundDoc);
 	}
 
-	async findByOrderNumber(orderNumber) {
+	async findByOrderNumber(orderNumber: string): Promise<OrderEntity | null> {
 		const foundDoc = await Order.findOne({ orderNumber }).lean();
-		return MongooseAdapter.toOrderEntity(foundDoc);
+		return OrderAdapter.toEntity(foundDoc);
 	}
 
-	async findAndCount(query, skip, limit, options = {}) {
-		const mongooseQuery = this.#buildMongooseQuery(query);
-		const sort = determineSort(options.sortBy, options.order);
+	async findAndCount(filters: OrderFiltersPersistence, skip: number, limit: number): Promise<RepositoryPaginationResult<OrderEntity>> {
+		const { sortBy = "createdAt", order = "desc", ...queryFilters } = filters;
 
-		const result = await Order.aggregate([
-			{ $match: mongooseQuery },
+		const query = this.buildQuery(queryFilters);
+		const sort = determineSort(sortBy, order);
+
+		const result: OrderAggregationResult = await Order.aggregate([
+			{ $match: query },
 			{ $sort: sort },
 			{
 				$facet: {
@@ -139,11 +156,11 @@ export class OrderMongooseRepository extends IOrderRepository {
 		const total = result[0].metadata[0]?.total || 0;
 		const foundDocs = result[0].data;
 
-		const entities = foundDocs.map(doc => MongooseAdapter.toOrderEntity(doc));
+		const entities = foundDocs.map(doc => OrderAdapter.toEntity(doc));
 		return new RepositoryPaginationResult(entities, total);
 	}
 
-	async hasUserPurchasedProduct(userId, productId) {
+	async hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean> {
 		return Boolean(await Order.exists({
 			user: userId,
 			"products.product": productId,
@@ -151,7 +168,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 		}));
 	}
 
-	async getSalesSummary() {
+	async getSalesSummary(): Promise<SalesSummaryDTO> {
 		const result = await Order.aggregate([
 			{
 				$group: {
@@ -174,7 +191,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 		return new SalesSummaryDTO(summary.totalSales, summary.totalRevenue);
 	}
 
-	async getDailySalesSummary(startDate, endDate) {
+	async getDailySalesSummary(startDate: Date, endDate: Date): Promise<DailySalesSummaryDTO[]> {
 		const results = await Order.aggregate([
 			{
 				$match: {

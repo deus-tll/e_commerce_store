@@ -3,6 +3,7 @@ import Product, {IProductDoc} from "./models/Product.js";
 
 import {IProductRepository} from "../../../../application/product/IProductRepository.js";
 import {ProductAdapter} from "./adapters/ProductAdapter.js";
+
 import {ProductEntity} from "../../../../entities/product/ProductEntity.js";
 import {
 	AttributeFacetDTO,
@@ -16,14 +17,16 @@ import {RepositoryPaginationResult} from "../../../../application/types/shared.j
 import {EntityNotFoundError} from "../../../../errors/index.js";
 
 import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
-import {determineSort} from "./utils.js";
+import {determineSort, toObjectId} from "./utils.js";
+import {OrderProductItem} from "../../../../entities/order/types/OrderProductItem.js";
+import {InsufficientStockError} from "../../../../errors/InsufficientStockError.js";
 
 export class ProductMongooseRepository extends IProductRepository {
 	private buildQuery(filters: ProductFiltersPersistence): FilterQuery<IProductDoc> {
 		const { categoryId, attributes } = filters;
 
 		return {
-			...(categoryId && {categoryId}),
+			...(categoryId && { category: toObjectId(categoryId, "Category")}),
 			...(attributes && Object.keys(attributes).length > 0 && {
 				$and: Object.entries(attributes).map(([name, value]) => {
 					const matchValue = Array.isArray(value) ? {$in: value} : value;
@@ -78,6 +81,36 @@ export class ProductMongooseRepository extends IProductRepository {
 		}
 
 		return ProductAdapter.toEntity(updatedDoc);
+	}
+
+	async deductStock(productItems: readonly OrderProductItem[]): Promise<void> {
+		const productItemsLength = productItems.length;
+
+		if (productItemsLength === 0) return;
+
+		const updateOperations = productItems.map((productItem) => {
+			const { id, quantity } = productItem;
+
+			return {
+				updateOne: {
+					filter: {
+						_id: id,
+						stock: { $gte: quantity  },
+					},
+					update: {
+						$inc: { stock: -quantity }
+					}
+				}
+			}
+		});
+
+		const updateResult = await Product.bulkWrite(updateOperations);
+
+		const modifiedCount = updateResult.modifiedCount;
+
+		if (modifiedCount < productItemsLength) {
+			throw new InsufficientStockError(`Only ${modifiedCount} of ${productItemsLength} items could be deducted.`)
+		}
 	}
 
 	async updateRatingStats(productId: string, ratingChange: number, totalReviewsChange: number, oldRating: number = 0): Promise<void> {
@@ -144,20 +177,20 @@ export class ProductMongooseRepository extends IProductRepository {
 		const { search, sortBy = "createdAt", order = "desc", ...queryFilters } = filters;
 
 		const isComplexQuery = !!search;
-		const mongooseQuery = this.buildQuery(queryFilters);
+		const query = this.buildQuery(queryFilters);
 
 		const sortObject = determineSort(sortBy, order);
 
 		// --- 1. Simple Find Path (No Search Query) ---
 		if (!isComplexQuery) {
 			const [foundDocs, calculatedTotal] = await Promise.all([
-				Product.find(mongooseQuery)
+				Product.find(query)
 					.sort(sortObject)
 					.skip(skip)
 					.limit(limit)
 					.lean(),
 
-				Product.countDocuments(mongooseQuery),
+				Product.countDocuments(query),
 			]);
 
 			const productEntities = foundDocs.map(doc => ProductAdapter.toEntity(doc));
@@ -170,8 +203,8 @@ export class ProductMongooseRepository extends IProductRepository {
 		const basePipeline: PipelineStage[] = [];
 
 		// A. Initial Match (for category filtering, if present)
-		if (Object.keys(mongooseQuery).length > 0) {
-			basePipeline.push({ $match: mongooseQuery });
+		if (Object.keys(query).length > 0) {
+			basePipeline.push({ $match: query });
 		}
 
 		basePipeline.push(

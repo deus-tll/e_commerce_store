@@ -4,7 +4,7 @@ import {ProductService} from "../application/product/ProductService.js";
 import {UserService} from "../application/user/UserService.js";
 import {ReviewService} from "../application/review/ReviewService.js";
 
-import {ProductAttribute} from "../entities/product/ProductValueObjects.js";
+import {ProductAttribute} from "../entities/product/types/ProductAttribute.js";
 
 import {UserRole} from "../enums/application.js";
 

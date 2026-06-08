@@ -160,26 +160,6 @@ export const updateProductImagesSchema = Joi.object({
 	'object.base': 'Images must be a valid object.',
 });
 
-// 16. Product Item for Checkout
-export const checkoutProductItemSchema = Joi.object({
-	id: Joi.string()
-		.trim()
-		.required()
-		.messages({
-			'any.required': 'Product ID is required for each item.',
-			'string.empty': 'Product ID cannot be empty.',
-		}),
-	quantity: Joi.number()
-		.integer()
-		.min(1)
-		.default(1)
-		.messages({
-			'number.base': 'Quantity must be a number.',
-			'number.integer': 'Quantity must be an integer.',
-			'number.min': 'Quantity must be 1 or greater.',
-		}),
-}).required().unknown(false);
-
 // 17. Category ID (for params)
 export const categoryIdParam = Joi.string()
 	.trim()

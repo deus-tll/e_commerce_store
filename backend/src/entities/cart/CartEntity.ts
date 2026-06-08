@@ -1,4 +1,4 @@
-import {CartItem} from "./CartValueObjects.js";
+import {CartItem} from "./types/CartItem.js";
 
 export class CartEntity {
     public readonly id: string;

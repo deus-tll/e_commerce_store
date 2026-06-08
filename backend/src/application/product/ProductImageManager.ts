@@ -1,5 +1,5 @@
 import {ProductStorageService} from "../shared/storage/AppStorageServices.js";
-import {ProductImage} from "../../entities/product/ProductValueObjects.js";
+import {ProductImage} from "../../entities/product/types/ProductImage.js";
 
 import {DomainValidationError} from "../../errors/index.js";
 import {ImageTracker, withSafeUpload} from "../shared/utils/withSafeUpload.js";

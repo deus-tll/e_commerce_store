@@ -3,7 +3,8 @@ import {CategoryService} from "../category/CategoryService.js";
 import {ProductCacheRepository} from "../../infrastructure/repositories/cache/ProductCacheRepository.js";
 import {ProductImageManager} from "./ProductImageManager.js";
 
-import {ProductAttribute, ProductImage} from "../../entities/product/ProductValueObjects.js";
+import {ProductImage} from "../../entities/product/types/ProductImage.js";
+import {ProductAttribute} from "../../entities/product/types/ProductAttribute.js";
 import {ProductEntity} from "../../entities/product/ProductEntity.js";
 import {
 	AttributeFacetDTO, ProductCreateInput, ProductCreatePersistence,
@@ -17,6 +18,7 @@ import {EntityNotFoundError} from "../../errors/index.js";
 
 import {removeUndefinedFields} from "../../utils/object.js";
 import {ProductMapper} from "./ProductMapper.js";
+import {OrderProductItem} from "../../entities/order/types/OrderProductItem.js";
 
 export class ProductService {
 	constructor(
@@ -176,6 +178,10 @@ export class ProductService {
 		await this.refreshFeaturedCache();
 
 		return await this.formProductDTO(updatedEntity);
+	}
+
+	async deductStock(productItems: readonly OrderProductItem[]): Promise<void> {
+		await this.productRepository.deductStock(productItems);
 	}
 
 	async delete(id: string): Promise<ProductDTO> {

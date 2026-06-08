@@ -36,7 +36,7 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 			const createdDoc = await Category.create(data);
 			return CategoryAdapter.toEntity(createdDoc);
 		}
-		catch (error: any) {
+		catch (error) {
 			if (error.code === 11000) {
 				const keyPattern = error['keyPattern'];
 				const key = Object.keys(keyPattern)[0] as keyof CategoryCreatePersistence;

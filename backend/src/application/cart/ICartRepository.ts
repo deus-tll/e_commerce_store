@@ -1,4 +1,4 @@
-import {CartItem} from "../../entities/cart/CartValueObjects.js";
+import {CartItem} from "../../entities/cart/types/CartItem.js";
 import {CartEntity} from "../../entities/cart/CartEntity.js";
 
 export abstract class ICartRepository {

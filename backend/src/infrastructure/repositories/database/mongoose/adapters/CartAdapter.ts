@@ -1,5 +1,5 @@
-import {CartItem} from "../../../../../entities/cart/CartValueObjects.js";
 import {CartEntity} from "../../../../../entities/cart/CartEntity.js";
+import {CartItem} from "../../../../../entities/cart/types/CartItem.js";
 import {ICartDoc} from "../models/Cart.js";
 
 import {normalizePersistence} from "../utils.js";

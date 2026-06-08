@@ -10,7 +10,6 @@ import registerStorageServices from "./registrations/storageServices.js";
 import registerImageManagers from "./registrations/imageManagers.js";
 import registerValidators from "./registrations/validators.js";
 import registerApplicationServices from "./registrations/applicationServices.js";
-import registerDomainServices from "./registrations/domainServices.js";
 import registerControllers from "./registrations/controllers.js";
 import registerSeeders from "./registrations/seeders.js";
 
@@ -27,7 +26,6 @@ const initContainer = () => {
     registerImageManagers(container);
     registerValidators(container);
     registerApplicationServices(container);
-    registerDomainServices(container);
     registerControllers(container);
     registerSeeders(container);
 

@@ -1,6 +1,5 @@
 import {
-	CouponEntity,
-	OrderEntity, OrderProductItem
+	CouponEntity
 } from "../../../../../domain/index.js";
 
 /**
@@ -49,34 +48,6 @@ export class MongooseAdapter {
 			...plainObject,
 			expirationDate: plainObject.expirationDate instanceof Date ? plainObject.expirationDate : new Date(plainObject.expirationDate),
 			userId: plainObject.userId?.toString()
-		});
-	}
-
-	/**
-	 * Converts a Mongoose Order Document/object to an OrderEntity.
-	 * Handles the nested conversion of order product items.
-	 * @param {object | null} doc
-	 * @returns {OrderEntity | null}
-	 */
-	static toOrderEntity(doc) {
-		const plainObject = MongooseAdapter.#toPlainObject(doc);
-
-		if (!plainObject) return null;
-
-		const products = plainObject.products.map(item => new OrderProductItem({
-			id: item.product?.toString(),
-			quantity: item.quantity,
-			price: item.price,
-			name: item.name,
-			image: item.image
-		}));
-
-		const { user, ...rest } = plainObject;
-
-		return new OrderEntity({
-			...rest,
-			userId: user ? user.toString() : null,
-			products: products
 		});
 	}
 }

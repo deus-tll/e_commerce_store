@@ -27,7 +27,7 @@ export function setupOrdersRouter(
 	router.get("/mine", validationMiddleware(getMineOrdersSchema), orderController.getAllMine);
 	router.get("/number/:orderNumber", adminRoute, validationMiddleware(orderNumberSchema), orderController.getByOrderNumber);
 	router.get("/payment-status/:sessionId", validationMiddleware(paymentSessionIdSchema), orderController.getPaymentStatus);
-	router.get("/payment-session/:sessionId", adminRoute, validationMiddleware(paymentSessionIdSchema), orderController.getByPaymentId);
+	router.get("/payment-session/:sessionId", adminRoute, validationMiddleware(paymentSessionIdSchema), orderController.getByPaymentSessionId);
 	router.get("/", adminRoute, validationMiddleware(getAllOrdersSchema), orderController.getAll);
 	router.get("/:id", validationMiddleware(orderIdSchema), orderController.getById);
 

@@ -1,14 +1,9 @@
-import mongoose from "mongoose";
-import {OrderStatus, OrderStatusValues} from "../../../../../enums/application.ts";
+import { Schema, model, InferSchemaType, Types } from "mongoose";
+import {OrderStatus, OrderStatusValues} from "../../../../../enums/application.js";
 
-
-/**
- * Defines the schema for a single product item within an order.
- * This structure includes snapshot data (name, image) to ensure order immutability.
- */
-const orderProductItemSchema = new mongoose.Schema({
+const orderProductItemSchema = new Schema({
 	product: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref: "Product",
 		required: true,
 	},
@@ -32,15 +27,15 @@ const orderProductItemSchema = new mongoose.Schema({
 	},
 }, { _id: false });
 
-const customerDetailsSchema = new mongoose.Schema({
+const customerDetailsSchema = new Schema({
 	fullName: { type: String, required: true },
 	phone: { type: String, required: true },
 	address: { type: String, required: true }
 }, { _id: false });
 
-const orderSchema = new mongoose.Schema({
+const orderSchema = new Schema({
 	user: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref: "User",
 		required: true,
 	},
@@ -75,13 +70,20 @@ const orderSchema = new mongoose.Schema({
 		required: true,
 		index: true,
 	},
-}, { timestamps: true });
+}, {
+	timestamps: true,
+	toJSON: { virtuals: true },
+	toObject: { virtuals: true },
+});
 
 orderSchema.index({ user: 1, "products.product": 1 });
 
-/**
- * @type {import('mongoose').Model & import('mongoose').Document}
- */
-const Order = mongoose.model("Order", orderSchema);
+export type IOrderDoc = InferSchemaType<typeof orderSchema> & {
+	_id: Types.ObjectId;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+const Order = model("Order", orderSchema);
 
 export default Order;

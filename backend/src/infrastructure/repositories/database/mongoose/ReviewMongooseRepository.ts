@@ -1,17 +1,30 @@
-import Review from "./models/Review.js";
+import {FilterQuery} from "mongoose";
+import Review, {IReviewDoc} from "./models/Review.js";
 
 import {IReviewRepository} from "../../../../application/review/IReviewRepository.js";
 import {ReviewAdapter} from "./adapters/ReviewAdapter.js";
 
 import {ReviewEntity} from "../../../../entities/review/ReviewEntity.js";
-import {ReviewCreatePersistence, ReviewUpdatePersistence} from "../../../../application/types/review.js";
+import {
+	ReviewCreatePersistence,
+	ReviewFiltersPersistence,
+	ReviewUpdatePersistence
+} from "../../../../application/types/review.js";
 import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 
-import {determineSort} from "./utils.js";
+import {determineSort, toObjectId} from "./utils.js";
 
 export class ReviewMongooseRepository extends IReviewRepository {
+	private buildQuery(filters: ReviewFiltersPersistence): FilterQuery<IReviewDoc> {
+		const { productId } = filters;
+
+		return {
+			...(productId && { product: toObjectId(productId, "Product") }),
+		}
+	}
+
 	async create(productId: string, userId: string, data: ReviewCreatePersistence): Promise<ReviewEntity> {
 		try {
 			const createdDoc = await Review.create({
@@ -62,7 +75,7 @@ export class ReviewMongooseRepository extends IReviewRepository {
 	}
 
 	async findAndCountByProduct(productId: string, skip: number, limit: number): Promise<RepositoryPaginationResult<ReviewEntity>> {
-		const query = { product: productId };
+		const query = this.buildQuery({ productId });
 		const sortObject = determineSort("createdAt", "desc");
 
 		const [foundDocs, total] = await Promise.all([

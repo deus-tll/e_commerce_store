@@ -1,4 +1,6 @@
-import {ProductAttribute, ProductImage, ProductRatingStats} from "./ProductValueObjects.js";
+import {ProductImage} from "./types/ProductImage.js";
+import {ProductAttribute} from "./types/ProductAttribute.js";
+import {ProductRatingStats} from "./types/ProductRatingStats.js";
 
 export class ProductEntity {
     public readonly id: string;

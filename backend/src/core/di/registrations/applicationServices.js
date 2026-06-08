@@ -10,11 +10,14 @@ import {ProductStatsService} from "../../../application/product/ProductStatsServ
 import {SessionAuthService} from "../../../application/auth/SessionAuthService.js";
 import {ReviewService} from "../../../application/review/ReviewService.js";
 import {AnalyticsService} from "../../../application/analytics/AnalyticsService.js";
+import {OrderService} from "../../../application/order/OrderService.js";
+import {CouponService} from "../../../application/coupon/CouponService.js";
+import {CheckoutService} from "../../../application/checkout/CheckoutService.js";
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
-    DatabaseRepositoryTypes, ImageManagerTypes,
-    InfrastructureServiceTypes, ProviderTypes, ValidatorTypes,
+    DatabaseRepositoryTypes, FactoryTypes, ImageManagerTypes,
+    InfrastructureServiceTypes, MapperTypes, ProviderTypes, ValidatorTypes,
 } from "../../../constants/ioc.js";
 
 import {config} from "../../../config.js";
@@ -88,6 +91,34 @@ const registerApplicationServices = (container) => {
     container.register(ApplicationServiceTypes.ANALYTICS, AnalyticsService,
         [DatabaseRepositoryTypes.ORDER, DatabaseRepositoryTypes.USER, DatabaseRepositoryTypes.PRODUCT]
     );
+
+    container.register(ApplicationServiceTypes.ORDER, OrderService, [DatabaseRepositoryTypes.ORDER, ApplicationServiceTypes.USER]);
+
+    container.register(ApplicationServiceTypes.COUPON, CouponService, [
+        DatabaseRepositoryTypes.COUPON,
+        ApplicationServiceTypes.USER,
+        ValidatorTypes.COUPON,
+        FactoryTypes.COUPON,
+        MapperTypes.COUPON
+    ]);
+
+    container.register(ApplicationServiceTypes.CHECKOUT, () => {
+        const paymentProvider = container.get(ProviderTypes.PAYMENT);
+        const productService = container.get(ApplicationServiceTypes.PRODUCT);
+        const orderService = container.get(ApplicationServiceTypes.ORDER);
+        const cartService = container.get(ApplicationServiceTypes.CART);
+        const couponService = container.get(ApplicationServiceTypes.COUPON);
+        const minAmountForGrant = config.business.coupon.minAmountForGrant;
+
+        return new CheckoutService(
+            paymentProvider,
+            productService,
+            orderService,
+            cartService,
+            couponService,
+            minAmountForGrant
+        );
+    });
 }
 
 export default registerApplicationServices;

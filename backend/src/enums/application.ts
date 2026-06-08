@@ -26,7 +26,8 @@ export enum OrderStatus {
     PROCESSING = "processing",
     SHIPPED = "shipped",
     DELIVERED = "delivered",
-    CANCELLED = "cancelled"
+    CANCELLED = "cancelled",
+    BACKORDER = "backorder"
 }
 
 export const OrderStatusValues = Object.values(OrderStatus);

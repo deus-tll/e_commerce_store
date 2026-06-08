@@ -7,6 +7,7 @@ import {
 	ProductFiltersPersistence,
 	ProductUpdatePersistence
 } from "../types/product.js";
+import {OrderProductItem} from "../../entities/order/types/OrderProductItem.js";
 
 export abstract class IProductRepository {
 	abstract create(data: ProductCreatePersistence): Promise<ProductEntity>;
@@ -30,6 +31,7 @@ export abstract class IProductRepository {
 	 */
 	abstract markAsFeaturedRatingBased(minRating: number): Promise<void>;
 	abstract toggleFeatured(id: string): Promise<ProductEntity>;
+	abstract deductStock(productItems: readonly OrderProductItem[]): Promise<void>
 	abstract deleteById(id: string): Promise<ProductEntity>;
 
 	abstract findById(id: string): Promise<ProductEntity | null>;
