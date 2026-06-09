@@ -4,7 +4,7 @@ export const createMock = <T>(): Mocked<T> => {
     const mock: Record<string | symbol, any> = {};
 
     return new Proxy({} as any, {
-        get(target, prop) {
+        get(_, prop) {
             if (!(prop in mock)) {
                 mock[prop] = vi.fn();
             }

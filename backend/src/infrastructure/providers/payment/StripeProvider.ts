@@ -4,15 +4,14 @@ import {IPaymentProvider} from "./IPaymentProvider.js";
 
 import {OrderProductItem} from "../../../entities/order/types/OrderProductItem.js";
 import {PaymentMetadataDTO, CheckoutSessionDTO, PaymentEventDataDTO, WebhookPaymentEventDTO} from "../../../application/types/payment.js";
-import {
-	CouponDTO
-} from "../../../domain/index.js";
+import {CouponDTO} from "../../../application/types/coupon.js";
 
 import {SystemError} from "../../../errors/index.js";
 
-import {Currency} from "../../../utils/currency.js";
 import {CheckoutSessionModes, Currencies, PaymentEventTypes, PaymentMethodTypes} from "../../../enums/payment.js";
 import {IdempotencyPrefixes, StripeCouponDurations, StripeEvents, StripeHeaders} from "../../../enums/stripe.js";
+
+import {Currency} from "../../../utils/currency.js";
 
 export class StripeProvider extends IPaymentProvider {
 	private readonly stripe: Stripe;

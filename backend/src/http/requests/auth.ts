@@ -8,12 +8,6 @@ export interface SignupRequest extends Request {
     body: Omit<UserCreateInput, "role" | "isVerified">
 }
 
-export interface VerifyEmailRequest extends Request {
-    body: {
-        code: string;
-    }
-}
-
 export interface ForgotPasswordRequest extends Request {
     body: {
         email: string;

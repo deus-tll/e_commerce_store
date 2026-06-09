@@ -1,8 +1,6 @@
 import {OrderProductItem} from "../../../entities/order/types/OrderProductItem.js";
 import {PaymentMetadataDTO, CheckoutSessionDTO, WebhookPaymentEventDTO} from "../../../application/types/payment.js";
-import {
-	CouponDTO,
-} from "../../../domain/index.js";
+import {CouponDTO} from "../../../application/types/coupon.js";
 
 export abstract class IPaymentProvider {
 	/**

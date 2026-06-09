@@ -13,3 +13,9 @@ export interface ParamsWithProductIdRequest extends Request {
         productId: string;
     }
 }
+
+export interface BodyWithCodeRequest extends Request {
+    body: {
+        code: string;
+    }
+}

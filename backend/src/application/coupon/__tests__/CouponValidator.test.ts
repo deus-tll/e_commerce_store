@@ -1,31 +1,37 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import {describe, it, expect, beforeEach, Mocked} from "vitest";
 
-import {CouponValidator} from "./CouponValidator.js";
-import {ICouponRepository} from "./ICouponRepository.js";
-import {CouponEntity} from "../../domain/index.js";
-import {EntityNotFoundError} from "../../errors/index.ts";
+import {CouponValidator} from "../CouponValidator.js";
+import {ICouponRepository} from "../ICouponRepository.js";
+import {CouponEntity} from "../../../entities/coupon/CouponEntity.js";
 
-import {createMock} from "../../tests/utils/createMock.ts";
+import {EntityNotFoundError} from "../../../errors/index.js";
+
+import {createMock} from "../../../tests/utils/createMock.js";
 
 describe("CouponValidator", () => {
-    let mockCouponRepository;
-    let couponValidator;
+    let mockCouponRepository: Mocked<ICouponRepository>;
+    let couponValidator: CouponValidator;
 
+    const COUPON_ID = "coupon-id";
     const USER_ID = "user-123";
     const COUPON_CODE = "some-coupon-code";
+    const DISCOUNT_PERCENTAGE = 20;
 
     beforeEach(() => {
-        mockCouponRepository = createMock(ICouponRepository);
+        mockCouponRepository = createMock<ICouponRepository>();
         couponValidator = new CouponValidator(mockCouponRepository);
     });
 
     it("should return Validation DTO if coupon is valid, active and not expired", async () => {
         const validCoupon = new CouponEntity({
+            id: COUPON_ID,
             code: COUPON_CODE,
-            discountPercentage: 20,
+            discountPercentage: DISCOUNT_PERCENTAGE,
             expirationDate: new Date(Date.now() + 10000),
             isActive: true,
-            userId: USER_ID
+            userId: USER_ID,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
 
         mockCouponRepository.findByCodeAndUserId.mockResolvedValue(validCoupon);
@@ -33,7 +39,7 @@ describe("CouponValidator", () => {
         const result = await couponValidator.validate(COUPON_CODE, USER_ID);
 
         expect(result.code).toBe(COUPON_CODE);
-        expect(result.discountPercentage).toBe(20);
+        expect(result.discountPercentage).toBe(DISCOUNT_PERCENTAGE);
         expect(result.message).toBe("Coupon is valid");
     });
 
@@ -47,10 +53,14 @@ describe("CouponValidator", () => {
 
     it("should deactivate coupon and throw DomainValidationError if expired", async () => {
         const expiredCoupon = new CouponEntity({
+            id: COUPON_ID,
             code: COUPON_CODE,
+            discountPercentage: DISCOUNT_PERCENTAGE,
             expirationDate: new Date(Date.now() - 10000),
             isActive: true,
-            userId: USER_ID
+            userId: USER_ID,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
 
         mockCouponRepository.findByCodeAndUserId.mockResolvedValue(expiredCoupon);
@@ -65,10 +75,14 @@ describe("CouponValidator", () => {
 
     it("should throw DomainValidationError if coupon is manually deactivated", async () => {
         const inactiveCoupon = new CouponEntity({
+            id: COUPON_ID,
             code: COUPON_CODE,
+            discountPercentage: DISCOUNT_PERCENTAGE,
             expirationDate: new Date(Date.now() + 10000),
             isActive: false,
-            userId: USER_ID
+            userId: USER_ID,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
 
         mockCouponRepository.findByCodeAndUserId.mockResolvedValue(inactiveCoupon);

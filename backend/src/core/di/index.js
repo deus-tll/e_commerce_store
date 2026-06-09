@@ -3,8 +3,6 @@ import {DIContainer} from "./DIContainer.js";
 import registerRepositories from "./registrations/repositories.js";
 import registerInfrastructureServices from "./registrations/infrastructureServices.js";
 import registerProviders from "./registrations/providers.js";
-import registerFactories from "./registrations/factories.js";
-import registerMappers from "./registrations/mappers.js";
 import registerCookieManagers from "./registrations/cookieManagers.js";
 import registerStorageServices from "./registrations/storageServices.js";
 import registerImageManagers from "./registrations/imageManagers.js";
@@ -19,8 +17,6 @@ const initContainer = () => {
     registerRepositories(container);
     registerInfrastructureServices(container);
     registerProviders(container);
-    registerFactories(container);
-    registerMappers(container);
     registerCookieManagers(container);
     registerStorageServices(container);
     registerImageManagers(container);

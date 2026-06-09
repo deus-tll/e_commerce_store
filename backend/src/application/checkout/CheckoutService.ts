@@ -9,9 +9,7 @@ import {CustomerDetails} from "../../entities/order/types/CustomerDetails.js";
 import {ShortProductDTO} from "../types/product.js";
 import {OrderCreateInput} from "../types/order.js";
 import {ClientItemInput, PaymentMetadataDTO, CheckoutSessionDTO, PaymentEventDataDTO} from "../types/payment.js";
-import {
-	CouponDTO,
-} from "../../domain/index.js";
+import {CouponDTO} from "../types/coupon.js";
 
 import {OrderStatus} from "../../enums/application.js";
 import {PaymentEventTypes} from "../../enums/payment.js";

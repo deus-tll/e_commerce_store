@@ -21,12 +21,6 @@ export const ProviderTypes = Object.freeze({
 	PAYMENT: "IPaymentProvider",
 });
 
-export const MapperTypes = Object.freeze({
-	REVIEW: "ReviewMapper",
-	ORDER: "OrderMapper",
-	COUPON: "CouponMapper"
-});
-
 export const CookieManagerTypes = Object.freeze({
 	AUTH: "AuthCookieManager"
 });
@@ -44,10 +38,6 @@ export const StorageServiceTypes = Object.freeze({
 export const ValidatorTypes = Object.freeze({
 	COUPON: "CouponValidator",
 	REVIEW: "ReviewValidator"
-});
-
-export const FactoryTypes = Object.freeze({
-	COUPON: "ICouponFactory"
 });
 
 export const InfrastructureServiceTypes = Object.freeze({

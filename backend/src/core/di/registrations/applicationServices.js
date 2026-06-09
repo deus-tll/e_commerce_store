@@ -16,8 +16,8 @@ import {CheckoutService} from "../../../application/checkout/CheckoutService.js"
 
 import {
     ApplicationServiceTypes, CacheRepositoryTypes,
-    DatabaseRepositoryTypes, FactoryTypes, ImageManagerTypes,
-    InfrastructureServiceTypes, MapperTypes, ProviderTypes, ValidatorTypes,
+    DatabaseRepositoryTypes, ImageManagerTypes,
+    InfrastructureServiceTypes, ProviderTypes, ValidatorTypes,
 } from "../../../constants/ioc.js";
 
 import {config} from "../../../config.js";
@@ -94,13 +94,19 @@ const registerApplicationServices = (container) => {
 
     container.register(ApplicationServiceTypes.ORDER, OrderService, [DatabaseRepositoryTypes.ORDER, ApplicationServiceTypes.USER]);
 
-    container.register(ApplicationServiceTypes.COUPON, CouponService, [
-        DatabaseRepositoryTypes.COUPON,
-        ApplicationServiceTypes.USER,
-        ValidatorTypes.COUPON,
-        FactoryTypes.COUPON,
-        MapperTypes.COUPON
-    ]);
+    container.register(ApplicationServiceTypes.COUPON, () => {
+        const couponRepository = container.get(DatabaseRepositoryTypes.COUPON);
+        const userService = container.get(ApplicationServiceTypes.USER);
+        const couponValidator = container.get(ValidatorTypes.COUPON);
+        const discountPercentage = config.business.coupon.discountPercentage;
+
+        return new CouponService(
+            couponRepository,
+            userService,
+            couponValidator,
+            discountPercentage
+        );
+    });
 
     container.register(ApplicationServiceTypes.CHECKOUT, () => {
         const paymentProvider = container.get(ProviderTypes.PAYMENT);

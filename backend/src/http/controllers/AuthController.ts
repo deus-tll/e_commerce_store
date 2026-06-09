@@ -9,9 +9,9 @@ import {
 	ChangePasswordRequest,
 	ForgotPasswordRequest, LoginRequest,
 	ResetPasswordRequest,
-	SignupRequest,
-	VerifyEmailRequest
+	SignupRequest
 } from "../requests/auth.js";
+import {BodyWithCodeRequest} from "../requests/shared.js";
 
 import {UserRole} from "../../enums/application.js";
 
@@ -39,7 +39,7 @@ export class AuthController {
 		return res.status(201).json(user);
 	}
 
-	verifyEmail = async (req: VerifyEmailRequest, res: Response): Promise<Response> => {
+	verifyEmail = async (req: BodyWithCodeRequest, res: Response): Promise<Response> => {
 		const { code } = req.body;
 		const { user, tokens } = await this.userAccountService.verifyEmail(code);
 
