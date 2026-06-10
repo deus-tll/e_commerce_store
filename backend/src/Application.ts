@@ -91,18 +91,6 @@ export class Application {
 		this.app.use(errorHandler);
 	}
 
-	async runSeeders() {
-		console.log("[Server] Starting seeders...");
-
-		await this.dependencies.adminSeeder.seed();
-
-		if (config.seeding.seedProductsOnStartup) {
-			await this.dependencies.dummyProductsSeeder.seed();
-		}
-
-		console.log("[Server] Seeding complete.");
-	}
-
 	async dropDatabase() {
 		if (config.infrastructure.providers.database.dropOnStartup) {
 			await this.dependencies.database.drop();
@@ -119,6 +107,18 @@ export class Application {
 		else {
 			console.log("[Storage] Skipping drop.");
 		}
+	}
+
+	async runSeeders() {
+		console.log("[Server] Starting seeders...");
+
+		await this.dependencies.adminSeeder.seed();
+
+		if (config.seeding.seedProductsOnStartup) {
+			await this.dependencies.dummyProductsSeeder.seed();
+		}
+
+		console.log("[Server] Seeding complete.");
 	}
 
 	async start() {
