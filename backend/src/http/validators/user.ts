@@ -1,13 +1,20 @@
 import Joi from "joi";
 
 import {
-	userRole,
 	userNameSchema,
 	emailSchema,
 	passwordSchema
 } from "./common.js";
 
-import {UserRole} from "../../enums/application.ts";
+import {UserRole} from "../../enums/application.js";
+
+const userRole = Joi.string()
+	.trim()
+	.valid(UserRole.CUSTOMER, UserRole.ADMIN)
+	.messages({
+		'any.only': `Role must be one of: ${UserRole.CUSTOMER}, ${UserRole.ADMIN}.`,
+		'string.base': 'Role must be a string.'
+	});
 
 const userIdParam = Joi.string()
 	.trim()

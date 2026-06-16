@@ -1,18 +1,46 @@
 import Joi from "joi";
 
 import {
-	productIdParam,
-	reviewIdParam,
-	reviewRatingSchema,
-	reviewCommentSchema
+	productIdParam
 } from "./common.js";
+
+const reviewIdParam = Joi.string()
+	.trim()
+	.required()
+	.messages({
+		'any.required': 'Review ID is required in URL parameters.',
+		'string.empty': 'Review ID cannot be empty.',
+		'string.base': 'Review ID must be a string.'
+	});
+
+const reviewRatingSchema = Joi.number()
+	.integer()
+	.min(1)
+	.max(5)
+	.messages({
+		'number.base': 'Rating must be a number.',
+		'number.integer': 'Rating must be an integer.',
+		'number.min': 'Rating must be 1 or greater.',
+		'number.max': 'Rating cannot exceed 5.'
+	});
+
+export const reviewCommentSchema = Joi.string()
+	.trim()
+	.min(1)
+	.max(500)
+	.messages({
+		'string.empty': 'Comment cannot be empty.',
+		'string.min': 'Comment cannot be empty.',
+		'string.base': 'Comment must be a string.',
+		'string.max': 'Comment cannot exceed 500 characters.'
+	});
 
 /**
  * Joi schema for validating the POST /reviews/product/:id request (Create Review).
  */
 export const createReviewSchema = Joi.object({
 	params: Joi.object({
-		id: productIdParam, // The product ID is aliased as 'id' in the route
+		id: productIdParam,
 	}).required().unknown(false),
 
 	body: Joi.object({

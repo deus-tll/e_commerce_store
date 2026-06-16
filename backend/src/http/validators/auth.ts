@@ -3,9 +3,16 @@ import Joi from "joi";
 import {
 	userNameSchema,
 	emailSchema,
-	passwordSchema,
-	verificationCodeSchema
+	passwordSchema
 } from "./common.js";
+
+const verificationCodeSchema = Joi.string()
+	.trim()
+	.length(6) // A 6-character code
+	.messages({
+		'string.empty': 'Verification code cannot be empty.',
+		'string.length': 'Verification code must be 6 characters long.'
+	});
 
 const resetTokenParam = Joi.string()
 	.trim()

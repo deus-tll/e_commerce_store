@@ -1,16 +1,47 @@
 import Joi from "joi";
 import {
-	categoryNameSchema,
-	categoryIdParam,
-	imageSchema, emptyParamAndBody, allowedAttributesSchema, categorySlugParam
+	imageSchema, emptyParamAndBody
 } from "./common.js";
+
+const categoryIdParam = Joi.string()
+	.trim()
+	.required()
+	.messages({
+		'any.required': 'Category ID is required in URL parameters.',
+		'string.empty': 'Category ID cannot be empty.',
+		'string.base': 'Category ID must be a string.'
+	});
+
+const nameSchema = Joi.string()
+	.trim()
+	.min(1)
+	.max(100)
+	.messages({
+		'string.empty': 'Category name cannot be empty.',
+		'string.base': 'Category name must be a string.'
+	});
+
+const allowedAttributesSchema = Joi.array()
+	.items(Joi.string().trim().min(1))
+	.messages({
+		'array.base': 'Allowed attributes must be an array of strings.'
+	});
+
+const categorySlugParam = Joi.string()
+	.trim()
+	.required()
+	.messages({
+		'any.required': 'Category Slug is required in URL parameters.',
+		'string.empty': 'Category Slug cannot be empty.',
+		'string.base': 'Category Slug must be a string.'
+	});
 
 /**
  * Joi schema for validating the POST /categories request (Create Category).
  */
 export const createCategorySchema = Joi.object({
 	body: Joi.object({
-		name: categoryNameSchema.required().messages({'any.required': 'Category name is required.'}),
+		name: nameSchema.required().messages({'any.required': 'Category name is required.'}),
 		image: imageSchema.required().messages({'any.required': 'Category image URL is required.'}),
 		allowedAttributes: allowedAttributesSchema.default([])
 	}).required().unknown(false),
@@ -28,7 +59,7 @@ export const updateCategorySchema = Joi.object({
 	}).required().unknown(false),
 
 	body: Joi.object({
-		name: categoryNameSchema.optional(),
+		name: nameSchema.optional(),
 		image: imageSchema.optional(),
 		allowedAttributes: allowedAttributesSchema.optional()
 	})
