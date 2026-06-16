@@ -61,7 +61,7 @@ export class OrderPaginationResultDTO {
     public readonly orders: readonly OrderDTO[];
     public readonly pagination: PaginationMetadata;
 
-    constructor(orders: OrderDTO[], pagination: PaginationMetadata) {
+    constructor(orders: readonly OrderDTO[], pagination: PaginationMetadata) {
         this.orders = Object.freeze([...orders]);
         this.pagination = pagination;
 

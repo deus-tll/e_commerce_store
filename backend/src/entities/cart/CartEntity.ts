@@ -10,7 +10,7 @@ export class CartEntity {
     constructor(data: {
         id: string;
         userId: string;
-        items: CartItem[];
+        items: readonly CartItem[];
         createdAt: Date;
         updatedAt: Date;
     }) {

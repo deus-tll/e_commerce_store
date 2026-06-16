@@ -100,7 +100,7 @@ export class ProductPaginationResultDTO {
     public readonly products: readonly ProductDTO[];
     public readonly pagination: PaginationMetadata;
 
-    constructor(products: ProductDTO[], pagination: PaginationMetadata) {
+    constructor(products: readonly ProductDTO[], pagination: PaginationMetadata) {
         this.products = Object.freeze([...products]);
         this.pagination = pagination;
 
@@ -112,7 +112,7 @@ export class AttributeFacetDTO {
     public readonly name: string;
     public readonly values: readonly string[];
 
-    constructor(name: string, values: string[]) {
+    constructor(name: string, values: readonly string[]) {
         this.name = name;
         this.values = Object.freeze([...values]);
 

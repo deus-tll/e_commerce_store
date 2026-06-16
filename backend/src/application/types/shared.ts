@@ -1,8 +1,8 @@
 export class RepositoryPaginationResult<T> {
-    public readonly results: T[];
+    public readonly results: readonly T[];
     public readonly total: number;
 
-    constructor(results: T[], total: number) {
+    constructor(results: readonly T[], total: number) {
         this.results = results;
         this.total = total;
 

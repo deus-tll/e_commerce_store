@@ -92,7 +92,7 @@ export class UserPaginationResultDTO {
     public readonly users: readonly UserDTO[];
     public readonly pagination: PaginationMetadata;
 
-    constructor(users: UserDTO[], pagination: PaginationMetadata) {
+    constructor(users: readonly UserDTO[], pagination: PaginationMetadata) {
         this.users = Object.freeze([...users]);
         this.pagination = pagination;
 

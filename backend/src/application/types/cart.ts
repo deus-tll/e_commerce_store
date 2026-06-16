@@ -20,7 +20,7 @@ export class CartDTO {
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
 
-    constructor(entity: CartEntity, items: CartItemDTO[]) {
+    constructor(entity: CartEntity, items: readonly CartItemDTO[]) {
         this.id = entity.id;
         this.userId = entity.userId;
         this.items = Object.freeze([...items]);

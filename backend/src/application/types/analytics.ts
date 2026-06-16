@@ -39,11 +39,11 @@ export class DailySalesDataDTO {
 
 export class FullAnalyticsResponseDTO {
     public readonly analyticsData: AnalyticsSummaryDTO;
-    public readonly dailySalesData: DailySalesDataDTO[];
+    public readonly dailySalesData: readonly DailySalesDataDTO[];
 
     constructor(data: {
         analyticsData: AnalyticsSummaryDTO;
-        dailySalesData: DailySalesDataDTO[]
+        dailySalesData: readonly DailySalesDataDTO[]
     }) {
         this.analyticsData = data.analyticsData;
         this.dailySalesData = data.dailySalesData;

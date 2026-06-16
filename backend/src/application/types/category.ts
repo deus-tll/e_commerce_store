@@ -55,7 +55,7 @@ export class CategoryPaginationResultDTO {
     public readonly categories: readonly CategoryDTO[];
     public readonly pagination: PaginationMetadata;
 
-    constructor(categories: CategoryDTO[], pagination: PaginationMetadata) {
+    constructor(categories: readonly CategoryDTO[], pagination: PaginationMetadata) {
         this.categories = Object.freeze([...categories]);
         this.pagination = pagination;
 

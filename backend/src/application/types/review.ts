@@ -49,7 +49,7 @@ export class ReviewPaginationResultDTO {
     public readonly reviews: readonly ReviewDTO[];
     public readonly pagination: PaginationMetadata;
 
-    constructor(reviews: ReviewDTO[], pagination: PaginationMetadata) {
+    constructor(reviews: readonly ReviewDTO[], pagination: PaginationMetadata) {
         this.reviews = Object.freeze([...reviews]);
         this.pagination = pagination;
 
