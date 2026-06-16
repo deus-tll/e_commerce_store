@@ -2,13 +2,30 @@ import express, {Express} from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-import {DIContainer} from "./core/di/DIContainer.js";
+import {Container} from "./core/di/Container.js";
+
+import {IDatabaseProvider} from "./infrastructure/providers/database/IDatabaseProvider.js";
+import {ICacheProvider} from "./infrastructure/providers/cache/ICacheProvider.js";
+import {IStorageProvider} from "./infrastructure/providers/storage/IStorageProvider.js";
+
+import {PaymentController} from "./http/controllers/PaymentController.js";
+import {SessionAuthService} from "./application/auth/SessionAuthService.js";
+import {AnalyticsController} from "./http/controllers/AnalyticsController.js";
+import {AuthController} from "./http/controllers/AuthController.js";
+import {CartController} from "./http/controllers/CartController.js";
+import {CategoryController} from "./http/controllers/CategoryController.js";
+import {CouponController} from "./http/controllers/CouponController.js";
+import {OrderController} from "./http/controllers/OrderController.js";
+import {ProductController} from "./http/controllers/ProductController.js";
+import {ReviewController} from "./http/controllers/ReviewController.js";
+import {UserController} from "./http/controllers/UserController.js";
+import {AdminSeeder} from "./seeders/AdminSeeder.js";
+import {ProductsDummyJsonSeeder} from "./seeders/ProductsDummyJsonSeeder.js";
 
 import {setupAppRouters} from "./http/routers/index.js";
 import {setupPaymentWebhookRouter} from "./http/routers/payment.webhook.js";
 import errorHandler from "./http/middleware/errorHandler.js";
 
-import {ApplicationServiceTypes, ControllerTypes, ProviderTypes, SeederTypes} from "./constants/ioc.js";
 import {config} from "./config.js";
 
 const JSON_LIMIT = config.server.jsonLimit;
@@ -20,38 +37,16 @@ const API_BASE = config.server.apiBaseUrl;
 export class Application {
 	private readonly app: Express;
 	private readonly port: number | string;
-	private readonly dependencies: any;
-	private readonly container: DIContainer;
+	private readonly database: IDatabaseProvider;
+	private readonly cache: ICacheProvider;
+	private readonly container: Container;
 
-	constructor(container: DIContainer) {
+	constructor(container: Container) {
 		this.app = express();
 		this.port = config.server.port;
-		this.dependencies = this.resolveDependencies(container);
+		this.database = container.get(IDatabaseProvider);
+		this.cache = container.get(ICacheProvider);
 		this.container = container;
-	}
-
-	private resolveDependencies(container :DIContainer) {
-		return {
-			database: container.get(ProviderTypes.DATABASE),
-			cache: container.get(ProviderTypes.CACHE),
-			storage: container.get(ProviderTypes.STORAGE),
-
-			authService: container.get(ApplicationServiceTypes.SESSION_AUTH),
-
-			analyticsController: container.get(ControllerTypes.ANALYTICS),
-			authController: container.get(ControllerTypes.AUTH),
-			cartController: container.get(ControllerTypes.CART),
-			categoryController: container.get(ControllerTypes.CATEGORY),
-			couponController: container.get(ControllerTypes.COUPON),
-			orderController: container.get(ControllerTypes.ORDER),
-			paymentController: container.get(ControllerTypes.PAYMENT),
-			productController: container.get(ControllerTypes.PRODUCT),
-			reviewController: container.get(ControllerTypes.REVIEW),
-			userController: container.get(ControllerTypes.USER),
-
-			adminSeeder: container.get(SeederTypes.ADMIN),
-			dummyProductsSeeder: container.get(SeederTypes.PRODUCTS_DUMMY_JSON)
-		};
 	}
 
 	/**
@@ -75,16 +70,33 @@ export class Application {
 	 * Sets up webhook routes that must bypass global JSON parsing.
 	 */
 	setupWebhookRoutes() {
-		const webhookRouter = setupPaymentWebhookRouter(this.dependencies.paymentController);
+		const paymentController = this.container.get(PaymentController);
+
+		const webhookRouter = setupPaymentWebhookRouter(paymentController);
 		this.app.use("/api/payments/webhook", webhookRouter);
 	}
 
 	setupRoutes() {
 		this.app.get("/", (_, res) => {
 			res.status(200).send("OK")
-		})
+		});
 
-		this.app.use(API_BASE, setupAppRouters(this.dependencies));
+		const deps = {
+			authService: this.container.get(SessionAuthService),
+
+			analyticsController: this.container.get(AnalyticsController),
+			authController: this.container.get(AuthController),
+			cartController: this.container.get(CartController),
+			categoryController: this.container.get(CategoryController),
+			couponController: this.container.get(CouponController),
+			orderController: this.container.get(OrderController),
+			paymentController: this.container.get(PaymentController),
+			productController: this.container.get(ProductController),
+			reviewController: this.container.get(ReviewController),
+			userController: this.container.get(UserController),
+		}
+
+		this.app.use(API_BASE, setupAppRouters(deps));
 	}
 
 	setupErrorHandling() {
@@ -93,7 +105,7 @@ export class Application {
 
 	async dropDatabase() {
 		if (config.infrastructure.providers.database.dropOnStartup) {
-			await this.dependencies.database.drop();
+			await this.database.drop();
 		}
 		else {
 			console.log("[Database] Skipping drop.");
@@ -102,7 +114,8 @@ export class Application {
 
 	async dropStorage() {
 		if (config.infrastructure.providers.storage.dropOnStartup) {
-			await this.dependencies.storage.deleteAll();
+			const storage = this.container.get(IStorageProvider)
+			await storage.deleteAll();
 		}
 		else {
 			console.log("[Storage] Skipping drop.");
@@ -112,10 +125,13 @@ export class Application {
 	async runSeeders() {
 		console.log("[Server] Starting seeders...");
 
-		await this.dependencies.adminSeeder.seed();
+		const adminSeeder = this.container.get(AdminSeeder);
+		const dummyProductsSeeder = this.container.get(ProductsDummyJsonSeeder);
+
+		await adminSeeder.seed();
 
 		if (config.seeding.seedProductsOnStartup) {
-			await this.dependencies.dummyProductsSeeder.seed();
+			await dummyProductsSeeder.seed();
 		}
 
 		console.log("[Server] Seeding complete.");
@@ -123,10 +139,10 @@ export class Application {
 
 	async start() {
 		try {
-			await this.dependencies.database.connect()
+			await this.database.connect()
 
 			try {
-				await this.dependencies.cache.connect();
+				await this.cache.connect();
 			}
 			catch (error) {
 				if (config.server.isProduction) throw error;
@@ -137,8 +153,6 @@ export class Application {
 			await this.dropDatabase();
 			// only works in development and with DROP_STORAGE_ON_STARTUP=true in .env
 			await this.dropStorage();
-
-			this.container.verify();
 
 			this.setupWebhookRoutes();
 			this.configureMiddleware();
@@ -165,8 +179,8 @@ export class Application {
 
 		try {
 			await Promise.allSettled([
-				this.dependencies.database.disconnect(),
-				this.dependencies.cache.disconnect()
+				this.database.disconnect(),
+				this.cache.disconnect()
 			]);
 
 			console.log("[Server] Cleanup complete. Exiting.");

@@ -13,8 +13,6 @@ export const createProtectRoute = (authService: SessionAuthService) : RequestHan
 		}
 
 		req.user = await authService.validateAccessToken(accessToken);
-		// @ts-ignore
-		req.userId = user.id;
 
 		next();
 	}

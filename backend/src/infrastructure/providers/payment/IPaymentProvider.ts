@@ -3,9 +3,6 @@ import {PaymentMetadataDTO, CheckoutSessionDTO, WebhookPaymentEventDTO} from "..
 import {CouponDTO} from "../../../application/types/coupon.js";
 
 export abstract class IPaymentProvider {
-	/**
-	 * Creates a new Checkout Session.
-	 */
 	abstract createSession(
 		orderItems: readonly OrderProductItem[],
 		metadata: PaymentMetadataDTO,

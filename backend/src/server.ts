@@ -1,7 +1,7 @@
+import {getContainer} from "./core/di/bootstrap.js";
 import {Application} from "./Application.js";
-import initContainer from "./core/di/index.js";
 
-const container = initContainer();
+const container = getContainer();
 
 const server = new Application(container);
 

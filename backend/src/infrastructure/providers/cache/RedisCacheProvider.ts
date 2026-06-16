@@ -12,12 +12,10 @@ const enum StatusType {
 }
 
 export class RedisCacheProvider extends ICacheProvider {
-    private readonly client: Redis;
     private isConnected: boolean = false;
 
-    constructor(client: Redis) {
+    constructor(private readonly client: Redis) {
         super();
-        this.client = client;
         this.setupEvents();
     }
 

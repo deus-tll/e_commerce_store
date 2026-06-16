@@ -2,13 +2,24 @@ import { v2 as Cloudinary, UploadApiResponse } from "cloudinary";
 import {IStorageProvider} from "./IStorageProvider.js";
 import {SystemError} from "../../../errors/index.js";
 
+export interface CloudinaryConfigOptions {
+	cloudName: string;
+	apiKey: string;
+	apiSecret: string;
+}
+
 export class CloudinaryStorageProvider extends IStorageProvider {
-	private readonly cloudinary: typeof Cloudinary;
 	private readonly isProduction: boolean;
 
-	constructor(cloudinary: typeof Cloudinary, isProduction: boolean) {
+	constructor(cloudinaryConfigOptions: CloudinaryConfigOptions, isProduction: boolean) {
 		super();
-		this.cloudinary = cloudinary;
+
+		Cloudinary.config({
+			cloud_name: cloudinaryConfigOptions.cloudName,
+			api_key: cloudinaryConfigOptions.apiKey,
+			api_secret: cloudinaryConfigOptions.apiSecret,
+		});
+
 		this.isProduction = isProduction;
 	}
 
@@ -39,7 +50,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 
 	async upload(file: string, folder: string): Promise<string> {
 		try {
-			const response: UploadApiResponse = await this.cloudinary.uploader.upload(file, { folder });
+			const response: UploadApiResponse = await Cloudinary.uploader.upload(file, { folder });
 			return response.secure_url;
 		}
 		catch (error) {
@@ -57,7 +68,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			if (!publicIdSegment) return;
 
 			const fullPublicId = `${folder}/${publicIdSegment}`;
-			await this.cloudinary.uploader.destroy(fullPublicId);
+			await Cloudinary.uploader.destroy(fullPublicId);
 		}
 		catch (error) {
 			console.error("[Cloudinary] Delete failed:", error.message);
@@ -77,7 +88,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			let deletedCount = 0;
 
 			while (hasMore) {
-				const result = await this.cloudinary.api.delete_all_resources({
+				const result = await Cloudinary.api.delete_all_resources({
 					resource_type: 'image',
 					invalidate: true,
 					max_results: 1000

@@ -27,11 +27,11 @@ interface MessageResult {
 export class UserAccountService {
 	constructor(
 		private readonly userService: UserService,
-		private readonly emailNotificationService: EmailNotificationService,
+		private readonly userTokenService: UserTokenService,
 		private readonly passwordService: PasswordService,
 		private readonly jwtService: JwtService,
+		private readonly emailNotificationService: EmailNotificationService,
 		private readonly authCacheRepository: AuthCacheRepository,
-		private readonly userTokenService: UserTokenService,
 	) {}
 
 	/**

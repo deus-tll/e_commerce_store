@@ -1,24 +1,22 @@
 import {Mongoose} from "mongoose";
 import {IDatabaseProvider} from "./IDatabaseProvider.js";
 
-/**
- * Mongoose implementation of the abstract contract for Database lifecycle management.
- */
 export class MongooseDatabaseProvider extends IDatabaseProvider {
-    private readonly mongoose: Mongoose;
+    private readonly client: Mongoose;
     private readonly uri: string;
     private readonly isProduction: boolean;
 
-    constructor(mongoose: Mongoose, uri: string, isProduction: boolean) {
+    constructor(client: Mongoose, uri: string, isProduction: boolean) {
         super();
-        this.mongoose = mongoose;
+        this.client = client;
         this.uri = uri;
         this.isProduction = isProduction;
+
     }
 
     async connect(): Promise<void> {
         try {
-            const conn = await this.mongoose.connect(this.uri);
+            const conn = await this.client.connect(this.uri);
             console.log(`[Database] Mongoose connected: ${conn.connection.host}`);
         }
         catch (error: any) {
@@ -28,7 +26,7 @@ export class MongooseDatabaseProvider extends IDatabaseProvider {
     }
 
     async disconnect(): Promise<void> {
-        await this.mongoose.disconnect();
+        await this.client.disconnect();
         console.log("[Database] Mongoose disconnected.");
     }
 
@@ -39,9 +37,9 @@ export class MongooseDatabaseProvider extends IDatabaseProvider {
         }
 
         try {
-            if (this.mongoose.connection.db) {
+            if (this.client.connection.db) {
                 console.log("[Database] Dropping Mongoose database...");
-                await this.mongoose.connection.db.dropDatabase();
+                await this.client.connection.db.dropDatabase();
                 console.log("[Database] Mongoose database dropped.");
             }
         } catch (error) {

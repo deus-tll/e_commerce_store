@@ -2,14 +2,9 @@ import {MailtrapClient} from "mailtrap";
 import {IEmailProvider} from "./IEmailProvider.js";
 import {SystemError} from "../../../errors/index.js";
 
-export class EmailSender {
-	public email: string;
-	public name: string;
-
-	constructor(email: string, name: string) {
-		this.email = email;
-		this.name = name;
-	}
+export interface EmailSender {
+	email: string;
+	name: string;
 }
 
 export class MailTrapEmailProvider extends IEmailProvider {
