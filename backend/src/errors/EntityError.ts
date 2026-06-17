@@ -1,14 +1,4 @@
-import {DomainError} from "./DomainError.js";
-import {ValidationErrorType} from "../enums/error.js";
-
-export class DomainValidationError extends DomainError {
-	public readonly type: ValidationErrorType;
-
-	constructor(message: string, type: ValidationErrorType = ValidationErrorType.BAD_REQUEST) {
-		super(message);
-		this.type = type;
-	}
-}
+import {DomainError} from "./BaseError.js";
 
 abstract class EntityError extends DomainError {
 	public readonly entity: string;

@@ -1,5 +1,5 @@
 import {CategoryStorageService} from "../shared/storage/AppStorageServices.js";
-import {DomainValidationError} from "../../errors/index.js";
+import {ValidationError} from "../../errors/index.js";
 import {ImageTracker, withSafeUpload} from "../shared/utils/withSafeUpload.js";
 
 export class CategoryImageManager {
@@ -9,7 +9,7 @@ export class CategoryImageManager {
 
 	private validatePresence(value: string | null | undefined): void {
 		if (!value) {
-			throw new DomainValidationError("Category image is required.");
+			throw new ValidationError("Category image is required.");
 		}
 	}
 

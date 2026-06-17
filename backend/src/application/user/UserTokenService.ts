@@ -6,7 +6,7 @@ import {PasswordService} from "../../infrastructure/security/PasswordService.js"
 import {UserEntity} from "../../entities/user/UserEntity.js";
 import {UserUpdatePersistence} from "../types/user.js";
 
-import {DomainValidationError} from "../../errors/index.js";
+import {ValidationError} from "../../errors/index.js";
 
 export class UserTokenService {
 	constructor(
@@ -35,7 +35,7 @@ export class UserTokenService {
 		const entity = await this.userRepository.findByValidVerificationToken(token);
 
 		if (!entity) {
-			throw new DomainValidationError("Invalid or expired verification token");
+			throw new ValidationError("Invalid or expired verification token");
 		}
 
 		const updateData: UserUpdatePersistence = Object.freeze({
@@ -58,7 +58,7 @@ export class UserTokenService {
 
 	async resetPassword(token: string, newPassword: string): Promise<UserEntity> {
 		const entity = await this.userRepository.findByValidResetToken(token);
-		if (!entity) throw new DomainValidationError("Invalid or expired reset token");
+		if (!entity) throw new ValidationError("Invalid or expired reset token");
 
 		const hashedPassword = await this.passwordProvider.hashPassword(newPassword);
 

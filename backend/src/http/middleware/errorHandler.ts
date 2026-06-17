@@ -4,7 +4,7 @@ import {ValidationErrorType} from "../../enums/error.js";
 import {
 	DomainError,
 	ActionNotAllowedError,
-	DomainValidationError,
+	ValidationError,
 	EntityAlreadyExistsError,
 	EntityNotFoundError,
 	SystemError,
@@ -36,7 +36,7 @@ const errorHandler: ErrorRequestHandler = (
 	}
 
 	// 3. Validation Errors (400, 410)
-	if (err instanceof DomainValidationError) {
+	if (err instanceof ValidationError) {
 		const statusMap = {
 			[ValidationErrorType.EXPIRED]: 410,
 			[ValidationErrorType.BAD_REQUEST]: 400

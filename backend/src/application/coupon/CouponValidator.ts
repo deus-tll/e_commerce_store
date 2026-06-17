@@ -3,7 +3,7 @@ import {ICouponRepository} from "./ICouponRepository.js";
 import {CouponEntity} from "../../entities/coupon/CouponEntity.js";
 import {CouponValidationDTO} from "../types/coupon.js";
 
-import {DomainValidationError, EntityNotFoundError} from "../../errors/index.js";
+import {ValidationError, EntityNotFoundError} from "../../errors/index.js";
 
 import {ValidationErrorType} from "../../enums/error.js";
 
@@ -15,7 +15,7 @@ export class CouponValidator {
 	private async handleExpiredCoupon(entity: CouponEntity, userId: string): Promise<void> {
 		if (entity.isExpired()) {
 			await this.couponRepository.updateCouponActiveState(entity.code, userId, false);
-			throw new DomainValidationError("Coupon expired", ValidationErrorType.EXPIRED);
+			throw new ValidationError("Coupon expired", ValidationErrorType.EXPIRED);
 		}
 	}
 
@@ -26,7 +26,7 @@ export class CouponValidator {
 
 		await this.handleExpiredCoupon(entity, userId);
 
-		if (!entity.isActive) throw new DomainValidationError("Coupon is not active");
+		if (!entity.isActive) throw new ValidationError("Coupon is not active");
 
 		return new CouponValidationDTO({
 			message: "Coupon is valid",

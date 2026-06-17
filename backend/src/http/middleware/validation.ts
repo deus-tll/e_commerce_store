@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, RequestHandler} from "express";
 import {ObjectSchema} from "joi";
 
-import {DomainValidationError} from "../../errors/index.js";
+import {ValidationError} from "../../errors/index.js";
 
 /**
  * Creates an Express middleware function that validates the request object
@@ -23,7 +23,7 @@ export const validationMiddleware = (schema: ObjectSchema): RequestHandler => {
 
 		if (error) {
 			const messages = error.details.map(detail => detail.message).join("; ");
-			throw new DomainValidationError(`Validation Failed: ${messages}`);
+			throw new ValidationError(`Validation Failed: ${messages}`);
 		}
 
 		const propertiesToUpdate = ["body", "query", "params"] as const;

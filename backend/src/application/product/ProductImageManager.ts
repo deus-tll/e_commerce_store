@@ -1,7 +1,7 @@
 import {ProductStorageService} from "../shared/storage/AppStorageServices.js";
 import {ProductImage} from "../../entities/product/types/ProductImage.js";
 
-import {DomainValidationError} from "../../errors/index.js";
+import {ValidationError} from "../../errors/index.js";
 import {ImageTracker, withSafeUpload} from "../shared/utils/withSafeUpload.js";
 
 interface UpdateMainImageResult {
@@ -26,7 +26,7 @@ export class ProductImageManager {
 
 	private validatePresence(value: string): void {
 		if (!value) {
-			throw new DomainValidationError("Main product image is required.");
+			throw new ValidationError("Main product image is required.");
 		}
 	}
 

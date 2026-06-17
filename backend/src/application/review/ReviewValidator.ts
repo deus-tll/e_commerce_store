@@ -3,7 +3,7 @@ import {IUserRepository} from "../user/IUserRepository.js";
 import {IReviewRepository} from "./IReviewRepository.js";
 import {IOrderRepository} from "../order/IOrderRepository.js";
 
-import {DomainValidationError, EntityNotFoundError} from "../../errors/index.js";
+import {ValidationError, EntityNotFoundError} from "../../errors/index.js";
 
 export class ReviewValidator {
 	constructor(
@@ -25,13 +25,13 @@ export class ReviewValidator {
 
 		const alreadyReviewed = await this.reviewRepository.existsByProductAndUser(productId, userId);
 		if (alreadyReviewed) {
-			throw new DomainValidationError("You have already reviewed this product.");
+			throw new ValidationError("You have already reviewed this product.");
 		}
 
 		if (this.requirePurchaseForReview) {
 			const hasPurchased = await this.orderRepository.hasUserPurchasedProduct(userId, productId);
 			if (!hasPurchased) {
-				throw new DomainValidationError("You can only review products you have purchased.");
+				throw new ValidationError("You can only review products you have purchased.");
 			}
 		}
 		else {

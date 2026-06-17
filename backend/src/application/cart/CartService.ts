@@ -5,7 +5,7 @@ import {CartMapper} from "./CartMapper.js";
 import {CartEntity} from "../../entities/cart/CartEntity.js";
 import {CartItemDTO} from "../types/cart.js";
 
-import {DomainValidationError} from "../../errors/index.js";
+import {ValidationError} from "../../errors/index.js";
 
 export class CartService {
 	constructor(
@@ -25,7 +25,7 @@ export class CartService {
 	async addItem(userId: string, productId: string): Promise<readonly CartItemDTO[]> {
 		const product = await this.productService.getByIdOrFail(productId);
 		if (product.stock < 1) {
-			throw new DomainValidationError("Product is out of stock.");
+			throw new ValidationError("Product is out of stock.");
 		}
 
 		const updatedEntity = await this.cartRepository.addItemOrIncrementQuantity(userId, productId);
@@ -43,7 +43,7 @@ export class CartService {
 
 	async updateItemQuantity(userId: string, productId: string, quantity: number): Promise<readonly CartItemDTO[]> {
 		if (quantity < 0) {
-			throw new DomainValidationError("Quantity must be non-negative.");
+			throw new ValidationError("Quantity must be non-negative.");
 		}
 
 		if (quantity === 0) {
@@ -53,7 +53,7 @@ export class CartService {
 
 		const product = await this.productService.getByIdOrFail(productId);
 		if (product.stock < quantity) {
-			throw new DomainValidationError(`Only ${product.stock} items available in stock.`);
+			throw new ValidationError(`Only ${product.stock} items available in stock.`);
 		}
 
 		const updatedEntity = await this.cartRepository.updateItemQuantity(userId, productId, quantity);
