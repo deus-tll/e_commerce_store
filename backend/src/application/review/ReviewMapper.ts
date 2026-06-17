@@ -7,7 +7,7 @@ export class ReviewMapper {
 		return new ReviewDTO(entity, shortUserDTO);
 	}
 
-	static toDTOs(entities: ReviewEntity[], shortUserDTOs: ShortUserDTO[]): ReviewDTO[] {
+	static toDTOs(entities: readonly ReviewEntity[], shortUserDTOs: readonly ShortUserDTO[]): ReviewDTO[] {
 		const userMap = new Map(shortUserDTOs.map(dto => [dto.id, dto]));
 
 		return entities.map(entity => {

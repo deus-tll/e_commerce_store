@@ -21,7 +21,7 @@ export class OrderService {
 		return OrderMapper.toDTO(entity, shortUserDTO);
 	}
 
-	private async formOrderDTOs(entities: OrderEntity[]): Promise<OrderDTO[]> {
+	private async formOrderDTOs(entities: readonly OrderEntity[]): Promise<OrderDTO[]> {
 		const uniqueUserIds = [
 			...new Set(entities.map(entity => entity.userId).filter(Boolean)),
 		];

@@ -7,7 +7,7 @@ export class OrderMapper {
 		return new OrderDTO(entity, shortUserDTO);
 	}
 
-	static toDTOs(entities: OrderEntity[], shortUserDTOs: ShortUserDTO[]): OrderDTO[] {
+	static toDTOs(entities: readonly OrderEntity[], shortUserDTOs: readonly ShortUserDTO[]): OrderDTO[] {
 		const userMap = new Map(shortUserDTOs.map(dto => [dto.id, dto]));
 
 		return entities.map(entity => {

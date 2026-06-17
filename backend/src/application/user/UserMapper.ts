@@ -6,7 +6,7 @@ export class UserMapper {
 		return new UserDTO(entity);
 	}
 
-	static toDTOs(entities: UserEntity[]): UserDTO[] {
+	static toDTOs(entities: readonly UserEntity[]): UserDTO[] {
 		return entities.map(entity => this.toDTO(entity));
 	}
 
@@ -14,7 +14,7 @@ export class UserMapper {
 		return new ShortUserDTO(entity);
 	}
 
-	static toShortDTOs(entities: UserEntity[]): ShortUserDTO[] {
+	static toShortDTOs(entities: readonly UserEntity[]): ShortUserDTO[] {
 		return entities.map(entity => this.toShortDTO(entity));
 	}
 }

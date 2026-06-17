@@ -3,7 +3,7 @@ import {CartDTO, CartItemDTO} from "../types/cart.js";
 import {ShortProductDTO} from "../types/product.js";
 
 export class CartMapper {
-    static toDTO(entity: CartEntity, shortProductDTOs: ShortProductDTO[]): CartDTO {
+    static toDTO(entity: CartEntity, shortProductDTOs: readonly ShortProductDTO[]): CartDTO {
         const productMap = new Map(shortProductDTOs.map(p => [p.id, p]));
 
         const itemDTOs = entity.items.map(item => {

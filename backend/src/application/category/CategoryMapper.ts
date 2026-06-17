@@ -6,7 +6,7 @@ export class CategoryMapper {
         return new CategoryDTO(entity);
     }
 
-    static toDTOs(entities: CategoryEntity[]): CategoryDTO[] {
+    static toDTOs(entities: readonly CategoryEntity[]): CategoryDTO[] {
         return entities.map(entity => this.toDTO(entity));
     }
 }

@@ -3,7 +3,7 @@ import {ICategoryDoc} from "../models/Category.js";
 import {normalizePersistence} from "../utils.js";
 
 export class CategoryAdapter {
-    static toEntity(doc: ICategoryDoc | null): CategoryEntity | null {
+    static toEntity(doc?: ICategoryDoc): CategoryEntity | null {
         const data = normalizePersistence(doc);
         if (!data) return null;
 

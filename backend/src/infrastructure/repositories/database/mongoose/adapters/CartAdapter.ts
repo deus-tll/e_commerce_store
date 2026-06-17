@@ -5,7 +5,7 @@ import {ICartDoc} from "../models/Cart.js";
 import {normalizePersistence} from "../utils.js";
 
 export class CartAdapter {
-    static toEntity(doc: ICartDoc | null): CartEntity | null {
+    static toEntity(doc?: ICartDoc): CartEntity | null {
         const data = normalizePersistence(doc);
         if (!data) return null;
 

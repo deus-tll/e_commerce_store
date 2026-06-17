@@ -17,7 +17,7 @@ import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort} from "./utils.js";
 
 export class CategoryMongooseRepository extends ICategoryRepository {
-	private buildMongooseQuery(filters: CategoryFiltersPersistence) : FilterQuery<ICategoryDoc> {
+	private buildQuery(filters: CategoryFiltersPersistence) : FilterQuery<ICategoryDoc> {
 		const { search } = filters;
 		const query: FilterQuery<ICategoryDoc> = {};
 
@@ -83,7 +83,7 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 	): Promise<RepositoryPaginationResult<CategoryEntity>> {
 		const { sortBy = "name", order = "asc", ...restFilters } = filters;
 
-		const query = this.buildMongooseQuery(restFilters);
+		const query = this.buildQuery(restFilters);
 
 		const sortObject = determineSort(sortBy, order);
 

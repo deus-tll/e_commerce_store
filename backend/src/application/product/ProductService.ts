@@ -37,7 +37,7 @@ export class ProductService {
 		return ProductMapper.toDTO(entity, finalCategoryDTO);
 	}
 
-	private async formProductDTOs(entities: ProductEntity[]): Promise<ProductDTO[]> {
+	private async formProductDTOs(entities: readonly ProductEntity[]): Promise<ProductDTO[]> {
 		const uniqueCategoryIds = [
 			...new Set(entities.map(entity => entity.categoryId).filter(Boolean))
 		];

@@ -31,7 +31,7 @@ export class ReviewService {
 		return ReviewMapper.toDTO(entity, shortUserDTO);
 	}
 
-	async #formReviewDTOs(entities: ReviewEntity[]): Promise<ReviewDTO[]> {
+	async #formReviewDTOs(entities: readonly ReviewEntity[]): Promise<ReviewDTO[]> {
 		const uniqueUserIds = [
 			...new Set(entities.map(entity => entity.userId).filter(Boolean))
 		];

@@ -7,7 +7,7 @@ export class ProductMapper {
         return new ProductDTO(entity, categoryDTO);
     }
 
-    static toDTOs(entities: ProductEntity[], categoryDTOs: CategoryDTO[]): ProductDTO[] {
+    static toDTOs(entities: readonly ProductEntity[], categoryDTOs: readonly CategoryDTO[]): ProductDTO[] {
         const categoryMap = new Map(categoryDTOs.map(dto => [dto.id, dto]));
 
         return entities.map(entity => {

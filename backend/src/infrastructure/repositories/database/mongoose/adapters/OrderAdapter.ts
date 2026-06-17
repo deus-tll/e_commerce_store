@@ -4,7 +4,7 @@ import {normalizePersistence} from "../utils.js";
 import {OrderProductItem} from "../../../../../entities/order/types/OrderProductItem.js";
 
 export class OrderAdapter {
-    static toEntity(doc: IOrderDoc | null): OrderEntity | null {
+    static toEntity(doc?: IOrderDoc): OrderEntity | null {
         const data = normalizePersistence(doc);
         if (!data) return null;
 

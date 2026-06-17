@@ -32,7 +32,7 @@ export class ProductAdapter {
         }
     }
 
-    static toEntity(doc: IProductDoc | null): ProductEntity | null {
+    static toEntity(doc?: IProductDoc): ProductEntity | null {
         const data = normalizePersistence(doc);
         if (!data) return null;
 
