@@ -9,7 +9,7 @@ export class OrderEntity {
     public readonly customerDetails: CustomerDetails;
     public readonly totalAmount: number;
     public readonly status: OrderStatus;
-    public readonly paymentSessionId?: string;
+    public readonly paymentSessionId?: string | null;
     public readonly orderNumber: string;
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
@@ -21,7 +21,7 @@ export class OrderEntity {
         customerDetails: CustomerDetails;
         totalAmount: number;
         status: OrderStatus;
-        paymentSessionId?: string;
+        paymentSessionId?: string | null;
         orderNumber: string;
         createdAt: Date;
         updatedAt: Date;

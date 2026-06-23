@@ -19,8 +19,9 @@ export class TemplateService {
 		try {
 			return await fs.readFile(fullPath, "utf-8");
 		}
-		catch (error) {
-			console.error(`[TemplateService] Failed to read template file: ${fullPath}. Code: ${error.code}, Message: ${error.message}.`);
+		catch (error: unknown) {
+			const err = error as NodeJS.ErrnoException;
+			console.error(`[TemplateService] Failed to read template file: ${fullPath}. Code: ${err.code}, Message: ${err.message}.`);
 			throw new SystemError("An error occurred while processing the template.");
 		}
 	}

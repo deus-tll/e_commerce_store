@@ -12,6 +12,7 @@ import {CheckoutSessionModes, Currencies, PaymentEventTypes, PaymentMethodTypes}
 import {IdempotencyPrefixes, StripeCouponDurations, StripeEvents, StripeHeaders} from "../../../enums/stripe.js";
 
 import {Currency} from "../../../utils/currency.js";
+import {getErrorMessage} from "../../../utils/error.js";
 
 export class StripeProvider extends IPaymentProvider {
 	private readonly stripe: Stripe;
@@ -106,22 +107,28 @@ export class StripeProvider extends IPaymentProvider {
 	constructEvent(payload: Buffer, headers: Record<string, any>) {
 		const signature = headers[StripeHeaders.SIGNATURE];
 
-		try {
-			const event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
-			const type = this.mapEventType(event.type);
-			const session = event.data.object as Stripe.Checkout.Session;
+		let event: Stripe.Event;
 
-			const { orderId, userId, couponCode } = session.metadata;
-			const totalAmountInCents = session.amount_total ?? 0;
-
-			const data = new PaymentEventDataDTO({
-				orderId, userId, couponCode, totalAmountInCents
-			});
-
-			return new WebhookPaymentEventDTO(type, data);
+		try	{
+			event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
 		}
-		catch (error: any) {
-			throw new SystemError(`[Stripe] Webhook construct event Error: ${error.message}`);
+		catch (error: unknown) {
+			throw new SystemError(`[Stripe] Webhook construct event Error: ${getErrorMessage(error)}`);
 		}
+
+		const session = event.data.object as Stripe.Checkout.Session;
+		const metadata = session.metadata;
+
+		if (!metadata) {
+			throw new SystemError(`[Stripe] Metadata is missing.`);
+		}
+
+		const { orderId, userId, couponCode } = metadata;
+		const totalAmountInCents = session.amount_total ?? 0;
+
+		return new WebhookPaymentEventDTO(
+			this.mapEventType(event.type),
+			new PaymentEventDataDTO({ orderId, userId, couponCode, totalAmountInCents })
+		);
 	}
 }

@@ -13,7 +13,7 @@ export class MemoryCacheProvider extends ICacheProvider {
         return data ? data as T : null;
     }
 
-    override async set(key: string, value: any, ttl?: number): Promise<void> {
+    override async set(key: string, value: any, _?: number): Promise<void> {
         this.storage.set(key, value);
         return Promise.resolve();
     }

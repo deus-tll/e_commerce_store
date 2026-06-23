@@ -18,6 +18,7 @@ import {InsufficientStockError} from "../../errors/InsufficientStockError.js";
 import {EntityNotFoundError} from "../../errors/index.js";
 
 import {Currency} from "../../utils/currency.js";
+import {getErrorMessage} from "../../utils/error.js";
 
 interface ApplyDiscountResponse {
 	totalAmountInCents: number,
@@ -38,15 +39,20 @@ export class CheckoutService {
 		clientItems: ClientItemInput[],
 		shortProductDTOs: ShortProductDTO[]
 	): OrderProductItem[] {
-		return shortProductDTOs.map(product => {
-			const clientProduct = clientItems.find(clientItem => clientItem.id === product.id);
-			const { id, name, price, image } = product;
-			const { quantity } = clientProduct;
+		return shortProductDTOs
+			.map(product => {
+				const clientProduct = clientItems.find(clientItem => clientItem.id === product.id);
 
-			return new OrderProductItem({
-				id, quantity, name, price, image
-			});
-		});
+				if (!clientProduct) return null;
+
+				const { id, name, price, image } = product;
+				const { quantity } = clientProduct;
+
+				return new OrderProductItem({
+					id, quantity, name, price, image
+				});
+			})
+			.filter((x): x is OrderProductItem => x !== null);
 	}
 
 	private calculateTotalInCents(items: OrderProductItem[]): number {
@@ -85,8 +91,8 @@ export class CheckoutService {
 
 		try {
 			await this.couponService.create(userId);
-		} catch (error) {
-			console.error(`Failed to grant coupon to user ${userId}:`, error.message);
+		} catch (error: unknown) {
+			console.error(`Failed to grant coupon to user ${userId}:`, getErrorMessage(error));
 		}
 	}
 

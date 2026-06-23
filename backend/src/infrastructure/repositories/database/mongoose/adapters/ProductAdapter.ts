@@ -14,6 +14,22 @@ import {toObjectId, normalizePersistence} from "../utils.js";
 export type CreateProductDocInput = Omit<IProductDoc, "_id" | "createdAt" | "updatedAt" | "ratingStats">;
 
 export class ProductAdapter {
+    private static buildEntity(
+        data: ReturnType<typeof normalizePersistence<IProductDoc>>
+    ): ProductEntity {
+        const { category, images, attributes, ratingStats, ...rest } = data;
+
+        return new ProductEntity({
+            ...rest,
+            images: new ProductImage(images),
+            categoryId: category?.toString(),
+            attributes: (attributes || []).map(
+                (attr: { name: string; value: string; }) =>
+                    new ProductAttribute(attr)),
+            ratingStats: new ProductRatingStats(ratingStats)
+        });
+    }
+
     static toCreatePersistenceDoc(data: ProductCreatePersistence): CreateProductDocInput {
         const { categoryId, ...rest } = data;
 
@@ -32,20 +48,15 @@ export class ProductAdapter {
         }
     }
 
-    static toEntity(doc?: IProductDoc): ProductEntity | null {
+    static toEntity(doc?: IProductDoc | null): ProductEntity | null {
+        if (!doc) return null;
+
         const data = normalizePersistence(doc);
-        if (!data) return null;
+        return this.buildEntity(data);
+    }
 
-        const { category, images, attributes, ratingStats, ...rest } = data;
-
-        return new ProductEntity({
-            ...rest,
-            images: new ProductImage(images),
-            categoryId: category?.toString(),
-            attributes: (attributes || []).map(
-                (attr: { name: string; value: string; }) =>
-                    new ProductAttribute(attr)),
-            ratingStats: new ProductRatingStats(ratingStats)
-        });
+    static toEntityRequired(doc: IProductDoc): ProductEntity {
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
     }
 }

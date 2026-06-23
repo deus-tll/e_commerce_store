@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType, Types } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import {OrderStatus, OrderStatusValues} from "../../../../../enums/application.js";
 
 const orderProductItemSchema = new Schema({
@@ -78,12 +78,33 @@ const orderSchema = new Schema({
 
 orderSchema.index({ user: 1, "products.product": 1 });
 
-export type IOrderDoc = InferSchemaType<typeof orderSchema> & {
+export interface IOrderProductItemDoc {
+	product: Types.ObjectId;
+	quantity: number;
+	price: number;
+	name: string;
+	image: string;
+}
+
+export interface ICustomerDetailsDoc {
+	fullName: string;
+	phone: string;
+	address: string;
+}
+
+export interface IOrderDoc {
 	_id: Types.ObjectId;
+	user: Types.ObjectId;
+	customerDetails: ICustomerDetailsDoc;
+	products: IOrderProductItemDoc[];
+	totalAmount: number;
+	status: OrderStatus;
+	paymentSessionId?: string;
+	orderNumber: string;
 	createdAt: Date;
 	updatedAt: Date;
 }
 
-const Order = model("Order", orderSchema);
+const Order = model<IOrderDoc>("Order", orderSchema);
 
 export default Order;

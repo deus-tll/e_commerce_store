@@ -10,7 +10,7 @@ export class UserEntity {
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
 
-    readonly #hashedPassword: string | undefined;
+    readonly #hashedPassword?: string;
 
     constructor(data: {
         id: string;
@@ -27,7 +27,7 @@ export class UserEntity {
         this.name = data.name;
         this.email = data.email;
         this.role = data.role;
-        this.isVerified = !!data.isVerified;
+        this.isVerified = data.isVerified;
         this.lastLogin = data.lastLogin;
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;

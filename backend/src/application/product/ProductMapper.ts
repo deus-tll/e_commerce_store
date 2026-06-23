@@ -10,9 +10,12 @@ export class ProductMapper {
     static toDTOs(entities: readonly ProductEntity[], categoryDTOs: readonly CategoryDTO[]): ProductDTO[] {
         const categoryMap = new Map(categoryDTOs.map(dto => [dto.id, dto]));
 
-        return entities.map(entity => {
-            const categoryDTO = categoryMap.get(entity.categoryId);
-            return this.toDTO(entity, categoryDTO);
-        });
+        return entities
+            .map(entity => {
+                const categoryDTO = categoryMap.get(entity.categoryId);
+                if (!categoryDTO) return null;
+                return this.toDTO(entity, categoryDTO);
+            })
+            .filter((x): x is ProductDTO => x !== null);
     }
 }

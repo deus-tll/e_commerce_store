@@ -1,3 +1,4 @@
+import {MongoServerError} from "mongodb";
 import {FilterQuery} from "mongoose";
 import Review, {IReviewDoc} from "./models/Review.js";
 
@@ -17,6 +18,14 @@ import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/
 import {determineSort, toObjectId} from "./utils.js";
 
 export class ReviewMongooseRepository extends IReviewRepository {
+	private toEntityOrThrow(doc?: IReviewDoc | null, criteria: any = {}): ReviewEntity {
+		const entity = ReviewAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("Review", criteria);
+
+		return entity;
+	}
+
 	private buildQuery(filters: ReviewFiltersPersistence): FilterQuery<IReviewDoc> {
 		const { productId } = filters;
 
@@ -33,10 +42,10 @@ export class ReviewMongooseRepository extends IReviewRepository {
 				user: userId
 			});
 
-			return ReviewAdapter.toEntity(createdDoc);
+			return ReviewAdapter.toEntityRequired(createdDoc);
 		}
 		catch (error) {
-			if (error.code === 11000)
+			if (error instanceof MongoServerError && error.code === 11000)
 			{
 				throw new EntityAlreadyExistsError("Review", { productId, userId });
 			}
@@ -52,21 +61,12 @@ export class ReviewMongooseRepository extends IReviewRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
-		if (!updatedDoc) {
-			throw new EntityNotFoundError("Review", { reviewId, userId });
-		}
-
-		return ReviewAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { reviewId, userId });
 	}
 
 	async deleteByIdAndUserId(reviewId: string, userId: string): Promise<ReviewEntity> {
 		const deletedDoc = await Review.findOneAndDelete({ _id: reviewId, user: userId }).lean();
-
-		if (!deletedDoc) {
-			throw new EntityNotFoundError("Review", { reviewId, userId });
-		}
-
-		return ReviewAdapter.toEntity(deletedDoc);
+		return this.toEntityOrThrow(deletedDoc, { reviewId, userId });
 	}
 
 	async findByIdAndUserId(reviewId: string, userId: string): Promise<ReviewEntity | null> {
@@ -87,7 +87,7 @@ export class ReviewMongooseRepository extends IReviewRepository {
 			Review.countDocuments(query),
 		]);
 
-		const reviewEntities = foundDocs.map(doc => ReviewAdapter.toEntity(doc));
+		const reviewEntities = foundDocs.map(doc => ReviewAdapter.toEntityRequired(doc));
 
 		return new RepositoryPaginationResult(reviewEntities, total);
 	}

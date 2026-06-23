@@ -26,12 +26,12 @@ export class ReviewService {
 		private readonly reviewValidator: ReviewValidator
 	) {}
 
-	async #formReviewDTO(entity: ReviewEntity): Promise<ReviewDTO> {
-		const shortUserDTO = await this.userService.getShortDTOById(entity.userId);
+	private async formDTO(entity: ReviewEntity): Promise<ReviewDTO> {
+		const shortUserDTO = await this.userService.getShortDTOByIdOrFail(entity.userId);
 		return ReviewMapper.toDTO(entity, shortUserDTO);
 	}
 
-	async #formReviewDTOs(entities: readonly ReviewEntity[]): Promise<ReviewDTO[]> {
+	private async formDTOs(entities: readonly ReviewEntity[]): Promise<ReviewDTO[]> {
 		const uniqueUserIds = [
 			...new Set(entities.map(entity => entity.userId).filter(Boolean))
 		];
@@ -40,23 +40,23 @@ export class ReviewService {
 		return ReviewMapper.toDTOs(entities, shortUserDTOs);
 	}
 
-	async #getReviewOrFail(reviewId: string, userId: string): Promise<ReviewEntity> {
-		const existingReview = await this.reviewRepository.findByIdAndUserId(reviewId, userId);
-		if (!existingReview) {
+	async getReviewOrFail(reviewId: string, userId: string): Promise<ReviewEntity> {
+		const existingEntity = await this.reviewRepository.findByIdAndUserId(reviewId, userId);
+		if (!existingEntity) {
 			throw new EntityNotFoundError("Review", { reviewId, userId });
 		}
-		return existingReview;
+		return existingEntity;
 	}
 
 	async create(productId: string, userId: string, data: ReviewCreateInput): Promise<ReviewDTO> {
 		await this.reviewValidator.validateCreation(productId, userId);
 
-		const createdReview = await this.reviewRepository.create(productId, userId, data);
+		const createdEntity = await this.reviewRepository.create(productId, userId, data);
 
 		try {
 			await this.productStatsService.handleReviewCreation(
-				createdReview.productId,
-				createdReview.rating
+				createdEntity.productId,
+				createdEntity.rating
 			);
 		}
 		catch (error) {
@@ -64,12 +64,12 @@ export class ReviewService {
 			console.error("Failed to update product stats after review creation:", error);
 		}
 
-		return await this.#formReviewDTO(createdReview);
+		return await this.formDTO(createdEntity);
 	}
 
 	async update(reviewId: string, userId: string, data: ReviewUpdateInput): Promise<ReviewDTO> {
-		const existingReview = await this.#getReviewOrFail(reviewId, userId);
-		const oldRating = existingReview.rating;
+		const existingEntity = await this.getReviewOrFail(reviewId, userId);
+		const oldRating = existingEntity.rating;
 
 		const { rating, comment } = data;
 
@@ -78,16 +78,16 @@ export class ReviewService {
 			...(comment && { comment }),
 		} satisfies ReviewUpdatePersistence);
 
-		const updatedReview = await this.reviewRepository.updateByIdAndUserId(
+		const updatedEntity = await this.reviewRepository.updateByIdAndUserId(
 			reviewId, userId, persistenceData
 		);
 
-		const newRating = updatedReview.rating;
+		const newRating = updatedEntity.rating;
 
 		if (data.rating !== undefined && data.rating !== oldRating) {
 			try {
 				await this.productStatsService.handleReviewUpdate(
-					updatedReview.productId,
+					updatedEntity.productId,
 					newRating,
 					oldRating
 				);
@@ -98,18 +98,18 @@ export class ReviewService {
 			}
 		}
 
-		return await this.#formReviewDTO(updatedReview);
+		return await this.formDTO(updatedEntity);
 	}
 
 	async delete(userId: string, reviewId: string): Promise<ReviewDTO> {
-		const deletedReview = await this.reviewRepository.deleteByIdAndUserId(reviewId, userId);
+		const deletedEntity = await this.reviewRepository.deleteByIdAndUserId(reviewId, userId);
 
 		await this.productStatsService.handleReviewDeletion(
-			deletedReview.productId,
-			deletedReview.rating
+			deletedEntity.productId,
+			deletedEntity.rating
 		);
 
-		return await this.#formReviewDTO(deletedReview);
+		return await this.formDTO(deletedEntity);
 	}
 
 	async getAllByProduct(productId: string, page = 1, limit = 10): Promise<ReviewPaginationResultDTO> {
@@ -120,10 +120,10 @@ export class ReviewService {
 		const { results, total } = await this.reviewRepository.findAndCountByProduct(productId, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const reviewDTOs = await this.#formReviewDTOs(results);
+		const dtos = await this.formDTOs(results);
 
 		return new ReviewPaginationResultDTO(
-			reviewDTOs,
+			dtos,
 			new PaginationMetadata(page, limit, total, pages)
 		);
 	}

@@ -1,8 +1,10 @@
+import {MongoServerError} from "mongodb";
 import {FilterQuery} from "mongoose";
 import User, {IUserDoc} from "./models/User.js";
 
 import {IUserRepository} from "../../../../application/user/IUserRepository.js";
 import {UserAdapter} from "./adapters/UserAdapter.js";
+
 import {UserEntity} from "../../../../entities/user/UserEntity.js";
 import {
 	UserCreatePersistence,
@@ -22,6 +24,14 @@ import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort} from "./utils.js";
 
 export class UserMongooseRepository extends IUserRepository {
+	private toEntityOrThrow(doc?: IUserDoc | null, criteria: any = {}): UserEntity {
+		const entity = UserAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("User", criteria);
+
+		return entity;
+	}
+
 	private buildQuery(filters: UserFiltersPersistence): FilterQuery<IUserDoc> {
 		const { search, role, isVerified } = filters;
 		const query: FilterQuery<IUserDoc> = {
@@ -48,10 +58,10 @@ export class UserMongooseRepository extends IUserRepository {
 	async create(data: UserCreatePersistence): Promise<UserEntity> {
 		try {
 			const createdDoc = await User.create(data);
-			return UserAdapter.toEntity(createdDoc);
+			return UserAdapter.toEntityRequired(createdDoc);
 		}
 		catch (error) {
-			if (error.code === 11000) {
+			if (error instanceof MongoServerError && error.code === 11000) {
 				const keyPattern = error["keyPattern"];
 				const key = Object.keys(keyPattern)[0] as keyof UserCreatePersistence;
 				throw new EntityAlreadyExistsError("User", { [key]: data[key] });
@@ -67,17 +77,12 @@ export class UserMongooseRepository extends IUserRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
-		if (!updatedDoc) throw new EntityNotFoundError("User", { id });
-
-		return UserAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async deleteById(id: string): Promise<UserEntity> {
 		const deletedDoc = await User.findByIdAndDelete(id).lean();
-
-		if (!deletedDoc) throw new EntityNotFoundError("User", { id });
-
-		return UserAdapter.toEntity(deletedDoc);
+		return this.toEntityOrThrow(deletedDoc, { id });
 	}
 
 	async findById(id: string, options: UserFindOneOptionsInput = {}): Promise<UserEntity | null> {
@@ -118,7 +123,7 @@ export class UserMongooseRepository extends IUserRepository {
 			User.countDocuments(query)
 		]);
 
-		const users = foundDocs.map(doc => UserAdapter.toEntity(doc));
+		const users = foundDocs.map(doc => UserAdapter.toEntityRequired(doc));
 
 		return new RepositoryPaginationResult(users, total);
 	}
@@ -130,7 +135,7 @@ export class UserMongooseRepository extends IUserRepository {
 
 	async findByIds(ids: string[]): Promise<UserEntity[]> {
 		const foundDocs = await User.find({ _id: { $in: ids } }).lean();
-		return foundDocs.map(doc => UserAdapter.toEntity(doc));
+		return foundDocs.map(doc => UserAdapter.toEntityRequired(doc));
 	}
 
 	async findByValidVerificationToken(token: string): Promise<UserEntity | null> {

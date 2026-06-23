@@ -5,10 +5,9 @@ import {ICartDoc} from "../models/Cart.js";
 import {normalizePersistence} from "../utils.js";
 
 export class CartAdapter {
-    static toEntity(doc?: ICartDoc): CartEntity | null {
-        const data = normalizePersistence(doc);
-        if (!data) return null;
-
+    private static buildEntity(
+        data: ReturnType<typeof normalizePersistence<ICartDoc>>
+    ): CartEntity {
         const { user, items, ...rest } = data;
 
         const processedItems = items.map(item => new CartItem({
@@ -21,5 +20,12 @@ export class CartAdapter {
             userId: user?.toString(),
             items: processedItems
         });
+    }
+
+    static toEntity(doc?: ICartDoc | null): CartEntity | null {
+        if (!doc) return null;
+
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
     }
 }

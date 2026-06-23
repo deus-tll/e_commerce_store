@@ -1,4 +1,5 @@
-import mongoose, {FilterQuery} from "mongoose";
+import {MongoServerError} from "mongodb";
+import {FilterQuery} from "mongoose";
 import Order, {IOrderDoc} from "./models/Order.js";
 import Counter from "./models/Counter.js";
 
@@ -22,10 +23,18 @@ import {determineSort, toObjectId} from "./utils.js";
 
 type OrderAggregationResult = {
 	metadata: { total: number }[];
-	data: mongoose.FlattenMaps<IOrderDoc>[];
+	data: IOrderDoc[];
 }[];
 
 export class OrderMongooseRepository extends IOrderRepository {
+	private toEntityOrThrow(doc?: IOrderDoc | null, criteria: any = {}): OrderEntity {
+		const entity = OrderAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("Order", criteria);
+
+		return entity;
+	}
+
 	private buildQuery(filters: OrderFiltersPersistence): FilterQuery<IOrderDoc> {
 		const { userId, status } = filters;
 
@@ -69,17 +78,18 @@ export class OrderMongooseRepository extends IOrderRepository {
 
 		try {
 			const createdDoc = await Order.create(docData);
-			return OrderAdapter.toEntity(createdDoc);
+			return OrderAdapter.toEntityRequired(createdDoc);
 		}
 		catch (error) {
-			if (error.code === 11000)
+			if (error instanceof MongoServerError && error.code === 11000)
 			{
-				const keyPattern = error['keyPattern'];
+				const keyPattern = error.keyPattern as Record<string, unknown> | undefined;
 
-				if (keyPattern.paymentSessionId) {
+				if (keyPattern?.paymentSessionId) {
 					throw new EntityAlreadyExistsError("Order", { paymentSessionId: data.paymentSessionId } );
 				}
-				if (keyPattern.orderNumber) {
+
+				if (keyPattern?.orderNumber) {
 					throw new SystemError("Order number conflict during save.");
 				}
 			}
@@ -95,11 +105,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 			{ new: true }
 		).lean();
 
-		if (!updatedDoc) {
-			throw new EntityNotFoundError("Order", { id });
-		}
-
-		return OrderAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async updatePaymentSessionId(id: string, paymentSessionId: string): Promise<OrderEntity> {
@@ -109,11 +115,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 			{ new: true }
 		).lean();
 
-		if (!updatedDoc) {
-			throw new EntityNotFoundError("Order", { id });
-		}
-
-		return OrderAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async findById(id: string): Promise<OrderEntity | null> {
@@ -123,7 +125,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 
 	async findByIdAndUser(id: string, userId: string): Promise<OrderEntity | null> {
 		const foundDoc = await Order.findOne({ _id: id, user: userId }).lean();
-		return foundDoc ? OrderAdapter.toEntity(foundDoc) : null;
+		return OrderAdapter.toEntity(foundDoc);
 	}
 
 	async findByPaymentSessionId(sessionId: string): Promise<OrderEntity | null> {
@@ -156,7 +158,7 @@ export class OrderMongooseRepository extends IOrderRepository {
 		const total = result[0].metadata[0]?.total || 0;
 		const foundDocs = result[0].data;
 
-		const entities = foundDocs.map(doc => OrderAdapter.toEntity(doc));
+		const entities = foundDocs.map(doc => OrderAdapter.toEntityRequired(doc));
 		return new RepositoryPaginationResult(entities, total);
 	}
 

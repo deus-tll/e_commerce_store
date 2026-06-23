@@ -14,7 +14,7 @@ export class PasswordService {
         }
     }
 
-    async comparePassword(plaintext: string, hashed: string): Promise<boolean> {
+    async comparePassword(plaintext: string, hashed?: string): Promise<boolean> {
         if (!hashed) {
             throw new SystemError("Data mismatch during verification.");
         }

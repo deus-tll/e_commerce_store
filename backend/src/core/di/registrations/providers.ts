@@ -46,7 +46,7 @@ const registerProviders = (container: Container): void => {
         {
             lazyConnect: true,
             maxRetriesPerRequest: 1,
-            retryStrategy(times: number): number {
+            retryStrategy(times: number): number | null {
                 if (times > 3) return null;
                 return Math.min(times * 100, 3000);
             }

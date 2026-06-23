@@ -34,11 +34,13 @@ export class CartService {
 	}
 
 	async removeItem(userId: string, productId: string): Promise<readonly CartItemDTO[]> {
-		const updatedEntity = await this.cartRepository.removeItem(userId, productId);
-
-		if (!updatedEntity) return [];
-
-		return await this.formItemDTOs(updatedEntity);
+		try {
+			const updatedEntity = await this.cartRepository.removeItem(userId, productId);
+			return await this.formItemDTOs(updatedEntity);
+		}
+		catch (_) {
+			return [];
+		}
 	}
 
 	async updateItemQuantity(userId: string, productId: string, quantity: number): Promise<readonly CartItemDTO[]> {
@@ -62,7 +64,11 @@ export class CartService {
 	}
 
 	async clear(userId: string): Promise<readonly CartItemDTO[]> {
-		await this.cartRepository.updateItemsByUserId(userId, []);
+		try	{
+			await this.cartRepository.updateItemsByUserId(userId, []);
+		}
+		catch (_) {}
+
 		return [];
 	}
 

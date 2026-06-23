@@ -1,5 +1,6 @@
 import {Redis} from "ioredis";
 import {ICacheProvider} from "./ICacheProvider.js";
+import {getErrorMessage} from "../../../utils/error.js";
 
 const enum EventType {
     CONNECT = "connect",
@@ -52,8 +53,8 @@ export class RedisCacheProvider extends ICacheProvider {
 
         try {
             return JSON.parse(data) as T;
-        } catch (err) {
-            console.warn(`[Redis] Failed to parse JSON for key "${key}":`, err.message);
+        } catch (error: unknown) {
+            console.warn(`[Redis] Failed to parse JSON for key "${key}":`, getErrorMessage(error));
             return data as unknown as T;
         }
     }

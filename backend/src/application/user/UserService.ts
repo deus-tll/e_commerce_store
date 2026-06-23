@@ -114,6 +114,11 @@ export class UserService {
 		return UserMapper.toShortDTO(entity);
 	}
 
+	async getShortDTOByIdOrFail(id: string): Promise<ShortUserDTO> {
+		const entity = await this.getEntityByIdOrFail(id);
+		return UserMapper.toShortDTO(entity);
+	}
+
 	async getByIdOrFail(id: string, options: UserFindOneOptionsInput = {}): Promise<UserDTO> {
 		const entity = await this.getEntityByIdOrFail(id, options);
 		return UserMapper.toDTO(entity);

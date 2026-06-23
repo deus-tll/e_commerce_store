@@ -16,6 +16,11 @@ const parseNum = (val: string | undefined, fallback: number): number => {
 	const parsed = Number(val);
 	return isNaN(parsed) ? fallback : parsed;
 };
+const requiredEnv = (name: string): string => {
+	const value = process.env[name];
+	if (!value) throw new Error(`${name} is required`);
+	return value;
+};
 
 const nodeEnv = process.env.NODE_ENV || EnvMode.DEV;
 const isProduction = nodeEnv === EnvMode.PROD;
@@ -27,10 +32,10 @@ export const config = {
 		isProduction: isProduction,
 		port: port,
 		clientUrl: isProduction
-			? process.env.PRODUCTION_CLIENT_URL
+			? requiredEnv("PRODUCTION_CLIENT_URL")
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
 		apiBaseUrl: process.env.API_BASE_URL || "/api",
-		passwordResetUrl: process.env.RESET_PASSWORD_URL,
+		passwordResetUrl: requiredEnv("RESET_PASSWORD_URL"),
 		jsonLimit: process.env.JSON_LIMIT || "10mb",
 		forceDisableSecureCookies: parseBool(process.env.FORCE_DISABLE_SECURE_COOKIES)
 	},
@@ -40,40 +45,40 @@ export const config = {
 				dropOnStartup: parseBool(process.env.DROP_DB_ON_STARTUP),
 				mongo: {
 					uri: isProduction
-						? process.env.PRODUCTION_MONGO_URI
-						: process.env.DEVELOPMENT_MONGO_URI,
+						? requiredEnv("PRODUCTION_MONGO_URI")
+						: requiredEnv("DEVELOPMENT_MONGO_URI"),
 				}
 			},
 			cache: {
 				type: process.env.CACHE_TYPE || CacheType.MEMORY,
 				redis: {
 					url: isProduction
-						? process.env.PRODUCTION_REDIS_URL
-						: process.env.DEVELOPMENT_REDIS_URL,
+						? requiredEnv("PRODUCTION_REDIS_URL")
+						: requiredEnv("DEVELOPMENT_REDIS_URL"),
 				}
 			},
 			storage: {
 				dropOnStartup: parseBool(process.env.DROP_STORAGE_ON_STARTUP),
 				cloudinary: {
-					cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-					apiKey: process.env.CLOUDINARY_API_KEY,
-					apiSecret: process.env.CLOUDINARY_API_SECRET,
+					cloudName: requiredEnv("CLOUDINARY_CLOUD_NAME"),
+					apiKey: requiredEnv("CLOUDINARY_API_KEY"),
+					apiSecret: requiredEnv("CLOUDINARY_API_SECRET"),
 				},
 			},
 			payment: {
 				stripe: {
-					secretKey: process.env.STRIPE_SECRET_KEY,
-					webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-					successUrl: process.env.STRIPE_SUCCESS_URL,
-					cancelUrl: process.env.STRIPE_CANCEL_URL,
+					secretKey: requiredEnv("STRIPE_SECRET_KEY"),
+					webhookSecret: requiredEnv("STRIPE_WEBHOOK_SECRET"),
+					successUrl: requiredEnv("STRIPE_SUCCESS_URL"),
+					cancelUrl: requiredEnv("STRIPE_CANCEL_URL"),
 				}
 			},
 			mail: {
 				mailtrap: {
-					token: process.env.MAILTRAP_TOKEN,
+					token: requiredEnv("MAILTRAP_TOKEN"),
 					sender: {
-						email: process.env.MAILTRAP_SENDER_EMAIL,
-						name: process.env.MAILTRAP_SENDER_NAME,
+						email: requiredEnv("MAILTRAP_SENDER_EMAIL"),
+						name: requiredEnv("MAILTRAP_SENDER_NAME"),
 					}
 				}
 			}
@@ -84,11 +89,11 @@ export const config = {
 			},
 			jwt: {
 				access: {
-					secret: process.env.ACCESS_TOKEN_SECRET,
+					secret: requiredEnv("ACCESS_TOKEN_SECRET"),
 					ttl: process.env.ACCESS_TOKEN_TTL || "15m",
 				},
 				refresh: {
-					secret: process.env.REFRESH_TOKEN_SECRET,
+					secret: requiredEnv("REFRESH_TOKEN_SECRET"),
 					ttl: process.env.REFRESH_TOKEN_TTL || "7d",
 				}
 			}
@@ -100,9 +105,9 @@ export const config = {
 			discountPercentage: parseNum(process.env.COUPON_DISCOUNT_PERCENTAGE, 10),
 		},
 		initialAdmin: {
-			name: process.env.ADMIN_NAME,
-			email: process.env.ADMIN_EMAIL,
-			password: process.env.ADMIN_PASSWORD,
+			name: requiredEnv("ADMIN_NAME"),
+			email: requiredEnv("ADMIN_EMAIL"),
+			password: requiredEnv("ADMIN_PASSWORD"),
 		},
 		product: {
 			featuredProductsMinRating: parseNum(process.env.FEATURED_PRODUCTS_MIN_RATING, 4.5),
@@ -113,7 +118,7 @@ export const config = {
 		}
 	},
 	seeding: {
-		defaultSeederUserPassword: process.env.DEFAULT_SEEDER_USER_PASSWORD,
+		defaultSeederUserPassword: requiredEnv("DEFAULT_SEEDER_USER_PASSWORD"),
 		seedProductsOnStartup: parseBool(process.env.SEED_PRODUCTS_ON_STARTUP),
 		dummyJson: {
 			productsUrlWithLimit: process.env.DUMMY_JSON_PRODUCTS_URL

@@ -140,14 +140,7 @@ export class Application {
 	async start() {
 		try {
 			await this.database.connect()
-
-			try {
-				await this.cache.connect();
-			}
-			catch (error) {
-				if (config.server.isProduction) throw error;
-				console.warn(`[Server] Cache not available: ${error.message}`);
-			}
+			await this.cache.connect();
 
 			// only works in development and with DROP_DB_ON_STARTUP=true in .env
 			await this.dropDatabase();

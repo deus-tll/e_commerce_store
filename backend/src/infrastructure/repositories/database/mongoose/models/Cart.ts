@@ -1,4 +1,4 @@
-import {Schema, Types, model, InferSchemaType} from "mongoose";
+import {Schema, Types, model} from "mongoose";
 
 const cartItemSchema = new Schema({
 	product: {
@@ -30,12 +30,29 @@ const cartSchema = new Schema({
 	toObject: { virtuals: true },
 });
 
-export type ICartDoc = InferSchemaType<typeof cartSchema> & {
-	_id: Types.ObjectId;
+// export type ICartDoc = InferSchemaType<typeof cartSchema> & {
+// 	_id: Types.ObjectId;
+// 	createdAt: Date;
+// 	updatedAt: Date;
+// }
+//
+// const Cart = model("Cart", cartSchema);
+
+export interface ICartItemDoc {
+	product: Types.ObjectId;
+	quantity: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
 
-const Cart = model("Cart", cartSchema);
+export interface ICartDoc {
+	_id: Types.ObjectId;
+	user: Types.ObjectId;
+	items: ICartItemDoc[];
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+const Cart = model<ICartDoc>("Cart", cartSchema);
 
 export default Cart;

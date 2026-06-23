@@ -7,11 +7,9 @@ export type SortObject = Record<string, 1 | -1>;
  * Converts a Mongoose Document or a lean object into a normalized JavaScript object
  * by removing some mongoose specific fields and methods that are the same between entities.
  */
-export function normalizePersistence<T extends { _id?: any; __v?: any, toObject?: (...args: any[]) => any } | null>(
+export function normalizePersistence<T extends { _id?: any; __v?: any, toObject?: (...args: any[]) => any }> (
     doc: T
-): T extends null ? null : Omit<T, "_id" | "__v"> & { id: string } {
-    if (!doc) return null;
-
+): Omit<T, "_id" | "__v"> & { id: string } {
     const normalizedObject = typeof doc.toObject === "function"
     ? doc.toObject({ getters: true, virtuals: false })
     : { ...(doc as any) };

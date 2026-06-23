@@ -1,5 +1,6 @@
 import {Mongoose} from "mongoose";
 import {IDatabaseProvider} from "./IDatabaseProvider.js";
+import {getErrorMessage} from "../../../utils/error.js";
 
 export class MongooseDatabaseProvider extends IDatabaseProvider {
     private readonly client: Mongoose;
@@ -42,8 +43,8 @@ export class MongooseDatabaseProvider extends IDatabaseProvider {
                 await this.client.connection.db.dropDatabase();
                 console.log("[Database] Mongoose database dropped.");
             }
-        } catch (error) {
-            console.error("[Database] Drop failed:", error.message);
+        } catch (error: unknown) {
+            console.error("[Database] Drop failed:", getErrorMessage(error));
         }
     }
 }

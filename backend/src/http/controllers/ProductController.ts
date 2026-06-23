@@ -73,8 +73,8 @@ export class ProductController {
 	 * Retrieves a list of recommended products based on a current cart items list.
 	 */
 	getRecommended = async (req: Request, res: Response): Promise<Response> => {
-		let categoryIds = [];
-		let excludedProductIds = [];
+		let categoryIds: string[] = [];
+		let excludedProductIds: string[] = [];
 
 		const cartItems = await this.cartService.getCartItems(req.user.id);
 		if (cartItems.length > 0) {

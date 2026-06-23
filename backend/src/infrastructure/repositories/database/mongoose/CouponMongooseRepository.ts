@@ -1,4 +1,5 @@
-import Coupon from "./models/Coupon.js";
+import {MongoServerError} from "mongodb";
+import Coupon, {ICouponDoc} from "./models/Coupon.js";
 
 import {ICouponRepository} from "../../../../application/coupon/ICouponRepository.js";
 import {CouponAdapter} from "./adapters/CouponAdapter.js";
@@ -9,6 +10,14 @@ import {CouponCreatePersistence} from "../../../../application/types/coupon.js";
 import {EntityAlreadyExistsError, EntityNotFoundError} from "../../../../errors/index.js";
 
 export class CouponMongooseRepository extends ICouponRepository {
+	private toEntityOrThrow(doc?: ICouponDoc | null, criteria: any = {}): CouponEntity {
+		const entity = CouponAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("Coupon", criteria);
+
+		return entity;
+	}
+
 	async replaceOrCreate(userId: string, data: CouponCreatePersistence): Promise<CouponEntity> {
 		try {
 			const updatedDoc = await Coupon.findOneAndReplace(
@@ -17,12 +26,19 @@ export class CouponMongooseRepository extends ICouponRepository {
 				{ upsert: true, new: true, runValidators: true }
 			).lean();
 
-			return CouponAdapter.toEntity(updatedDoc);
+			return CouponAdapter.toEntityRequired(updatedDoc);
 		}
-		catch (error) {
-			const keyPattern = error['keyPattern'];
-			if (error.code === 11000 && keyPattern?.code) {
-				throw new EntityAlreadyExistsError("Coupon", { code: data.code });
+		catch (error: unknown) {
+			if (error instanceof MongoServerError && error.code === 11000) {
+				const keyPattern = error.keyPattern as Record<string, unknown> | undefined;
+
+				if (keyPattern?.code) {
+					throw new EntityAlreadyExistsError("Coupon", { code: data.code });
+				}
+
+				if (keyPattern?.user) {
+					throw new EntityAlreadyExistsError("Coupon", { user: userId });
+				}
 			}
 			throw error;
 		}
@@ -35,9 +51,7 @@ export class CouponMongooseRepository extends ICouponRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
-		if (!updatedDoc) throw new EntityNotFoundError("Coupon", { code: couponCode, userId });
-
-		return CouponAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { code: couponCode, userId });
 	}
 
 	async findByCodeAndUserId(code: string, userId: string): Promise<CouponEntity | null> {

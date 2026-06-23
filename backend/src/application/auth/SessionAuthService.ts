@@ -10,6 +10,7 @@ import {InvalidCredentialsError, InvalidTokenError} from "../../errors/index.js"
 
 import {TokenType} from "../../enums/auth.js";
 import {AuthMapper} from "./AuthMapper.js";
+import {getErrorMessage} from "../../utils/error.js";
 
 export class SessionAuthService {
 	constructor(
@@ -47,8 +48,8 @@ export class SessionAuthService {
 				const decoded = this.jwtService.verifyToken(refreshToken, TokenType.REFRESH_TOKEN);
 				await this.authCacheRepository.removeRefreshToken(decoded.userId);
 			}
-			catch (error) {
-				console.warn("Invalid refresh token during logout:", error.message);
+			catch (error: unknown) {
+				console.warn("Invalid refresh token during logout:", getErrorMessage(error));
 			}
 		}
 	}

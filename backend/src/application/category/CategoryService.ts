@@ -23,10 +23,22 @@ export class CategoryService {
 		private readonly categoryImageManager: CategoryImageManager
 	) {}
 
+	private formDTO(entity?: CategoryEntity | null): CategoryDTO | null {
+		return entity ? CategoryMapper.toDTO(entity) : null;
+	}
+
+	private formDTORequired(entity: CategoryEntity): CategoryDTO {
+		return CategoryMapper.toDTO(entity);
+	}
+
+	private formDTOsRequired(entities: CategoryEntity[]): CategoryDTO[] {
+		return CategoryMapper.toDTOs(entities);
+	}
+
 	private async getEntityByIdOrFail(id: string): Promise<CategoryEntity> {
-		const category = await this.categoryRepository.findById(id);
-		if (!category) throw new EntityNotFoundError("Category", { id });
-		return category;
+		const entity = await this.categoryRepository.findById(id);
+		if (!entity) throw new EntityNotFoundError("Category", { id });
+		return entity;
 	}
 
 	async create(data: CategoryCreateInput): Promise<CategoryDTO> {
@@ -43,7 +55,7 @@ export class CategoryService {
 		} satisfies CategoryCreatePersistence);
 
 		const createdEntity = await this.categoryRepository.create(persistenceData);
-		return CategoryMapper.toDTO(createdEntity);
+		return this.formDTORequired(createdEntity);
 	}
 
 	async update(id: string, data: CategoryUpdateInput): Promise<CategoryDTO> {
@@ -70,14 +82,14 @@ export class CategoryService {
 			...imageUpdate
 		} satisfies CategoryUpdatePersistence);
 
-		const updatedCategory = await this.categoryRepository.updateById(id, persistenceData);
-		return CategoryMapper.toDTO(updatedCategory);
+		const updatedEntity = await this.categoryRepository.updateById(id, persistenceData);
+		return this.formDTORequired(updatedEntity);
 	}
 
 	async delete(id: string): Promise<CategoryDTO> {
-		const deletedCategory = await this.categoryRepository.deleteById(id);
-		await this.categoryImageManager.deleteByUrl(deletedCategory.image);
-		return CategoryMapper.toDTO(deletedCategory);
+		const deletedEntity = await this.categoryRepository.deleteById(id);
+		await this.categoryImageManager.deleteByUrl(deletedEntity.image);
+		return this.formDTORequired(deletedEntity);
 	}
 
 	async getAll(
@@ -90,38 +102,39 @@ export class CategoryService {
 		const { results, total } = await this.categoryRepository.findAndCount(filters, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const categoryDTOs = CategoryMapper.toDTOs(results);
+		const dtos = CategoryMapper.toDTOs(results);
 
 		return new CategoryPaginationResultDTO(
-			categoryDTOs,
+			dtos,
 			new PaginationMetadata(page, limit, total, pages)
 		);
 	}
 
 	async getDTOsByIds(ids: string[]): Promise<CategoryDTO[]> {
 		const entities = await this.categoryRepository.findByIds(ids);
-		return CategoryMapper.toDTOs(entities);
+		return this.formDTOsRequired(entities);
 	}
 
 	async getById(id: string): Promise<CategoryDTO | null> {
-		const category = await this.categoryRepository.findById(id);
-		return category ? CategoryMapper.toDTO(category) : null;
+		const entity = await this.categoryRepository.findById(id);
+		return this.formDTO(entity);
 	}
 
 	async getByIdOrFail(id: string): Promise<CategoryDTO> {
-		const category = await this.getById(id);
-		if (!category) throw new EntityNotFoundError("Category", { id });
-		return category;
+		const entity = await this.getEntityByIdOrFail(id);
+		return this.formDTORequired(entity);
 	}
 
 	async getBySlug(slug: string): Promise<CategoryDTO | null> {
-		const category = await this.categoryRepository.findBySlug(slug);
-		return category ? CategoryMapper.toDTO(category) : null;
+		const entity = await this.categoryRepository.findBySlug(slug);
+		return this.formDTO(entity);
 	}
 
 	async getBySlugOrFail(slug: string): Promise<CategoryDTO> {
-		const category = await this.getBySlug(slug);
-		if (!category) throw new EntityNotFoundError("Category", { slug });
-		return category;
+		const dto = await this.getBySlug(slug);
+
+		if (!dto) throw new EntityNotFoundError("Category", { slug });
+
+		return dto;
 	}
 }

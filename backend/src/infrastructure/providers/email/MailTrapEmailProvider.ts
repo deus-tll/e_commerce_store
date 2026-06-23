@@ -1,6 +1,7 @@
 import {MailtrapClient} from "mailtrap";
 import {IEmailProvider} from "./IEmailProvider.js";
 import {SystemError} from "../../../errors/index.js";
+import {getErrorMessage} from "../../../utils/error.js";
 
 export interface EmailSender {
 	email: string;
@@ -27,8 +28,8 @@ export class MailTrapEmailProvider extends IEmailProvider {
 				category
 			});
 		}
-		catch (error) {
-			console.error(`[Mailtrap Error] Failed to send an email:`, error.message);
+		catch (error: unknown) {
+			console.error(`[Mailtrap Error] Failed to send an email:`, getErrorMessage(error));
 			throw new SystemError("Email delivery failed. Please try again later.");
 		}
 	}

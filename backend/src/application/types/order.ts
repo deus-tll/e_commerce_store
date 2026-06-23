@@ -36,7 +36,7 @@ export class OrderDTO {
     public readonly customerDetails: CustomerDetails;
     public readonly totalAmount: number;
     public readonly status: OrderStatus;
-    public readonly paymentSessionId?: string;
+    public readonly paymentSessionId?: string | null;
     public readonly orderNumber: string;
     public readonly createdAt: Date;
     public readonly updatedAt: Date;

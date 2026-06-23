@@ -10,9 +10,12 @@ export class ReviewMapper {
 	static toDTOs(entities: readonly ReviewEntity[], shortUserDTOs: readonly ShortUserDTO[]): ReviewDTO[] {
 		const userMap = new Map(shortUserDTOs.map(dto => [dto.id, dto]));
 
-		return entities.map(entity => {
-			const shortUserDTO = userMap.get(entity.userId);
-			return this.toDTO(entity, shortUserDTO);
-		});
+		return entities
+			.map(entity => {
+				const shortUserDTO = userMap.get(entity.userId);
+				if (!shortUserDTO) return null;
+				return this.toDTO(entity, shortUserDTO);
+			})
+			.filter((x): x is ReviewDTO => x !== null);
 	}
 }

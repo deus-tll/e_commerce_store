@@ -1,13 +1,12 @@
 import {IOrderDoc} from "../models/Order.js";
 import {OrderEntity} from "../../../../../entities/order/OrderEntity.js";
-import {normalizePersistence} from "../utils.js";
 import {OrderProductItem} from "../../../../../entities/order/types/OrderProductItem.js";
+import {normalizePersistence} from "../utils.js";
 
 export class OrderAdapter {
-    static toEntity(doc?: IOrderDoc): OrderEntity | null {
-        const data = normalizePersistence(doc);
-        if (!data) return null;
-
+    private static buildEntity(
+        data: ReturnType<typeof normalizePersistence<IOrderDoc>>
+    ): OrderEntity {
         const { products, user, ...rest } = data;
 
         const orderItems = products.map(item => new OrderProductItem({
@@ -23,5 +22,17 @@ export class OrderAdapter {
             userId: user?.toString(),
             products: orderItems
         });
+    }
+
+    static toEntity(doc?: IOrderDoc | null): OrderEntity | null {
+        if (!doc) return null;
+
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
+    }
+
+    static toEntityRequired(doc: IOrderDoc): OrderEntity {
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
     }
 }

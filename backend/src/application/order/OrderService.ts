@@ -16,9 +16,18 @@ export class OrderService {
 		private readonly userService: UserService
 	) {}
 
-	private async formOrderDTO(entity: OrderEntity): Promise<OrderDTO> {
-		const shortUserDTO = await this.userService.getShortDTOById(entity.userId);
+	private async buildDTO(entity: OrderEntity): Promise<OrderDTO> {
+		const shortUserDTO = await this.userService.getShortDTOByIdOrFail(entity.userId);
 		return OrderMapper.toDTO(entity, shortUserDTO);
+	}
+
+	private async formDTO(entity?: OrderEntity | null): Promise<OrderDTO | null> {
+		if (!entity) return null;
+		return await this.buildDTO(entity);
+	}
+
+	private async formDTORequired(entity: OrderEntity): Promise<OrderDTO> {
+		return await this.buildDTO(entity);
 	}
 
 	private async formOrderDTOs(entities: readonly OrderEntity[]): Promise<OrderDTO[]> {
@@ -33,80 +42,71 @@ export class OrderService {
 	async create(userId: string, data: OrderCreateInput): Promise<OrderDTO> {
 		await this.userService.getByIdOrFail(userId);
 
-		const createdOrder = await this.orderRepository.create(userId, data);
+		const createdEntity = await this.orderRepository.create(userId, data);
 
-		return await this.formOrderDTO(createdOrder);
+		return await this.formDTORequired(createdEntity);
 	}
 
 	async updateStatus(id: string, status: OrderStatus): Promise<OrderDTO> {
 		const updatedEntity = await this.orderRepository.updateStatus(id, status);
-		return await this.formOrderDTO(updatedEntity);
+		return await this.formDTORequired(updatedEntity);
 	}
 
 	async updatePaymentSessionId(id: string, paymentSessionId: string): Promise<OrderDTO> {
 		const updatedEntity = await this.orderRepository.updatePaymentSessionId(id, paymentSessionId);
-		return await this.formOrderDTO(updatedEntity);
+		return await this.formDTORequired(updatedEntity);
 	}
 
 	async getById(id: string): Promise<OrderDTO | null> {
-		const orderEntity = await this.orderRepository.findById(id);
-
-		if (!orderEntity) return null;
-
-		return await this.formOrderDTO(orderEntity);
+		const entity = await this.orderRepository.findById(id);
+		return await this.formDTO(entity);
 	}
 
 	async getByIdOrFail(id: string): Promise<OrderDTO> {
-		const orderDTO = await this.getById(id);
+		const dto = await this.getById(id);
 
-		if (!orderDTO) throw new EntityNotFoundError("Order", { id });
+		if (!dto) throw new EntityNotFoundError("Order", { id });
 
-		return orderDTO;
+		return dto;
 	}
 
 	async getByIdAndUser(id: string, userId: string): Promise<OrderDTO | null> {
-		const orderEntity = await this.orderRepository.findByIdAndUser(id, userId);
-		return await this.formOrderDTO(orderEntity);
+		const entity = await this.orderRepository.findByIdAndUser(id, userId);
+		return await this.formDTO(entity);
 	}
 
 	async getByIdAndUserOrFail(id: string, userId: string): Promise<OrderDTO> {
-		const orderDTO = await this.getByIdAndUser(id, userId);
+		const dto = await this.getByIdAndUser(id, userId);
 
-		if (!orderDTO) throw new EntityNotFoundError("Order", { id, userId });
+		if (!dto) throw new EntityNotFoundError("Order", { id, userId });
 
-		return orderDTO;
+		return dto;
 	}
 
 	async getByPaymentSessionId(sessionId: string): Promise<OrderDTO | null> {
-		const orderEntity = await this.orderRepository.findByPaymentSessionId(sessionId);
-
-		if (!orderEntity) return null;
-
-		return await this.formOrderDTO(orderEntity);
+		const entity = await this.orderRepository.findByPaymentSessionId(sessionId);
+		return await this.formDTO(entity);
 	}
 
 	async getByPaymentSessionIdOrFail(sessionId: string): Promise<OrderDTO> {
-		const orderDTO = await this.getByPaymentSessionId(sessionId);
+		const dto = await this.getByPaymentSessionId(sessionId);
 
-		if (!orderDTO) throw new EntityNotFoundError("Order", { sessionId });
+		if (!dto) throw new EntityNotFoundError("Order", { sessionId });
 
-		return orderDTO;
+		return dto;
 	}
 
 	async getByOrderNumber(orderNumber: string): Promise<OrderDTO | null> {
-		const orderEntity = await this.orderRepository.findByOrderNumber(orderNumber);
-
-		if (!orderEntity) return null;
-
-		return await this.formOrderDTO(orderEntity);
+		const entity = await this.orderRepository.findByOrderNumber(orderNumber);
+		return await this.formDTO(entity);
 	}
 
 	async getByOrderNumberOrFail(orderNumber: string): Promise<OrderDTO> {
-		const orderDTO = await this.getByOrderNumber(orderNumber);
+		const dto = await this.getByOrderNumber(orderNumber);
 
-		if (!orderDTO) throw new EntityNotFoundError("Order", { orderNumber });
+		if (!dto) throw new EntityNotFoundError("Order", { orderNumber });
 
-		return orderDTO;
+		return dto;
 	}
 
 	async getAll(page: number = 1, limit: number = 10, filters: OrderFiltersInput = {}): Promise<OrderPaginationResultDTO> {
@@ -115,10 +115,10 @@ export class OrderService {
 		const { results, total } = await this.orderRepository.findAndCount(filters, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const orderDTOs = await this.formOrderDTOs(results);
+		const dtos = await this.formOrderDTOs(results);
 
 		return new OrderPaginationResultDTO(
-			orderDTOs,
+			dtos,
 			new PaginationMetadata(page, limit, total, pages)
 		);
 	}

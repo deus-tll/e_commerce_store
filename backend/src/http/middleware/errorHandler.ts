@@ -18,7 +18,7 @@ import {config} from "../../config.js";
  * Global error handler middleware.
  */
 const errorHandler: ErrorRequestHandler = (
-	err: Error | DomainError, req: Request, res: Response, _next: NextFunction
+	err: Error | DomainError, _: Request, res: Response, _next: NextFunction
 ) => {
 	const { isProduction } = config.server;
 

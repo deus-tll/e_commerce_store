@@ -11,6 +11,7 @@ import {UserCreateInput} from "../application/types/user.js";
 import {ReviewCreateInput} from "../application/types/review.js";
 
 import {UserRole} from "../enums/application.js";
+import {getErrorMessage} from "../utils/error.js";
 
 interface DummyJsonReview {
     rating: number;
@@ -88,9 +89,8 @@ export class ProductsDummyJsonSeeder implements ISeeder {
     }
 
     private async getOrCreateCategory(slug: string, fallbackImage: string): Promise<string> {
-        if (this.categoryMap.has(slug)) {
-            return this.categoryMap.get(slug);
-        }
+        const categoryId = this.categoryMap.get(slug);
+        if (categoryId) return categoryId;
 
         const categoryName = this.formatName(slug);
         const categoryCreateInput: CategoryCreateInput = {
@@ -135,8 +135,11 @@ export class ProductsDummyJsonSeeder implements ISeeder {
         ] as const;
 
         const attributes: ProductAttribute[] = possibleAttributePairs
-            .filter(([, value]) => value !== null && value !== undefined)
-            .map(([name, value]) => new ProductAttribute({ name, value }));
+            .map(([name, value]) => {
+                if (value == null) return null;
+                return new ProductAttribute({ name, value });
+            })
+            .filter((x): x is ProductAttribute => x !== null);
 
         const productCreateInput: ProductCreateInput = {
             name: p.title,
@@ -161,9 +164,8 @@ export class ProductsDummyJsonSeeder implements ISeeder {
 
     private async getOrCreateUser(reviewData: DummyJsonReview): Promise<string> {
         const email = reviewData.reviewerEmail;
-        if (this.userMap.has(email)) {
-            return this.userMap.get(email);
-        }
+        const userId = this.userMap.get(email);
+        if (userId) return userId;
 
         const userCreateInput: UserCreateInput = {
             name: reviewData.reviewerName,
@@ -197,8 +199,8 @@ export class ProductsDummyJsonSeeder implements ISeeder {
             try {
                 await this.reviewService.create(productId, userId, reviewCreateInput);
                 processedUsersForThisProduct.add(userId);
-            } catch (error) {
-                console.error(`[Seeder] Could not create review: ${error.message}`);
+            } catch (error: unknown) {
+                console.error(`[Seeder] Could not create review: ${getErrorMessage(error)}`);
             }
         }
     }
@@ -229,8 +231,8 @@ export class ProductsDummyJsonSeeder implements ISeeder {
 
             console.log("[Seeder] DummyJson seeding completed successfully!");
         }
-        catch(error) {
-            console.error("[Seeder] Error during seeding:", error.message);
+        catch(error: unknown) {
+            console.error("[Seeder] Error during seeding:", getErrorMessage(error));
         }
     }
 }

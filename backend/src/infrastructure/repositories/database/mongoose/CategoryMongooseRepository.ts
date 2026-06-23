@@ -1,3 +1,4 @@
+import {MongoServerError} from "mongodb";
 import {FilterQuery} from "mongoose";
 import Category, {ICategoryDoc} from "./models/Category.js";
 
@@ -17,6 +18,14 @@ import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort} from "./utils.js";
 
 export class CategoryMongooseRepository extends ICategoryRepository {
+	private toEntityOrThrow(doc?: ICategoryDoc | null, criteria: any = {}): CategoryEntity {
+		const entity = CategoryAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("Category", criteria);
+
+		return entity;
+	}
+
 	private buildQuery(filters: CategoryFiltersPersistence) : FilterQuery<ICategoryDoc> {
 		const { search } = filters;
 		const query: FilterQuery<ICategoryDoc> = {};
@@ -34,11 +43,11 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 	async create(data: CategoryCreatePersistence): Promise<CategoryEntity> {
 		try {
 			const createdDoc = await Category.create(data);
-			return CategoryAdapter.toEntity(createdDoc);
+			return CategoryAdapter.toEntityRequired(createdDoc);
 		}
-		catch (error) {
-			if (error.code === 11000) {
-				const keyPattern = error['keyPattern'];
+		catch (error: unknown) {
+			if (error instanceof MongoServerError && error.code === 11000) {
+				const keyPattern = error["keyPattern"];
 				const key = Object.keys(keyPattern)[0] as keyof CategoryCreatePersistence;
 				throw new EntityAlreadyExistsError("Category", { [key]: data[key] });
 			}
@@ -53,17 +62,12 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
-		if (!updatedDoc) throw new EntityNotFoundError("Category", { id });
-
-		return CategoryAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async deleteById(id: string): Promise<CategoryEntity> {
 		const deletedDoc = await Category.findByIdAndDelete(id).lean();
-
-		if (!deletedDoc) throw new EntityNotFoundError("Category", { id });
-
-		return CategoryAdapter.toEntity(deletedDoc);
+		return this.toEntityOrThrow(deletedDoc, { id });
 	}
 
 	async findById(id: string): Promise<CategoryEntity | null> {
@@ -96,12 +100,12 @@ export class CategoryMongooseRepository extends ICategoryRepository {
 			Category.countDocuments(query),
 		]);
 
-		const categoryEntities = foundDocs.map(doc => CategoryAdapter.toEntity(doc));
+		const categoryEntities = foundDocs.map(doc => CategoryAdapter.toEntityRequired(doc));
 		return new RepositoryPaginationResult(categoryEntities, total);
 	}
 
 	async findByIds(ids: string[]): Promise<CategoryEntity[]> {
 		const foundDocs = await Category.find({ _id: { $in: ids } }).lean();
-		return foundDocs.map(doc => CategoryAdapter.toEntity(doc));
+		return foundDocs.map(doc => CategoryAdapter.toEntityRequired(doc));
 	}
 }

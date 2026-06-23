@@ -29,15 +29,15 @@ export class ProductService {
 		private readonly recommendationsInCartSize: number
 	) {}
 
-	private async formProductDTO(entity: ProductEntity, categoryDTO?: CategoryDTO): Promise<ProductDTO> {
+	private async formDTO(entity: ProductEntity, categoryDTO?: CategoryDTO): Promise<ProductDTO> {
 		const finalCategoryDTO = categoryDTO
 			? categoryDTO
-			: await this.categoryService.getById(entity.categoryId);
+			: await this.categoryService.getByIdOrFail(entity.categoryId);
 
 		return ProductMapper.toDTO(entity, finalCategoryDTO);
 	}
 
-	private async formProductDTOs(entities: readonly ProductEntity[]): Promise<ProductDTO[]> {
+	private async formDTOs(entities: readonly ProductEntity[]): Promise<ProductDTO[]> {
 		const uniqueCategoryIds = [
 			...new Set(entities.map(entity => entity.categoryId).filter(Boolean))
 		];
@@ -51,7 +51,7 @@ export class ProductService {
 	 */
 	private async refreshFeaturedCache(): Promise<ProductDTO[]> {
 		const entities = await this.productRepository.findByFeaturedStatus(true);
-		const dtos = await this.formProductDTOs(entities);
+		const dtos = await this.formDTOs(entities);
 		await this.productCacheRepository.setFeaturedProducts(dtos);
 
 		return dtos;
@@ -77,16 +77,16 @@ export class ProductService {
 		attributes?: ProductAttribute[]
 	): Promise<ProductAttribute[] | undefined> {
 		if (categoryId) {
-			const category = await this.categoryService.getByIdOrFail(categoryId);
+			const categoryDTO = await this.categoryService.getByIdOrFail(categoryId);
 
 			return attributes !== undefined
-				? this.filterAttributes(category.allowedAttributes, attributes)
+				? this.filterAttributes(categoryDTO.allowedAttributes, attributes)
 				: [];
 		}
 
 		if (attributes !== undefined) {
-			const category = await this.categoryService.getByIdOrFail(existingEntity.categoryId);
-			return this.filterAttributes(category.allowedAttributes, attributes);
+			const categoryDTO = await this.categoryService.getByIdOrFail(existingEntity.categoryId);
+			return this.filterAttributes(categoryDTO.allowedAttributes, attributes);
 		}
 
 		return undefined;
@@ -135,7 +135,7 @@ export class ProductService {
 				await this.refreshFeaturedCache();
 			}
 
-			return await this.formProductDTO(createdEntity, categoryDTO);
+			return await this.formDTO(createdEntity, categoryDTO);
 		}
 		catch (error) {
 			if (processedImages) {
@@ -169,7 +169,7 @@ export class ProductService {
 			await this.refreshFeaturedCache();
 		}
 
-		return await this.formProductDTO(updatedEntity);
+		return await this.formDTO(updatedEntity);
 	}
 
 	async toggleFeatured(id: string): Promise<ProductDTO> {
@@ -177,7 +177,7 @@ export class ProductService {
 
 		await this.refreshFeaturedCache();
 
-		return await this.formProductDTO(updatedEntity);
+		return await this.formDTO(updatedEntity);
 	}
 
 	async deductStock(productItems: readonly OrderProductItem[]): Promise<void> {
@@ -193,7 +193,7 @@ export class ProductService {
 
 		await this.productImageManager.deleteImageData(deletedEntity.images);
 
-		return await this.formProductDTO(deletedEntity);
+		return await this.formDTO(deletedEntity);
 	}
 
 	async getAll(page: number = 1, limit: number = 10, filters: ProductFiltersInput = {}): Promise<ProductPaginationResultDTO> {
@@ -219,10 +219,10 @@ export class ProductService {
 		const { results, total } = await this.productRepository.findAndCount(finalFilters, skip, limit);
 
 		const pages = Math.ceil(total / limit);
-		const productDTOs = await this.formProductDTOs(results);
+		const dtos = await this.formDTOs(results);
 
 		return new ProductPaginationResultDTO(
-			productDTOs,
+			dtos,
 			new PaginationMetadata(page, limit, total, pages)
 		);
 	}
@@ -235,7 +235,7 @@ export class ProductService {
 
 		const categoryDTO = await this.categoryService.getByIdOrFail(entity.categoryId);
 
-		return await this.formProductDTO(entity, categoryDTO);
+		return await this.formDTO(entity, categoryDTO);
 	}
 
 	async getFeatured(): Promise<ProductDTO[]> {
@@ -260,7 +260,7 @@ export class ProductService {
 			categoryIds,
 			excludedProductIds
 		);
-		return await this.formProductDTOs(entities);
+		return await this.formDTOs(entities);
 	}
 
 	async getShortDTOsByIds(ids: string[]): Promise<ShortProductDTO[]> {

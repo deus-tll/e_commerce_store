@@ -1,6 +1,7 @@
 import { v2 as Cloudinary, UploadApiResponse } from "cloudinary";
 import {IStorageProvider} from "./IStorageProvider.js";
 import {SystemError} from "../../../errors/index.js";
+import {getErrorMessage} from "../../../utils/error.js";
 
 export interface CloudinaryConfigOptions {
 	cloudName: string;
@@ -23,7 +24,7 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 		this.isProduction = isProduction;
 	}
 
-	#extractPublicIdSegment(fileUrl: string, folder: string): string | null {
+	private extractPublicIdSegment(fileUrl: string, folder: string): string | null {
 		// 1. Split the URL path based on the folder name.
 		const urlSegments = fileUrl.split(`${folder}/`);
 
@@ -34,6 +35,11 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 		}
 
 		const publicIdWithExt = urlSegments.pop(); // e.g., 'product-123.jpg'
+
+		if (!publicIdWithExt) {
+			console.warn(`[Cloudinary] Could not extract public ID from: ${publicIdWithExt}`);
+			return null;
+		}
 
 		// 2. Extract the public ID by removing the file extension (everything before the last dot).
 		const lastDotIndex = publicIdWithExt.lastIndexOf('.');
@@ -53,8 +59,8 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 			const response: UploadApiResponse = await Cloudinary.uploader.upload(file, { folder });
 			return response.secure_url;
 		}
-		catch (error) {
-			console.error("[Cloudinary] Upload failed:", error.message);
+		catch (error: unknown) {
+			console.error("[Cloudinary] Upload failed:", getErrorMessage(error));
 			throw new SystemError("Failed to upload file to cloud storage.");
 		}
 	}
@@ -63,15 +69,15 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 		try {
 			if (!fileUrl) return;
 
-			const publicIdSegment = this.#extractPublicIdSegment(fileUrl, folder);
+			const publicIdSegment = this.extractPublicIdSegment(fileUrl, folder);
 
 			if (!publicIdSegment) return;
 
 			const fullPublicId = `${folder}/${publicIdSegment}`;
 			await Cloudinary.uploader.destroy(fullPublicId);
 		}
-		catch (error) {
-			console.error("[Cloudinary] Delete failed:", error.message);
+		catch (error: unknown) {
+			console.error("[Cloudinary] Delete failed:", getErrorMessage(error));
 		}
 	}
 
@@ -106,8 +112,8 @@ export class CloudinaryStorageProvider extends IStorageProvider {
 
 			console.log(`[Cloudinary] Cleanup complete. Total assets removed: ${deletedCount}`);
 		}
-		catch (error) {
-			console.error("[Cloudinary] Cleanup failed:", error.message);
+		catch (error: unknown) {
+			console.error("[Cloudinary] Cleanup failed:", getErrorMessage(error));
 		}
 	}
 }

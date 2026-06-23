@@ -5,6 +5,8 @@ import {UserCreateInput} from "../application/types/user.js";
 
 import {UserRole} from "../enums/application.js";
 
+import {getErrorMessage} from "../utils/error.js";
+
 interface UserData {
 	name: string;
 	email: string;
@@ -45,8 +47,8 @@ export class AdminSeeder implements ISeeder {
 
 			console.log("[Seeder] Admin account seeded successfully.");
 		}
-		catch (error) {
-			console.error("[Seeder] Critical failure seeding admin:", error.message);
+		catch (error: unknown) {
+			console.error("[Seeder] Critical failure seeding admin:", getErrorMessage(error));
 		}
 	}
 }

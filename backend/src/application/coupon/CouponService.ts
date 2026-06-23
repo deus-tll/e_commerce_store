@@ -14,8 +14,12 @@ export class CouponService {
 		private readonly discountPercentage: number
 	) {}
 
-	private formDTO(entity?: CouponEntity): CouponDTO | null {
+	private formDTO(entity?: CouponEntity | null): CouponDTO | null {
 		return entity ? CouponMapper.toDTO(entity) : null;
+	}
+
+	private formDTORequired(entity: CouponEntity): CouponDTO {
+		return CouponMapper.toDTO(entity);
 	}
 
 	async create(userId: string): Promise<CouponDTO> {
@@ -24,12 +28,12 @@ export class CouponService {
 		const couponCreatePersistence: CouponCreatePersistence = CouponEntity.prepareCreatePersistence(this.discountPercentage);
 		const createdEntity = await this.couponRepository.replaceOrCreate(userId, couponCreatePersistence);
 
-		return this.formDTO(createdEntity);
+		return this.formDTORequired(createdEntity);
 	}
 
 	async deactivate(code: string, userId: string): Promise<CouponDTO> {
 		const updatedEntity = await this.couponRepository.updateCouponActiveState(code, userId, false);
-		return this.formDTO(updatedEntity);
+		return this.formDTORequired(updatedEntity);
 	}
 
 	async validate(code: string, userId: string): Promise<CouponValidationDTO> {

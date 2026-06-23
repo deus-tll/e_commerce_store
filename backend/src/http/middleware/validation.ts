@@ -8,7 +8,7 @@ import {ValidationError} from "../../errors/index.js";
  * (params, body, query) against a Joi schema.
  */
 export const validationMiddleware = (schema: ObjectSchema): RequestHandler => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, _: Response, next: NextFunction) => {
 		const validationTarget = {
 			params: req.params || {},
 			body: req.body || {},

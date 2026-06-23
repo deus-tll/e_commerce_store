@@ -3,10 +3,9 @@ import {CouponEntity} from "../../../../../entities/coupon/CouponEntity.js";
 import {normalizePersistence} from "../utils.js";
 
 export class CouponAdapter {
-    static toEntity(doc?: ICouponDoc): CouponEntity | null {
-        const data = normalizePersistence(doc);
-        if (!data) return null;
-
+    private static buildEntity(
+        data: ReturnType<typeof normalizePersistence<ICouponDoc>>
+    ): CouponEntity {
         const { expirationDate, user, ...rest } = data;
 
         return new CouponEntity({
@@ -14,5 +13,17 @@ export class CouponAdapter {
             expirationDate: expirationDate instanceof Date ? expirationDate : new Date(expirationDate),
             userId: user?.toString()
         });
+    }
+
+    static toEntity(doc?: ICouponDoc | null): CouponEntity | null {
+        if (!doc) return null;
+
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
+    }
+
+    static toEntityRequired(doc: ICouponDoc): CouponEntity {
+        const data = normalizePersistence(doc);
+        return this.buildEntity(data);
     }
 }

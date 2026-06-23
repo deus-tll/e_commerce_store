@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType, Types } from "mongoose";
+import {Schema, model} from "mongoose";
 
 const counterSchema = new Schema({
 	_id: { type: String, required: true },

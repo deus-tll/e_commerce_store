@@ -5,6 +5,7 @@ import {IProductRepository} from "../../../../application/product/IProductReposi
 import {ProductAdapter} from "./adapters/ProductAdapter.js";
 
 import {ProductEntity} from "../../../../entities/product/ProductEntity.js";
+import {OrderProductItem} from "../../../../entities/order/types/OrderProductItem.js";
 import {
 	AttributeFacetDTO,
 	ProductCountFilters,
@@ -15,13 +16,20 @@ import {
 import {RepositoryPaginationResult} from "../../../../application/types/shared.js";
 
 import {EntityNotFoundError} from "../../../../errors/index.js";
+import {InsufficientStockError} from "../../../../errors/InsufficientStockError.js";
 
 import {sanitizeSearchTerm} from "../../../../utils/sanitize.js";
 import {determineSort, toObjectId} from "./utils.js";
-import {OrderProductItem} from "../../../../entities/order/types/OrderProductItem.js";
-import {InsufficientStockError} from "../../../../errors/InsufficientStockError.js";
 
 export class ProductMongooseRepository extends IProductRepository {
+	private toEntityOrThrow(doc?: IProductDoc | null, criteria: any = {}): ProductEntity {
+		const entity = ProductAdapter.toEntity(doc);
+
+		if (!entity) throw new EntityNotFoundError("Product", criteria);
+
+		return entity;
+	}
+
 	private buildQuery(filters: ProductFiltersPersistence): FilterQuery<IProductDoc> {
 		const { categoryId, attributes } = filters;
 
@@ -44,7 +52,7 @@ export class ProductMongooseRepository extends IProductRepository {
 	async create(data: ProductCreatePersistence): Promise<ProductEntity> {
 		const persistenceDoc = ProductAdapter.toCreatePersistenceDoc(data);
 		const createdDoc = await Product.create(persistenceDoc);
-		return ProductAdapter.toEntity(createdDoc);
+		return ProductAdapter.toEntityRequired(createdDoc);
 	}
 
 	async updateById(id: string, data: ProductUpdatePersistence): Promise<ProductEntity> {
@@ -56,11 +64,7 @@ export class ProductMongooseRepository extends IProductRepository {
 			{ new: true, runValidators: true }
 		).lean();
 
-		if (!updatedDoc) {
-			throw new EntityNotFoundError("Product", { id });
-		}
-
-		return ProductAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async toggleFeatured(id: string): Promise<ProductEntity> {
@@ -76,11 +80,7 @@ export class ProductMongooseRepository extends IProductRepository {
 			{ new: true, useFindAndModify: false }
 		).lean();
 
-		if (!updatedDoc) {
-			throw new EntityNotFoundError("Product", { id });
-		}
-
-		return ProductAdapter.toEntity(updatedDoc);
+		return this.toEntityOrThrow(updatedDoc, { id });
 	}
 
 	async deductStock(productItems: readonly OrderProductItem[]): Promise<void> {
@@ -158,10 +158,7 @@ export class ProductMongooseRepository extends IProductRepository {
 
 	async deleteById(id: string): Promise<ProductEntity> {
 		const deletedDoc = await Product.findByIdAndDelete(id).lean();
-
-		if (!deletedDoc) throw new EntityNotFoundError("Product", { id });
-
-		return ProductAdapter.toEntity(deletedDoc);
+		return this.toEntityOrThrow(deletedDoc, { id });
 	}
 
 	async findById(id: string): Promise<ProductEntity | null> {
@@ -193,7 +190,7 @@ export class ProductMongooseRepository extends IProductRepository {
 				Product.countDocuments(query),
 			]);
 
-			const productEntities = foundDocs.map(doc => ProductAdapter.toEntity(doc));
+			const productEntities = foundDocs.map(doc => ProductAdapter.toEntityRequired(doc));
 			return new RepositoryPaginationResult(productEntities, calculatedTotal);
 		}
 
@@ -257,7 +254,7 @@ export class ProductMongooseRepository extends IProductRepository {
 		];
 
 		const foundDocs = await Product.aggregate(documentsPipeline);
-		const productEntities = foundDocs.map(doc => ProductAdapter.toEntity(doc));
+		const productEntities = foundDocs.map(doc => ProductAdapter.toEntityRequired(doc));
 
 		return new RepositoryPaginationResult(productEntities, calculatedTotal);
 	}
@@ -269,12 +266,12 @@ export class ProductMongooseRepository extends IProductRepository {
 
 	async findByIds(ids: string[]): Promise<ProductEntity[]> {
 		const foundDocs = await Product.find({ _id: { $in: ids } }).lean();
-		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntityRequired(doc));
 	}
 
 	async findByFeaturedStatus(isFeatured: boolean): Promise<ProductEntity[]> {
 		const foundDocs = await Product.find({ isFeatured }).lean();
-		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntityRequired(doc));
 	}
 
 	async exists(id: string): Promise<boolean> {
@@ -352,6 +349,6 @@ export class ProductMongooseRepository extends IProductRepository {
 		];
 
 		const foundDocs = await Product.aggregate(pipeline);
-		return foundDocs.map(doc => ProductAdapter.toEntity(doc));
+		return foundDocs.map(doc => ProductAdapter.toEntityRequired(doc));
 	}
 }

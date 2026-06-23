@@ -5,7 +5,7 @@ import {InvalidTokenError, UnauthenticatedError, AccountNotVerifiedError, Forbid
 import {UserRole} from "../../enums/application.js";
 
 export const createProtectRoute = (authService: SessionAuthService) : RequestHandler => {
-	return async (req: Request, res: Response, next: NextFunction) => {
+	return async (req: Request, _: Response, next: NextFunction) => {
 		const accessToken = req.cookies?.accessToken;
 
 		if (!accessToken) {
