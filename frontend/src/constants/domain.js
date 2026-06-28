@@ -6,7 +6,8 @@ const ORDER_STATUS = Object.freeze({
 	PROCESSING: "processing",
 	SHIPPED: "shipped",
 	DELIVERED: "delivered",
-	CANCELLED: "cancelled"
+	CANCELLED: "cancelled",
+	BACKORDER: "backorder"
 });
 
 export const ORDER_STATUS_STYLES = Object.freeze({
@@ -16,6 +17,7 @@ export const ORDER_STATUS_STYLES = Object.freeze({
 	[ORDER_STATUS.SHIPPED]: "!text-purple-500 !bg-purple-500/10 !border-purple-500/20",
 	[ORDER_STATUS.DELIVERED]: "!text-emerald-500 !bg-emerald-500/10 !border-emerald-500/20",
 	[ORDER_STATUS.CANCELLED]: "!text-rose-600 !bg-rose-600/10 !border-rose-600/20",
+	[ORDER_STATUS.BACKORDER]: "!text-black-600 !bg-black-600/10 !border-black-600/20",
 });
 
 export const ORDER_STATUS_VALUES = Object.values(ORDER_STATUS);

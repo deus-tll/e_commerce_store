@@ -56,15 +56,15 @@ export const useUserStore = create((set, get) => ({
 		shouldUpdateStoreError: true
 	}),
 
-	updateUser: async (userId, userData) => await handleAsyncAction(set, {
-		action: () => userApi.update(userId, userData),
+	updateUser: async (id, userData) => await handleAsyncAction(set, {
+		action: () => userApi.update(id, userData),
 		onSuccess: () => get().fetchUsers(),
 		errorMessage: "User update failed.",
 		shouldUpdateStoreError: true
 	}),
 
-	deleteUser: async (userId) => await handleAsyncAction(set, {
-		action: () => userApi.delete(userId),
+	deleteUser: async (id) => await handleAsyncAction(set, {
+		action: () => userApi.delete(id),
 		onSuccess: () => handleDeletionNavigation(get, get().setPage, get().fetchUsers),
 		errorMessage: "User deletion failed.",
 		shouldUpdateStoreError: false,

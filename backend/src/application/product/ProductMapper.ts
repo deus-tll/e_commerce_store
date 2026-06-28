@@ -1,0 +1,21 @@
+import {ProductEntity} from "../../entities/product/ProductEntity.js";
+import {ProductDTO} from "../types/product.js";
+import {CategoryDTO} from "../types/category.js";
+
+export class ProductMapper {
+    static toDTO(entity: ProductEntity, categoryDTO: CategoryDTO): ProductDTO {
+        return new ProductDTO(entity, categoryDTO);
+    }
+
+    static toDTOs(entities: readonly ProductEntity[], categoryDTOs: readonly CategoryDTO[]): ProductDTO[] {
+        const categoryMap = new Map(categoryDTOs.map(dto => [dto.id, dto]));
+
+        return entities
+            .map(entity => {
+                const categoryDTO = categoryMap.get(entity.categoryId);
+                if (!categoryDTO) return null;
+                return this.toDTO(entity, categoryDTO);
+            })
+            .filter((x): x is ProductDTO => x !== null);
+    }
+}
