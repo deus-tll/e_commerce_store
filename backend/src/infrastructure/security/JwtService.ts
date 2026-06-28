@@ -1,4 +1,4 @@
-import jwt, { JwtPayload, TokenExpiredError as JwtTokenExpiredError } from "jsonwebtoken";
+import jwt, {JwtPayload} from "jsonwebtoken";
 
 import {TokenType} from "../../enums/auth.js";
 import {AuthMapper} from "../../application/auth/AuthMapper.js";
@@ -48,7 +48,7 @@ export class JwtService {
 		catch (error: unknown) {
 			const tokenName = type === TokenType.ACCESS_TOKEN ? "Access token" : "Refresh token";
 
-			if (error instanceof JwtTokenExpiredError) {
+			if (error instanceof jwt.TokenExpiredError) {
 				throw new TokenExpiredError(`${tokenName} expired`);
 			}
 
