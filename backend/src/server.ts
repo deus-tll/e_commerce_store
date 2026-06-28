@@ -1,9 +1,9 @@
-import {AppServer} from "./AppServer.js";
-import initContainer from "./core/di/index.js";
+import {getContainer} from "./core/di/bootstrap.js";
+import {Application} from "./Application.js";
 
-const container = initContainer();
+const container = getContainer();
 
-const server = new AppServer(container);
+const server = new Application(container);
 
 server.start().catch((err) => {
 	console.error("[Server] Failed to start server", err);

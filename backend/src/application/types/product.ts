@@ -1,0 +1,121 @@
+import {ProductRatingStats} from "../../entities/product/types/ProductRatingStats.js";
+import {ProductAttribute} from "../../entities/product/types/ProductAttribute.js";
+import {ProductImage} from "../../entities/product/types/ProductImage.js";
+import {ProductEntity} from "../../entities/product/ProductEntity.js";
+import {CategoryDTO} from "./category.js";
+import {PaginationMetadata} from "./shared.js";
+
+
+// INPUT DATA STRUCTURES
+//=======================
+
+export interface ProductCreateInput {
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    images: ProductImage;
+    categoryId: string;
+    attributes: ProductAttribute[];
+    isFeatured: boolean;
+}
+
+export type ProductUpdateInput = Partial<ProductCreateInput>;
+
+export interface ProductFiltersInput {
+    categorySlug?: string;
+    search?: string;
+    attributes?: Record<string, string | string[]>;
+    sortBy?: "price" | "createdAt" | "name" | "ratingStats.averageRating";
+    order?: "asc" | "desc";
+}
+
+export type ProductCreatePersistence = ProductCreateInput;
+
+export type ProductUpdatePersistence = ProductUpdateInput;
+
+export type ProductFiltersPersistence =
+    Omit<ProductFiltersInput, "categorySlug"> &
+    { categoryId?: string };
+
+export type ProductCountFilters =
+    Omit<ProductFiltersPersistence, "search" | "sortBy" | "order">;
+
+// OUTPUT DATA STRUCTURES
+//=======================
+
+export class ProductDTO {
+    public readonly id: string;
+    public readonly name: string;
+    public readonly description: string;
+    public readonly price: number;
+    public readonly stock: number;
+    public readonly images: ProductImage;
+    public readonly category: CategoryDTO;
+    public readonly attributes: readonly ProductAttribute[];
+    public readonly isFeatured: boolean;
+    public readonly ratingStats: ProductRatingStats;
+    public readonly createdAt: Date;
+    public readonly updatedAt: Date;
+
+    constructor(entity: ProductEntity, categoryDTO: CategoryDTO) {
+        this.id = entity.id;
+        this.name = entity.name;
+        this.description = entity.description;
+        this.price = entity.price;
+        this.stock = entity.stock;
+        this.images = entity.images;
+        this.category = categoryDTO;
+        this.attributes = Object.freeze([...entity.attributes]);
+        this.isFeatured = entity.isFeatured;
+        this.ratingStats = entity.ratingStats;
+        this.createdAt = entity.createdAt;
+        this.updatedAt = entity.updatedAt;
+
+        Object.freeze(this);
+    }
+}
+
+export class ShortProductDTO {
+    public readonly id: string;
+    public readonly categoryId: string;
+    public readonly name: string;
+    public readonly price: number;
+    public readonly stock: number;
+    public readonly image: string;
+
+    constructor(entity: ProductEntity) {
+        this.id = entity.id;
+        this.categoryId = entity.categoryId;
+        this.name = entity.name;
+        this.price = entity.price;
+        this.stock = entity.stock;
+        this.image = entity.images?.mainImage || "";
+
+        Object.freeze(this);
+    }
+}
+
+export class ProductPaginationResultDTO {
+    public readonly products: readonly ProductDTO[];
+    public readonly pagination: PaginationMetadata;
+
+    constructor(products: readonly ProductDTO[], pagination: PaginationMetadata) {
+        this.products = Object.freeze([...products]);
+        this.pagination = pagination;
+
+        Object.freeze(this);
+    }
+}
+
+export class AttributeFacetDTO {
+    public readonly name: string;
+    public readonly values: readonly string[];
+
+    constructor(name: string, values: readonly string[]) {
+        this.name = name;
+        this.values = Object.freeze([...values]);
+
+        Object.freeze(this);
+    }
+}
