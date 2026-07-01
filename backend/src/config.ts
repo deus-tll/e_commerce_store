@@ -31,6 +31,7 @@ export const config = {
 		nodeEnv: nodeEnv,
 		isProduction: isProduction,
 		port: port,
+		appName: process.env.APP_NAME,
 		clientUrl: isProduction
 			? requiredEnv("PRODUCTION_CLIENT_URL")
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",

@@ -48,7 +48,8 @@ const registerApplicationServices = (container: Container): void => {
     }, [
         IEmailProvider,
         TemplateService,
-        new URL(config.server.passwordResetUrl, config.server.clientUrl).toString()
+        new URL(config.server.passwordResetUrl, config.server.clientUrl).toString(),
+        config.server.appName
     ]);
 
     // CATEGORY

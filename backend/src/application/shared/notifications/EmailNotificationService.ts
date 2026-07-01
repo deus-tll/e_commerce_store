@@ -20,20 +20,17 @@ const TEMPLATE_PATH = {
 }
 
 export class EmailNotificationService {
-    private readonly emailProvider: IEmailProvider;
-    private readonly templateService: TemplateService;
-    private readonly resetPasswordUrlBase: string;
-
-    constructor(emailProvider: IEmailProvider, templateService: TemplateService, resetPasswordUrlBase: string) {
-        this.emailProvider = emailProvider;
-        this.templateService = templateService;
-        this.resetPasswordUrlBase = resetPasswordUrlBase;
-    }
+    constructor(
+        private readonly emailProvider: IEmailProvider,
+        private readonly templateService: TemplateService,
+        private readonly resetPasswordUrlBase: string,
+        private readonly appName: string,
+    ) {}
 
     async sendEmailVerification(email: string, token: string): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.VERIFICATION,
-            { verificationCode: token }
+            { verificationCode: token, appName: this.appName }
         );
 
         await this.emailProvider.send(email, EMAIL_SUBJECT.VERIFICATION, html, EMAIL_CATEGORY.VERIFICATION);
@@ -42,7 +39,7 @@ export class EmailNotificationService {
     async sendPasswordReset(email: string, token: string): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.RESET_REQUEST,
-            { resetPasswordUrl: `${this.resetPasswordUrlBase}/${token}` }
+            { resetPasswordUrl: `${this.resetPasswordUrlBase}/${token}`, appName: this.appName }
         );
 
         await this.emailProvider.send(email, EMAIL_SUBJECT.RESET_REQUEST, html, EMAIL_CATEGORY.RESET_REQUEST);
@@ -51,7 +48,7 @@ export class EmailNotificationService {
     async sendPasswordResetSuccess(email: string): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.RESET_SUCCESS,
-            {}
+            { appName: this.appName }
         );
 
         await this.emailProvider.send(email, EMAIL_SUBJECT.RESET_SUCCESS, html, EMAIL_CATEGORY.RESET_SUCCESS);
