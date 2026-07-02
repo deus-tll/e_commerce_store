@@ -3,7 +3,7 @@ import path from "path";
 import {fileURLToPath} from "url";
 
 import {EnvMode} from "./enums/server.js";
-import {CacheType} from "./enums/infrastructure.js";
+import {CacheType, EmailType} from "./enums/infrastructure.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +31,7 @@ export const config = {
 		nodeEnv: nodeEnv,
 		isProduction: isProduction,
 		port: port,
+		appName: process.env.APP_NAME,
 		clientUrl: isProduction
 			? requiredEnv("PRODUCTION_CLIENT_URL")
 			: process.env.DEVELOPMENT_CLIENT_URL || "http://localhost:5173",
@@ -73,13 +74,19 @@ export const config = {
 					cancelUrl: requiredEnv("STRIPE_CANCEL_URL"),
 				}
 			},
-			mail: {
+			email: {
+				type: process.env.EMAIL_TYPE || EmailType.NODEMAILER,
+				senderName: requiredEnv("MAIL_SENDER_NAME"),
 				mailtrap: {
 					token: requiredEnv("MAILTRAP_TOKEN"),
 					sender: {
 						email: requiredEnv("MAILTRAP_SENDER_EMAIL"),
 						name: requiredEnv("MAILTRAP_SENDER_NAME"),
 					}
+				},
+				gmail: {
+					user: requiredEnv("GMAIL_USER"),
+					pass: requiredEnv("GMAIL_PASS"),
 				}
 			}
 		},

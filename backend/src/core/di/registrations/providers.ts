@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import {Redis} from "ioredis";
 import {MailtrapClient} from "mailtrap";
+import nodemailer from "nodemailer";
 import Stripe from "stripe";
 
 import {Container} from "../Container.js";
@@ -18,10 +19,13 @@ import {
     CloudinaryConfigOptions,
     CloudinaryStorageProvider
 } from "../../../infrastructure/providers/storage/CloudinaryStorageProvider.js";
-import {EmailSender, MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
+import {MailTrapEmailProvider} from "../../../infrastructure/providers/email/MailTrapEmailProvider.js";
+import {NodemailerEmailProvider} from "../../../infrastructure/providers/email/NodemailerEmailProvider.js";
 import {StripeProvider} from "../../../infrastructure/providers/payment/StripeProvider.js";
 
-import {CacheType} from "../../../enums/infrastructure.js";
+import {EmailSender} from "../../../infrastructure/providers/email/types.js";
+
+import {CacheType, EmailType} from "../../../enums/infrastructure.js";
 
 import {config} from "../../../config.js";
 
@@ -39,9 +43,7 @@ const registerProviders = (container: Container): void => {
 
     // CACHE
     //=======================
-    container.register({
-        token: Redis
-    }, [
+    const redisClient = new Redis(
         config.infrastructure.providers.cache.redis.url,
         {
             lazyConnect: true,
@@ -51,14 +53,14 @@ const registerProviders = (container: Container): void => {
                 return Math.min(times * 100, 3000);
             }
         }
-    ]);
+    );
 
     const cacheType = config.infrastructure.providers.cache.type;
     const cacheImpl = cacheType === CacheType.REDIS
         ? RedisCacheProvider
         : MemoryCacheProvider;
     const cacheDeps = cacheType === CacheType.REDIS
-        ? [Redis]
+        ? [redisClient]
         : [];
 
     container.register({
@@ -69,19 +71,40 @@ const registerProviders = (container: Container): void => {
     // EMAIL
     //=======================
     const mailtrapClient = new MailtrapClient({
-        token: config.infrastructure.providers.mail.mailtrap.token,
+        token: config.infrastructure.providers.email.mailtrap.token,
     });
+    const nodemailerClient = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: config.infrastructure.providers.email.gmail.user,
+            pass: config.infrastructure.providers.email.gmail.pass
+        }
+    });
+
+    const emailType = config.infrastructure.providers.email.type;
+    const emailImpl = emailType === EmailType.MAILTRAP
+        ? MailTrapEmailProvider
+        : NodemailerEmailProvider;
+    const emailDeps = emailType === EmailType.MAILTRAP
+        ? [
+            mailtrapClient,
+            {
+                email: config.infrastructure.providers.email.mailtrap.sender.email,
+                name: config.infrastructure.providers.email.senderName
+            } satisfies EmailSender
+        ]
+        : [
+            nodemailerClient,
+            {
+                email: config.infrastructure.providers.email.gmail.user,
+                name: config.infrastructure.providers.email.senderName
+            } satisfies EmailSender
+        ];
 
     container.register({
         token: IEmailProvider,
-        implementation: MailTrapEmailProvider
-    }, [
-        mailtrapClient,
-        {
-            email: config.infrastructure.providers.mail.mailtrap.sender.email,
-            name: config.infrastructure.providers.mail.mailtrap.sender.name
-        } satisfies EmailSender
-    ]);
+        implementation: emailImpl as any
+    }, emailDeps);
 
     // STORAGE
     //=======================

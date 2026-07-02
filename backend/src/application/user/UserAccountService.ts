@@ -54,7 +54,7 @@ export class UserAccountService {
 
 	async signup(data: UserCreateInput): Promise<UserWithTokensDTO> {
 		const userDTO = await this.userService.create(data);
-		const { id: userId, email } = userDTO;
+		const { id: userId, email, name } = userDTO;
 
 		const { token: verificationToken, expiresAt: verificationTokenExpiresAt } = this.generateVerificationTokenDetails();
 		const { accessToken, refreshToken } = this.jwtService.generateTokens(userId);
@@ -63,7 +63,7 @@ export class UserAccountService {
 
 		await Promise.all([
 			this.authCacheRepository.storeRefreshToken(userId, refreshToken),
-			this.emailNotificationService.sendEmailVerification(email, verificationToken)
+			this.emailNotificationService.sendEmailVerification({email, name}, verificationToken)
 		]);
 
 		return AuthMapper.toUserWithTokensDTO(userDTO, accessToken, refreshToken);
@@ -85,7 +85,7 @@ export class UserAccountService {
 
 	async resendVerificationEmail(userId: string): Promise<MessageResult> {
 		const userEntity = await this.userService.getEntityByIdOrFail(userId);
-		const { email, isVerified } = userEntity;
+		const { email, name, isVerified } = userEntity;
 
 		if (isVerified) {
 			throw new ActionNotAllowedError("Email is already verified");
@@ -94,7 +94,7 @@ export class UserAccountService {
 		const { token: verificationToken, expiresAt: verificationTokenExpiresAt } = this.generateVerificationTokenDetails();
 
 		await this.userTokenService.setVerificationToken(userId, verificationToken, verificationTokenExpiresAt);
-		await this.emailNotificationService.sendEmailVerification(email, verificationToken);
+		await this.emailNotificationService.sendEmailVerification({email, name}, verificationToken);
 
 		return { message: "Verification code sent to your email" };
 	}
@@ -102,12 +102,12 @@ export class UserAccountService {
 	async forgotPassword(email: string): Promise<MessageResult> {
 		try {
 			const userEntity = await this.userService.getEntityByEmailOrFail(email);
-			const { id: userId } = userEntity;
+			const { id: userId, name } = userEntity;
 
 			const { token: resetToken, expiresAt: resetPasswordTokenExpiresAt } = this.generateResetTokenDetails();
 
 			await this.userTokenService.setResetPasswordToken(userId, resetToken, resetPasswordTokenExpiresAt);
-			await this.emailNotificationService.sendPasswordReset(email, resetToken);
+			await this.emailNotificationService.sendPasswordReset({email, name}, resetToken);
 		}
 		catch (error) {
 			if (!(error instanceof EntityNotFoundError)) {
@@ -123,13 +123,13 @@ export class UserAccountService {
 
 	async resetPassword(token: string, password: string): Promise<UserWithTokensDTO> {
 		const userEntity = await this.userTokenService.resetPassword(token, password);
-		const { id: userId, email } = userEntity;
+		const { id: userId, email, name } = userEntity;
 
 		const { accessToken, refreshToken } = this.jwtService.generateTokens(userId);
 
 		await Promise.all([
 			this.authCacheRepository.storeRefreshToken(userId, refreshToken),
-			this.emailNotificationService.sendPasswordResetSuccess(email)
+			this.emailNotificationService.sendPasswordResetSuccess({email, name})
 		]);
 
 		return AuthMapper.toUserWithTokensDTO(
