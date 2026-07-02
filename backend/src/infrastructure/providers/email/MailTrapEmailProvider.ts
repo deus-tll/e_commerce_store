@@ -1,28 +1,25 @@
 import {MailtrapClient} from "mailtrap";
+
 import {IEmailProvider} from "./IEmailProvider.js";
+import {EmailRecipient, EmailSender} from "./types.js";
+
 import {SystemError} from "../../../errors/index.js";
+
 import {getErrorMessage} from "../../../utils/error.js";
 
-export interface EmailSender {
-	email: string;
-	name: string;
-}
-
 export class MailTrapEmailProvider extends IEmailProvider {
-	private readonly client: MailtrapClient;
-	private readonly sender: EmailSender;
-
-	constructor(client: MailtrapClient, sender: EmailSender) {
+	constructor(
+		private readonly client: MailtrapClient,
+		private readonly sender: EmailSender
+	) {
 		super();
-		this.client = client;
-		this.sender = sender;
 	}
 
-	async send(to: string, subject: string, html: string, category: string) {
+	async send(recipient: EmailRecipient, subject: string, html: string, category?: string): Promise<void> {
 		try {
 			await this.client.send({
 				from: this.sender,
-				to: [{ email: to }],
+				to: [{ email: recipient.email, name: recipient.name }],
 				subject,
 				html: html,
 				category

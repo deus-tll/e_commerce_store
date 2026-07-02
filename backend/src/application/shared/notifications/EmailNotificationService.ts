@@ -1,5 +1,6 @@
 import {IEmailProvider} from "../../../infrastructure/providers/email/IEmailProvider.js";
 import {TemplateService} from "../../../infrastructure/templates/TemplateService.js";
+import {EmailRecipient} from "../../../infrastructure/providers/email/types.js";
 
 const EMAIL_CATEGORY = {
     VERIFICATION: "Email Verification",
@@ -27,30 +28,30 @@ export class EmailNotificationService {
         private readonly appName: string,
     ) {}
 
-    async sendEmailVerification(email: string, token: string): Promise<void> {
+    async sendEmailVerification(recipient: EmailRecipient, token: string): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.VERIFICATION,
             { verificationCode: token, appName: this.appName }
         );
 
-        await this.emailProvider.send(email, EMAIL_SUBJECT.VERIFICATION, html, EMAIL_CATEGORY.VERIFICATION);
+        await this.emailProvider.send(recipient, EMAIL_SUBJECT.VERIFICATION, html, EMAIL_CATEGORY.VERIFICATION);
     }
 
-    async sendPasswordReset(email: string, token: string): Promise<void> {
+    async sendPasswordReset(recipient: EmailRecipient, token: string): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.RESET_REQUEST,
             { resetPasswordUrl: `${this.resetPasswordUrlBase}/${token}`, appName: this.appName }
         );
 
-        await this.emailProvider.send(email, EMAIL_SUBJECT.RESET_REQUEST, html, EMAIL_CATEGORY.RESET_REQUEST);
+        await this.emailProvider.send(recipient, EMAIL_SUBJECT.RESET_REQUEST, html, EMAIL_CATEGORY.RESET_REQUEST);
     }
 
-    async sendPasswordResetSuccess(email: string): Promise<void> {
+    async sendPasswordResetSuccess(recipient: EmailRecipient): Promise<void> {
         const html = await this.templateService.replacePlaceholders(
             TEMPLATE_PATH.RESET_SUCCESS,
             { appName: this.appName }
         );
 
-        await this.emailProvider.send(email, EMAIL_SUBJECT.RESET_SUCCESS, html, EMAIL_CATEGORY.RESET_SUCCESS);
+        await this.emailProvider.send(recipient, EMAIL_SUBJECT.RESET_SUCCESS, html, EMAIL_CATEGORY.RESET_SUCCESS);
     }
 }
