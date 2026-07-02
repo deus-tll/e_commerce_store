@@ -81,7 +81,6 @@ export const config = {
 					token: requiredEnv("MAILTRAP_TOKEN"),
 					sender: {
 						email: requiredEnv("MAILTRAP_SENDER_EMAIL"),
-						name: requiredEnv("MAILTRAP_SENDER_NAME"),
 					}
 				},
 				gmail: {
