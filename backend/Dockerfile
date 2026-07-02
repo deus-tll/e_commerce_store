@@ -17,5 +17,6 @@ RUN npm run build
 FROM base AS production
 RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
+COPY src/templates ./src/templates
 EXPOSE 3001
 CMD ["npm", "start"]
