@@ -16,4 +16,6 @@ export abstract class IPaymentProvider {
 		payload: Buffer,
 		headers: Record<string, any>
 	): WebhookPaymentEventDTO;
+
+	abstract deleteUsedCoupon(stripeCouponId: string): Promise<void>;
 }
