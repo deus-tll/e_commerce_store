@@ -42,19 +42,22 @@ export class CheckoutSessionDTO {
 export class PaymentEventDataDTO {
     public readonly orderId: string;
     public readonly userId: string;
-    public readonly couponCode: string;
     public readonly totalAmountInCents: number;
+    public readonly couponCode: string;
+    public readonly providerCouponId: string;
 
     constructor(data: {
         orderId: string;
         userId: string;
-        couponCode: string;
         totalAmountInCents: number;
+        couponCode: string;
+        providerCouponId: string
     }) {
         this.orderId = data.orderId;
         this.userId = data.userId;
         this.couponCode = data.couponCode;
         this.totalAmountInCents = data.totalAmountInCents;
+        this.providerCouponId = data.providerCouponId;
 
         Object.freeze(this);
     }

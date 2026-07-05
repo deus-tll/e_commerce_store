@@ -116,8 +116,36 @@ export class StripeProvider extends IPaymentProvider {
 			throw new SystemError(`[Stripe] Webhook construct event Error: ${getErrorMessage(error)}`);
 		}
 
+		if (event.type !== StripeEvents.CHECKOUT_SESSION_COMPLETED) {
+			return new WebhookPaymentEventDTO(PaymentEventTypes.UNKNOWN, null as any);
+		}
+
 		const session = event.data.object as Stripe.Checkout.Session;
+
+		if (!session.metadata || !Object.keys(session.metadata).length) {
+			console.warn("[Stripe] Received event without metadata, ignoring:", {
+				eventId: event.id,
+				eventType: event.type
+			});
+
+			return new WebhookPaymentEventDTO(PaymentEventTypes.UNKNOWN, null as any);
+		}
+
 		const metadata = session.metadata;
+
+		let providerCouponId: string = "";
+		if (session.discounts?.length) {
+			const firstDiscount = session.discounts[0];
+
+			if (firstDiscount.coupon) {
+				if (typeof firstDiscount.coupon === "string") {
+					providerCouponId = firstDiscount.coupon;
+				}
+				else {
+					providerCouponId = firstDiscount.coupon.id;
+				}
+			}
+		}
 
 		if (!metadata) {
 			throw new SystemError(`[Stripe] Metadata is missing.`);
@@ -128,7 +156,19 @@ export class StripeProvider extends IPaymentProvider {
 
 		return new WebhookPaymentEventDTO(
 			this.mapEventType(event.type),
-			new PaymentEventDataDTO({ orderId, userId, couponCode, totalAmountInCents })
+			new PaymentEventDataDTO({
+				orderId,
+				userId,
+				totalAmountInCents,
+				couponCode,
+				providerCouponId,
+			})
 		);
+	}
+
+	async deleteUsedCoupon(stripeCouponId: string): Promise<void> {
+		await this.stripe.coupons.del(stripeCouponId).catch(() => {
+			console.warn(`[Stripe] Coupon deletion failed: ${stripeCouponId}`);
+		});
 	}
 }

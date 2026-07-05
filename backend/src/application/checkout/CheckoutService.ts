@@ -96,17 +96,18 @@ export class CheckoutService {
 		}
 	}
 
-	private async finalizeCouponUsage(userId: string, couponCode: string, amountPaid: number): Promise<void> {
+	private async finalizeCouponUsage(userId: string, amountPaid: number, couponCode: string, providerCouponId: string): Promise<void> {
 		const tasks: Promise<any>[] = [];
 
 		if (couponCode) tasks.push(this.couponService.deactivate(couponCode, userId));
+		if (providerCouponId) tasks.push(this.paymentProvider.deleteUsedCoupon(providerCouponId));
 		tasks.push(this.grantNewCouponIfEligible(userId, amountPaid));
 
 		await Promise.all(tasks);
 	}
 
 	private async handleWebhookSuccess(data: PaymentEventDataDTO): Promise<void> {
-		const { orderId, userId, couponCode, totalAmountInCents } = data;
+		const { orderId, userId, couponCode, totalAmountInCents, providerCouponId } = data;
 
 		const order = await this.orderService.getById(orderId);
 		if (!order || order.status !== OrderStatus.AWAITING_PAYMENT) return;
@@ -126,7 +127,7 @@ export class CheckoutService {
 
 		await Promise.all([
 			this.cartService.clear(userId),
-			this.finalizeCouponUsage(userId, couponCode, totalAmountInCents)
+			this.finalizeCouponUsage(userId, totalAmountInCents, couponCode, providerCouponId)
 		]);
 	}
 
