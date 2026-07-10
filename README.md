@@ -211,8 +211,8 @@ Screenshots and a video of some of the functionality.
 
 **Cart & Checkout flow**:
 
-<video src="./assets/cart_and_checkout.mp4" controls width="100%"></video>
-[Download video](./assets/cart_and_checkout.mp4) if video doesn't play.
+![Checkout Demo](./assets/cart_thumbnail.png)
+[Watch full demo (MP4, 8MB)](./assets/cart_and_checkout.mp4)
 ---
 
 <a id="backend-architecture"></a>
